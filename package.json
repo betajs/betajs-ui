@@ -1,0 +1,12 @@
+{
+  "name": "jquery-touch-gestures",
+  "version": "0.0.1",
+  "devDependencies": {
+    "grunt": "",
+    "grunt-contrib-jshint": "",
+    "grunt-contrib-nodeunit": "",
+    "grunt-contrib-concat": "",
+    "grunt-contrib-uglify": "",
+    "grunt-newer": ""
+  }
+}
