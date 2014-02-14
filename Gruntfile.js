@@ -12,7 +12,9 @@ module.exports = function(grunt) {
 			dist : {
 				dest : 'dist/jquery-touch-gestures.js',
 				src : [
-			        'src/todo.js',
+			        'src/base.js',
+			        'src/draggablex.js',
+			        'src/sortabley.js',
 				]
 			},
 		},
@@ -30,6 +32,6 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	
 
-	grunt.registerTask('default', ['newer:concat', 'newer:uglify']);
+	grunt.registerTask('default', ['concat', 'newer:uglify']);
 
 };

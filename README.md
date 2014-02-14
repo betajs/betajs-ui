@@ -3,7 +3,7 @@ jquery-touch-gestures
 
 jquery-touch-gestures as a stand-alone jQuery plugin for enabling simple touch gestures.
 
-This is a pre-alpha version that has only been created for the sake of having a repository.
+It allows draggable-x and sortable-y (see demos).
 
 
 ## Contributors

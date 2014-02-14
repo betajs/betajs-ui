@@ -1,0 +1,30 @@
+.doodads {
+	-webkit-user-select: none
+}
+.doodad .outer {
+    background-color: #EEEEEE;
+    overflow:hidden;
+}
+.doodad .inner {
+    height: 50px;
+    line-height: 50px;
+    text-align: center;
+    border: 1px dashed black;
+    background-color: white;
+    overflow:hidden;
+}
+.doodad .archive {
+    background-color: yellow;
+}
+.doodad .delete {
+    background-color: red;
+}
+.doodad .other {
+    background-color: #C58917;
+}
+.doodad .focus {
+	border: 1px solid yellow;
+}
+.doodad .unfocus {
+	opacity: 0.2;
+}
