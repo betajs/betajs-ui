@@ -1,7 +1,7 @@
 .doodads {
-	-webkit-user-select: none
+	-webkit-user-select: none;
 }
-.doodad .outer {
+.doodad {
     background-color: #EEEEEE;
     overflow:hidden;
 }
@@ -13,18 +13,18 @@
     background-color: white;
     overflow:hidden;
 }
-.doodad .archive {
-    background-color: yellow;
-}
-.doodad .delete {
-    background-color: red;
-}
-.doodad .other {
-    background-color: #C58917;
-}
-.doodad .focus {
+.doodads .focus {
 	border: 1px solid yellow;
 }
-.doodad .unfocus {
+.doodads .unfocus {
 	opacity: 0.2;
+}
+.doodads .archive {
+    background-color: yellow;
+}
+.doodads .delete {
+    background-color: red;
+}
+.doodads .other {
+    background-color: #C58917;
 }

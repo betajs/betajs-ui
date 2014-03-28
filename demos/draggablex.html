@@ -12,26 +12,26 @@
     </head>
     <body>
     	<div class="doodads">
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 1</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 2</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 3</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 4</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 5</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 6</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 7</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 8</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 9</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 10</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 11</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 12</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 13</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 14</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 15</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 16</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 17</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 18</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 19</div></div></div>
-	        <div class="doodad"><div class="outer"><div class="inner">Doodad 20</div></div></div>
+	        <div class="doodad"><div class="inner">Doodad 1</div></div>
+	        <div class="doodad"><div class="inner">Doodad 2</div></div>
+	        <div class="doodad"><div class="inner">Doodad 3</div></div>
+	        <div class="doodad"><div class="inner">Doodad 4</div></div>
+	        <div class="doodad"><div class="inner">Doodad 5</div></div>
+	        <div class="doodad"><div class="inner">Doodad 6</div></div>
+	        <div class="doodad"><div class="inner">Doodad 7</div></div>
+	        <div class="doodad"><div class="inner">Doodad 8</div></div>
+	        <div class="doodad"><div class="inner">Doodad 9</div></div>
+	        <div class="doodad"><div class="inner">Doodad 10</div></div>
+	        <div class="doodad"><div class="inner">Doodad 11</div></div>
+	        <div class="doodad"><div class="inner">Doodad 12</div></div>
+	        <div class="doodad"><div class="inner">Doodad 13</div></div>
+	        <div class="doodad"><div class="inner">Doodad 14</div></div>
+	        <div class="doodad"><div class="inner">Doodad 15</div></div>
+	        <div class="doodad"><div class="inner">Doodad 16</div></div>
+	        <div class="doodad"><div class="inner">Doodad 17</div></div>
+	        <div class="doodad"><div class="inner">Doodad 18</div></div>
+	        <div class="doodad"><div class="inner">Doodad 19</div></div>
+	        <div class="doodad"><div class="inner">Doodad 20</div></div>
     	</div>
         <script>
         	var actions = {
@@ -62,7 +62,7 @@
                     for (var cls in actions) {
                     	a = actions[cls];
                     	if ((!a.less || x <= w * a.less) && (!a.greater || x >= w * a.greater)) {
-	                        elem.parent().parent().slideUp();
+	                        elem.parent().slideUp();
 	                        return false;
                     	}
                     }
