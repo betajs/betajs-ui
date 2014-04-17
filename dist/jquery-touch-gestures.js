@@ -1,5 +1,5 @@
 /*!
-  jquery-touch-gestures - v0.0.1 - 2014-02-14
+  jquery-touch-gestures - v0.0.1 - 2014-04-17
   Copyright (c) Oliver Friedmann
   MIT Software License.
 */
@@ -54,7 +54,8 @@
 			var self = this;
 			this.element.on("touchstart touchmove touchend", function (event) {
 				var method = null;
-				var elem = $(event.target);
+				//var elem = $(event.target);
+				var elem = self.element;
 				for (var key in elem.data("touchgestures") || {})
 					method = $.touchgestures.methods[key];
 					if (method)

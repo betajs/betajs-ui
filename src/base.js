@@ -49,7 +49,8 @@
 			var self = this;
 			this.element.on("touchstart touchmove touchend", function (event) {
 				var method = null;
-				var elem = $(event.target);
+				//var elem = $(event.target);
+				var elem = self.element;
 				for (var key in elem.data("touchgestures") || {})
 					method = $.touchgestures.methods[key];
 					if (method)
