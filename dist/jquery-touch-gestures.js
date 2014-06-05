@@ -1,5 +1,5 @@
 /*!
-  jquery-touch-gestures - v0.0.1 - 2014-04-17
+  jquery-touch-gestures - v0.0.1 - 2014-06-05
   Copyright (c) Oliver Friedmann
   MIT Software License.
 */
@@ -68,7 +68,14 @@
 
 
 (function($) {
-	$.touchgestures.methods.draggablex = {
+	var _clear = $.ui.draggable.prototype._clear;
+    $.widget("ui.draggable", $.extend({}, $.ui.draggable.prototype, {
+    	_clear: function() {
+    		this.element.css("left", "");
+        	_clear.apply(this, arguments);
+    	}
+    }));
+    $.touchgestures.methods.draggablex = {
 		initialize: function (data) {
 			data.animation_threshold_x = "animation_threshold_x" in data ? data.animation_threshold_x : 10;
 			data.activation_threshold_x = "activation_threshold_x" in data ? data.activation_threshold_x : 50;
