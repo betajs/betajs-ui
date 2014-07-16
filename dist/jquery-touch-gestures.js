@@ -1,5 +1,5 @@
 /*!
-  jquery-touch-gestures - v0.0.1 - 2014-06-05
+  jquery-touch-gestures - v0.0.1 - 2014-07-16
   Copyright (c) Oliver Friedmann
   MIT Software License.
 */
