@@ -13,8 +13,7 @@ module.exports = function(grunt) {
 				dest : 'dist/jquery-touch-gestures.js',
 				src : [
 			        'src/base.js',
-			        'src/draggablex.js',
-			        'src/sortabley.js',
+			        'src/*.js',
 				]
 			},
 		},

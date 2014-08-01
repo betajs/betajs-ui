@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <script>
-        	window.onerror = function (a,b,c) { alert(a + "\n" + b + "\n" + c); };
-        </script>
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-        <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-        <script src="../dist/jquery-touch-gestures.js"></script> 
+        <script src="jquery.min.js"></script>
+        <script src="jquery-ui.min.js"></script>
+        <script src="beta.js"></script>
+        <script src="../dist/jquery-touch-gestures.js"></script>
         <link rel="stylesheet" href="styles.css" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     </head>
@@ -34,47 +32,47 @@
 	        <div class="doodad"><div class="inner">Doodad 20</div></div>
     	</div>
         <script>
-        	$(window).on("scroll", function () {
-        		console.log("scroll:" + "abc");
-        	});
         	var actions = {
         		"other": {less: -1/4},
         		"archive": {greater: 1/4, less: 1/3},
         		"delete": {greater: 1/3}
         	};
-        	$(".doodad .inner").touchgesture({
-        		method: "draggablex",
-                drag: function() {
-                    var elem = $(this);
-                    var parent = elem.parent();                    
-                    var x = parseInt(elem.css("left"), 10);
-                    var w = document.width;
-                    var a = {};
-                    for (var cls in actions) {
-                    	a = actions[cls];
-                    	if ((!a.less || x <= w * a.less) && (!a.greater || x >= w * a.greater))
-                    		parent.addClass(cls);
-                    	else
-                    		parent.removeClass(cls);
-                    }
-                },
-                revert: function () {
-                    var elem = $(this);
-                    var x = parseInt(elem.css("left"), 10);
-                    var w = document.width;
-                    for (var cls in actions) {
-                    	a = actions[cls];
-                    	if ((!a.less || x <= w * a.less) && (!a.greater || x >= w * a.greater)) {
-	                        elem.parent().slideUp();
-	                        return false;
-                    	}
-                    }
-                    return true;
-                }
-        	});
-            $(".doodad .inner").click(function () {
-               alert("Open " + $(this).text()); 
-            });
+			$(".doodad .inner").each(function () {
+				BetaJS.UI.Gestures.register(this, BetaJS.UI.Gestures.swipeMachine({}, {
+	                drag: function() {
+	                    var elem = $(this);
+	                    var parent = elem.parent();                    
+	                    var x = parseInt(elem.css("left"), 10);
+	                    var w = document.width;
+	                    var a = {};
+	                    for (var cls in actions) {
+	                    	a = actions[cls];
+	                    	if ((!a.less || x <= w * a.less) && (!a.greater || x >= w * a.greater))
+	                    		parent.addClass(cls);
+	                    	else
+	                    		parent.removeClass(cls);
+	                    }
+	                },
+	                finish: function () {
+	                    var elem = $(this);
+	                    var x = parseInt(elem.css("left"), 10);
+	                    var w = document.width;
+	                    for (var cls in actions) {
+	                    	a = actions[cls];
+	                    	if ((!a.less || x <= w * a.less) && (!a.greater || x >= w * a.greater)) {
+		                        elem.parent().slideUp();
+		                        return false;
+	                    	}
+	                    }
+	                    return true;
+	                }
+				}));
+				BetaJS.UI.Gestures.register(this, BetaJS.UI.Gestures.clickMachine({}, {
+					click: function () {
+		               alert("Open " + $(this).text()); 
+					}
+				}));
+			});
         </script>    
     </body>
 </html>
