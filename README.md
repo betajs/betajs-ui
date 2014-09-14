@@ -1,14 +1,12 @@
-jquery-touch-gestures
+betajs-ui
 =================
 
-jquery-touch-gestures as an easily extendible jQuery plugin for enabling touch and mouse gestures.
+betajs-ui is a betajs library for enables gestures and interactions such as drag and drop.
 
 Gestures are implemented as versatile, competitive state machines which allow you to register different
 gestures all at once.
 
-It allows draggable, sortable and swipe (see demos).
-
-It requires jQuery, jQuery-UI and BetaJS.
+It requires jQuery and BetaJS.
 
 
 ## Contributors
@@ -18,4 +16,4 @@ It requires jQuery, jQuery-UI and BetaJS.
 ## License
 MIT Software License.
 
-Copyright (c) 2013 Oliver Friedmann
+Copyright (c) 2013-2014 Oliver Friedmann

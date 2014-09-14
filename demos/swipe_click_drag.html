@@ -31,6 +31,27 @@
 	        <div class="doodad"><div class="inner">Doodad 20</div></div>
     	</div>
         <script>
+        	BetaJS.UI.Interactions.Drag.multiple($(".doodad"), {
+                enabled : true,
+                clone_element: true,
+				start_event: null                
+            }, function (drag) {
+	            var drag_gesture = new BetaJS.UI.Gestures.Gesture(drag.element(), BetaJS.UI.Gestures.defaultGesture({
+			    	mouse_up_activate: false,
+			        wait_time: 750,
+			        wait_activate: true,
+			        disable_x: 10,
+			        disable_y: 10,
+			        enable_x: -1,
+			        enable_y: -1,
+	            }));
+	            drag_gesture.on("activate", drag.start, drag);
+	            drag_gesture.on("deactivate", drag.stop, drag);
+	            drag.on("move", function (event) {
+	            	event.actionable_modifier.csscls("focus", true);
+	            	event.modifier.csscls("unfocus", true);
+	            });
+	        });
         	var actions = {
         		"other": {less: -1/4},
         		"archive": {greater: 1/4, less: 1/3},
@@ -38,8 +59,20 @@
         	};
         	BetaJS.UI.Interactions.Drag.multiple($(".inner"), {
                 enabled : true,
-                draggable_y: false
+                draggable_y: false,
+                start_event: null
             }, function (drag) {
+	            var drag_gesture = new BetaJS.UI.Gestures.Gesture(drag.element(), BetaJS.UI.Gestures.defaultGesture({
+			    	mouse_up_activate: false,
+			        wait_time: 750,
+			        wait_activate: false,
+			        disable_x: -1,
+			        disable_y: 10,
+			        enable_x: 10,
+			        enable_y: -1,
+	            }));
+	            drag_gesture.on("activate", drag.start, drag);
+	            drag_gesture.on("deactivate", drag.stop, drag);
 	            drag.on("move", function (event) {
 	            	var element = event.element;
 	            	var parent = element.parent();
@@ -66,6 +99,21 @@
 	                        parent.slideUp();
 	                	}
 	                }
+	            });
+	        });
+	        $(".inner").each(function () {
+	        	var element = $(this);
+		        var click_gesture = new BetaJS.UI.Gestures.Gesture(element, BetaJS.UI.Gestures.defaultGesture({
+			    	mouse_up_activate: true,
+			        wait_time: 250,
+			        wait_activate: false,
+			        disable_x: -1,
+			        disable_y: -1,
+			        enable_x: -1,
+			        enable_y: -1,
+	            }));
+	            click_gesture.on("activate", function () {
+	            	alert("click");
 	            });
 	        });
         </script>    

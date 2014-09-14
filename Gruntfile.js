@@ -10,17 +10,21 @@ module.exports = function(grunt) {
 						+ '  MIT Software License.\n' + '*/\n'
 			},
 			dist : {
-				dest : 'dist/jquery-touch-gestures.js',
+				dest : 'dist/beta-ui.js',
 				src : [
-			        'src/base.js',
-			        'src/*.js',
+			        'src/elements/*.js',
+			        'src/events/events_support.js',
+			        'src/events/*.js',
+			        'src/interactions/interactions.js',
+			        'src/interactions/*.js',
+			        'src/gestures/*.js',
 				]
 			},
 		},
 		uglify : {
 			dist : {
 				files : {
-					'dist/jquery-touch-gestures.min.js' : [ 'dist/jquery-touch-gestures.js' ],
+					'dist/beta-ui.min.js' : [ 'dist/beta-ui.js' ],
 				}
 			}
 		}

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="assets/jquery.min.js"></script>
+        <script src="assets/beta.js"></script>
+        <script src="../dist/beta-ui.js"></script>
+        <link rel="stylesheet" href="assets/styles.css" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    </head>
+    <body>
+    	<div class="doodads" id="drag">
+	        <div class="doodad"><div class="inner">Doodad 1</div></div>
+	        <div class="doodad"><div class="inner">Doodad 2</div></div>
+	        <div class="doodad"><div class="inner">Doodad 3</div></div>
+	        <div class="doodad"><div class="inner">Doodad 4</div></div>
+	        <div class="doodad"><div class="inner">Doodad 5</div></div>
+	    </div>
+	    <hr />
+		<div class="doodad" id="floater" style="display:none">
+			<div class="inner" style="height: 35px; background-color: #EEEEEE">
+				Drop Here
+			</div>
+		</div>
+	    <div class="doodads" id="drop">
+	        <div class="doodad"><div class="inner">Doodad 6</div></div>
+	        <div class="doodad"><div class="inner">Doodad 7</div></div>
+	        <div class="doodad"><div class="inner">Doodad 8</div></div>
+	        <div class="doodad"><div class="inner">Doodad 9</div></div>
+	        <div class="doodad"><div class="inner">Doodad 10</div></div>
+    	</div>
+        <script>
+        	BetaJS.UI.Interactions.Drag.multiple($("#drag .doodad"), {
+        		droppable: true,
+                enabled : true,
+                clone_element: true,
+                remove_element_on_drop : true
+            }, function (drag) {
+	            drag.on("move", function (event) {
+	            	event.actionable_modifier.csscls("focus", true);
+	            	event.modifier.csscls("unfocus", true);
+	            });
+	        });
+	        var drop = new BetaJS.UI.Interactions.DropList($("#drop"), {
+                enabled : true,
+                floater: $("#floater"),
+                bounding_box : function(bb) {
+                    var height = bb.bottom - bb.top + 1;
+                    var margin = Math.floor(height * 0.2);
+                    bb.top += margin;
+                    bb.bottom -= margin;
+                    return bb;
+                }                
+            });
+            drop.on("dropped", function(event) {
+            	event.target.insertAt("<div class='doodad'>" + event.source.element.html() + "</div>", event.index);
+            });
+        </script>    
+    </body>
+</html>

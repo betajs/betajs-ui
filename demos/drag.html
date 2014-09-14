@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <script src="jquery.min.js"></script>
-        <script src="jquery-ui.min.js"></script>
-        <script src="beta.js"></script>
-        <script src="../dist/jquery-touch-gestures.js"></script>
-        <link rel="stylesheet" href="styles.css" /> 
+        <script src="assets/jquery.min.js"></script>
+        <script src="assets/beta.js"></script>
+        <script src="../dist/beta-ui.js"></script>
+        <link rel="stylesheet" href="assets/styles.css" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     </head>
     <body>
@@ -32,24 +31,15 @@
 	        <div class="doodad"><div class="inner">Doodad 20</div></div>
     	</div>
         <script>
-			$(".doodad .inner").each(function () {
-				BetaJS.UI.Gestures.register(this, BetaJS.UI.Gestures.draggableMachine({}, {
-	                semi_start: function() {
-		        		var doodad = $(this);
-	        			$(".doodad .inner").addClass("unfocus");
-	        			doodad.removeClass("unfocus");
-	        			doodad.addClass("focus");
-	                },
-	                semi_finish: function () {
-	        			$(".doodad .inner").removeClass("unfocus focus");
-	                }
-				}));
-				BetaJS.UI.Gestures.register(this, BetaJS.UI.Gestures.clickMachine({}, {
-					click: function () {
-		               alert("Open " + $(this).text()); 
-					}
-				}));
-			});
+        	BetaJS.UI.Interactions.Drag.multiple($(".doodad"), {
+                enabled : true,
+                clone_element: true
+            }, function (drag) {
+	            drag.on("move", function (event) {
+	            	event.actionable_modifier.csscls("focus", true);
+	            	event.modifier.csscls("unfocus", true);
+	            });
+	        });
         </script>    
     </body>
 </html>

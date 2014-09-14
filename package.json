@@ -1,6 +1,6 @@
 {
-  "name": "jquery-touch-gestures",
-  "version": "0.0.1",
+  "name": "betajs-ui",
+  "version": "0.0.2",
   "devDependencies": {
     "grunt": "",
     "grunt-contrib-jshint": "",
