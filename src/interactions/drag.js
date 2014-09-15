@@ -203,6 +203,7 @@ BetaJS.UI.Interactions.Drag.Idle.extend("BetaJS.UI.Interactions.Drag.Dragging", 
 	},
 	
 	__dragging: function (event) {
+		event.preventDefault();
 		var page_coords = BetaJS.UI.Events.Mouse.pageCoords(event);
 		var delta_coords = {
 			x: page_coords.x - this._page_coords.x,

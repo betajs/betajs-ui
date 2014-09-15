@@ -1,5 +1,5 @@
 /*!
-  betajs-ui - v0.0.2 - 2014-09-14
+  betajs-ui - v0.0.2 - 2014-09-15
   Copyright (c) Oliver Friedmann
   MIT Software License.
 */
@@ -568,6 +568,7 @@ BetaJS.UI.Interactions.Drag.Idle.extend("BetaJS.UI.Interactions.Drag.Dragging", 
 	},
 	
 	__dragging: function (event) {
+		event.preventDefault();
 		var page_coords = BetaJS.UI.Events.Mouse.pageCoords(event);
 		var delta_coords = {
 			x: page_coords.x - this._page_coords.x,
