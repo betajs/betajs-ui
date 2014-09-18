@@ -279,9 +279,11 @@ BetaJS.UI.Hardware.MouseCoords = {
 	require: function () {
 		if (this.__required === 0) {
 			var self = this;
-			BetaJS.$("body").on(BetaJS.UI.Events.Mouse.moveEvent + "." + BetaJS.Ids.objectId(this), function (event) {
-				self.coords = BetaJS.UI.Events.Mouse.pageCoords(event); 
-			});
+			var events = [BetaJS.UI.Events.Mouse.moveEvent, BetaJS.UI.Events.Mouse.upEvent, BetaJS.UI.Events.Mouse.downEvent];
+			for (var i = 0; i < events.length; ++i)
+				BetaJS.$("body").on(events[i] + "." + BetaJS.Ids.objectId(this), function (event) {
+					self.coords = BetaJS.UI.Events.Mouse.pageCoords(event); 
+				});
 		}
 		this.__required++;
 	},
@@ -289,7 +291,7 @@ BetaJS.UI.Hardware.MouseCoords = {
 	unrequire: function () {
 		this.__required--;
 		if (this.__required === 0) {
-			BetaJS.$("body").off(BetaJS.UI.Events.Mouse.moveEvent + "." + BetaJS.Ids.objectId(this));
+			BetaJS.$("body").off("." + BetaJS.Ids.objectId(this));
 		}
 	}
 	
@@ -971,6 +973,7 @@ BetaJS.UI.Gestures.ElementStateHost.extend("BetaJS.UI.Gestures.Gesture", {
             element.data("gestures", composite);
         }
         this._inherited(BetaJS.UI.Gestures.Gesture, "constructor", element, composite);
+        BetaJS.UI.Hardware.MouseCoords.require();
         for (var key in machine) {
         	machine[key] = BetaJS.Objs.extend({
         		priority: 1,
@@ -982,6 +985,11 @@ BetaJS.UI.Gestures.ElementStateHost.extend("BetaJS.UI.Gestures.Gesture", {
             state_descriptor: machine,
             current_state: "Initial"
         });
+	},
+	
+	destroy: function () {
+        BetaJS.UI.Hardware.MouseCoords.unrequire();
+		this._inherited(BetaJS.UI.Gestures.Gesture, "destroy");
 	}
 	
 });
@@ -1108,16 +1116,13 @@ BetaJS.UI.Gestures.ElementEvent.extend("BetaJS.UI.Gestures.ElementMouseMoveOutEv
 
     constructor: function (box, element, callback, context) {
         this._inherited(BetaJS.UI.Gestures.ElementMouseMoveOutEvent, "constructor", element, callback, context);
-        var position = null;
-        var delta = [0,0];
-        this.on("mousemove touchmove", function (event) {
-            var original = event.type == "mousemove" ? event.originalEvent : event.originalEvent.touches[0];
-            var current = [original.clientX, original.clientY];
-            if (!position)
-                position = current;
-            delta[0] = Math.max(delta[0], Math.abs(position[0] - current[0]));
-            delta[1] = Math.max(delta[1], Math.abs(position[1] - current[1]));
-            if (("x" in box && box.x >= 0 && delta[0] >= box.x) || ("y" in box && box.y >= 0 && delta[1] >= box.y)) {
+        var position = BetaJS.UI.Hardware.MouseCoords.coords;
+        var delta = {x: 0, y: 0};
+        this.on(BetaJS.UI.Events.Mouse.moveEvent, function (event) {
+            var current = BetaJS.UI.Events.Mouse.pageCoords(event);
+            delta.x = Math.max(delta.x, Math.abs(position.x - current.x));
+            delta.y = Math.max(delta.y, Math.abs(position.y - current.y));
+            if (("x" in box && box.x >= 0 && delta.x >= box.x) || ("y" in box && box.y >= 0 && delta.y >= box.y)) {
                 this.callback();
             }
         });
