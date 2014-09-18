@@ -24,8 +24,9 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Drag", 
 	},
 	
 	_enable: function () {
-		if (this._options.start_event)
+		if (this._options.start_event) {
 			this._element.on(this._options.start_event + "." + BetaJS.Ids.objectId(this), BetaJS.Functions.as_method(this.start, this));
+		}
 	},
 	
 	_disable: function () {
@@ -35,7 +36,7 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Drag", 
 	
 	start: function () {
 		if (this._enabled)
-			this._host.state().next("Starting");
+			this._host.state().next("Dragging");
 	},
 	
 	stop: function () {
@@ -79,7 +80,7 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Drag", 
 			actionable_modifier: this.actionable_modifier(),
 			source: this,
 			data: this.data,
-			page_coords: this._host.state()._page_coords,
+			page_coords: BetaJS.UI.Hardware.MouseCoords.coords,
 			underneath: this.__underneath
 		};
 	},
@@ -90,8 +91,6 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Drag", 
 	
 	__triggerDomEvent: function (label) {
 		var data = this.__eventData();
-		if (!data.page_coords)
-			return;
 		var underneath = BetaJS.UI.Elements.Support.elementFromPoint(data.page_coords.x, data.page_coords.y, this.actionable_element());
 		if (underneath)
 			BetaJS.UI.Events.Support.dispatchElementEvent(underneath, "drag-" + label, data);
@@ -99,8 +98,6 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Drag", 
 	
 	__triggerDomMove: function () {
 		var data = this.__eventData();
-		if (!data.page_coords)
-			return;
 		var underneath = BetaJS.UI.Elements.Support.elementFromPoint(data.page_coords.x, data.page_coords.y, this.actionable_element());
 		if (underneath) {
 			if (this.__old_coords && this.__underneath && this.__underneath != underneath) {
@@ -117,7 +114,7 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Drag", 
 
 BetaJS.UI.Interactions.State.extend("BetaJS.UI.Interactions.Drag.Idle", {
 	
-	_white_list: ["Starting"],
+	_white_list: ["Dragging"],
 	
 	trigger: function (label) {
 		this.parent().__triggerEvent(label);
@@ -133,21 +130,14 @@ BetaJS.UI.Interactions.State.extend("BetaJS.UI.Interactions.Drag.Idle", {
 
 });
 
-BetaJS.UI.Interactions.Drag.Idle.extend("BetaJS.UI.Interactions.Drag.Starting", {
+BetaJS.UI.Interactions.Drag.Idle.extend("BetaJS.UI.Interactions.Drag.Dragging", {
 	
-	_white_list: ["Stopping", "Dragging"],
+	_white_list: ["Stopping"],
 	_persistents: ["initial_element_coords", "cloned_element", "cloned_modifier"],
 
 	_start: function () {
-		this.on("body", BetaJS.UI.Events.Mouse.moveEvent, function (event) {
-			this.next("Dragging", {page_coords: BetaJS.UI.Events.Mouse.pageCoords(event)});
-		});
 		var opts = this.parent().options();
-		if (opts.stop_event) {
-			this.on("body", opts.stop_event, function () {
-				this.next("Stopping");
-			});
-		}		
+		this._page_coords = BetaJS.UI.Hardware.MouseCoords.coords;
 		if (opts.clone_element) {
 			this._cloned_element = this.element().clone();
 			this._cloned_element.css("position", "absolute");
@@ -180,18 +170,7 @@ BetaJS.UI.Interactions.Drag.Idle.extend("BetaJS.UI.Interactions.Drag.Starting", 
 			}
 		}
 		this.trigger("start");
-	}
-
-});
-
-BetaJS.UI.Interactions.Drag.Idle.extend("BetaJS.UI.Interactions.Drag.Dragging", {
-	
-	_white_list: ["Stopping"],
-	_persistents: ["page_coords", "initial_element_coords", "cloned_element", "cloned_modifier"],
-
-	_start: function () {
 		this.on("body", BetaJS.UI.Events.Mouse.moveEvent, this.__dragging);
-		var opts = this.parent()._options;
 		if (opts.stop_event) {
 			this.on("body", opts.stop_event, function () {
 				if (opts.droppable)
@@ -224,7 +203,7 @@ BetaJS.UI.Interactions.Drag.Idle.extend("BetaJS.UI.Interactions.Drag.Dragging", 
 BetaJS.UI.Interactions.Drag.Idle.extend("BetaJS.UI.Interactions.Drag.Stopping", {
 	
 	_white_list: ["Idle", "Starting"],
-	_locals: ["page_coords", "initial_element_coords", "cloned_element", "cloned_modifier", "immediately", "released"],
+	_locals: ["initial_element_coords", "cloned_element", "cloned_modifier", "immediately", "released"],
 	
 	_start: function () {
 		this.trigger("stopping");

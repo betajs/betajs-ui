@@ -4,6 +4,7 @@ BetaJS.Class.extend("BetaJS.UI.Interactions.ElementInteraction", [
     	
 	constructor: function (element, options) {
 		this._inherited(BetaJS.UI.Interactions.ElementInteraction, "constructor");
+		BetaJS.UI.Hardware.MouseCoords.require();
 		this._element = BetaJS.$(BetaJS.$(element).get(0));
 		this._enabled = false;
 		this._options = options || {};
@@ -20,6 +21,7 @@ BetaJS.Class.extend("BetaJS.UI.Interactions.ElementInteraction", [
 	destroy: function () {
 		this.disable();
 		this._host.destroy();
+		BetaJS.UI.Hardware.MouseCoords.unrequire();
 		this._inherited(BetaJS.UI.Interactions.ElementInteraction, "destroy");
 	},
 	
