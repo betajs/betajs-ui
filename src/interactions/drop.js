@@ -54,6 +54,8 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Drop", 
 	},
 	
 	_is_hovering: function (source) {
+		if (!source.source.options().droppable)
+			return false;
 		var bb = BetaJS.UI.Elements.Support.elementBoundingBox(this.element());
 		bb = this._options.bounding_box.call(this._options.context, bb);
 		var co = source.page_coords;
