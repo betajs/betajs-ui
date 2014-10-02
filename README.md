@@ -1,19 +1,14 @@
-betajs-ui
-=================
+# betajs-ui 1.0.0
 
-BetaJS-UI is a BetaJS library for enabling gestures and interactions such as drag and drop.
-
-Gestures are implemented as versatile, competitive state machines which allow you to register different
-gestures all at once.
-
-It requires jQuery and BetaJS.
+BetaJS-UI is a library for enabling gestures and interactions such as drag and drop.
 
 
 ## Contributors
+
 - Oliver Friedmann
+- Victor Lingenthal
 
 
 ## License
-MIT Software License.
 
-Copyright (c) 2013-2014 Oliver Friedmann
+MIT

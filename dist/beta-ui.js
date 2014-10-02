@@ -1,7 +1,7 @@
 /*!
-  betajs-ui - v0.0.2 - 2014-09-18
-  Copyright (c) Oliver Friedmann
-  MIT Software License.
+betajs-ui - v1.0.0 - 2014-10-02
+Copyright (c) Oliver Friedmann,Victor Lingenthal
+MIT Software License.
 */
 BetaJS.Class.extend("BetaJS.UI.Elements.Animators", {
 	
