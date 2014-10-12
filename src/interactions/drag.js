@@ -202,7 +202,7 @@ BetaJS.UI.Interactions.Drag.Idle.extend("BetaJS.UI.Interactions.Drag.Dragging", 
 
 BetaJS.UI.Interactions.Drag.Idle.extend("BetaJS.UI.Interactions.Drag.Stopping", {
 	
-	_white_list: ["Idle", "Starting"],
+	_white_list: ["Idle"],
 	_locals: ["initial_element_coords", "cloned_element", "cloned_modifier", "immediately", "released"],
 	
 	_start: function () {

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="assets/jquery.min.js"></script>
+        <script src="assets/beta.js"></script>
+        <script src="assets/beta-browser.js"></script>
+        <script src="../dist/beta-ui.js"></script>
+        <link rel="stylesheet" href="assets/styles.css" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    </head>
+    <body>
+		<div class="pinch" style="width: 200px; height: 200px">
+			Pinch Me
+		</div>
+		<script>
+			var pinch = new BetaJS.UI.Interactions.Pinch($(".pinch"), {
+				enabled: true
+			});
+			pinch.on("pinch", function (details) {
+				$(".pinch").css("width", (parseInt($(".pinch").css("width"), 10) + details.delta_last.x) + "px");
+				$(".pinch").css("height", (parseInt($(".pinch").css("height"), 10) + details.delta_last.y) + "px");
+			});
+		</script>
+    </body>
+</html>

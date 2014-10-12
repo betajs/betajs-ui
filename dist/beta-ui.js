@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.0 - 2014-10-02
+betajs-ui - v1.0.0 - 2014-10-12
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -251,20 +251,46 @@ BetaJS.UI.Events.Support = {
 };
 
 BetaJS.UI.Events.Mouse = {
+		
 	downEvent: BetaJS.Browser.Info.isMobile() ? "touchstart" : "mousedown",	
 	moveEvent: BetaJS.Browser.Info.isMobile() ? "touchmove" : "mousemove",	
 	upEvent: BetaJS.Browser.Info.isMobile() ? "touchend" : "mouseup",
-	pageCoords: function (event) {
-		if (event.originalEvent.touches) {
+			
+	customCoords: function (event, type, multi) {
+		if (event.originalEvent.touches && event.originalEvent.touches.length) {
+			var touches = event.originalEvent.touches;
+			if (multi) {
+				var touch_coords = [];
+				for (var i = 0; i < touches.length; ++i) {
+					touch_coords.push({
+						x: touches[i][type + "X"],
+						y: touches[i][type + "Y"]
+					});
+				}
+				return touch_coords;
+			}
 			return {
-				x: event.originalEvent.touches[0].pageX,
-				y: event.originalEvent.touches[0].pageY
+				x: touches[0][type + "X"],
+				y: touches[0][type + "Y"]
 			};
 		}
-		return {
-			x: event.pageX,
-			y: event.pageY
+		var coords = {
+			x: event[type + "X"],
+			y: event[type + "Y"]
 		};
+		return multi ? [coords] : coords;
+	},
+	
+	pageCoords: function (event, multi) {
+		return this.customCoords(event, "page", multi);
+	},
+	
+	clientCoords: function (event, multi) {
+		return this.customCoords(event, "client", multi);
+	},
+
+	screenCoords: function (event, multi) {
+		return this.customCoords(event, "screen", multi);
 	}
 };
 
@@ -598,7 +624,7 @@ BetaJS.UI.Interactions.Drag.Idle.extend("BetaJS.UI.Interactions.Drag.Dragging", 
 
 BetaJS.UI.Interactions.Drag.Idle.extend("BetaJS.UI.Interactions.Drag.Stopping", {
 	
-	_white_list: ["Idle", "Starting"],
+	_white_list: ["Idle"],
 	_locals: ["initial_element_coords", "cloned_element", "cloned_modifier", "immediately", "released"],
 	
 	_start: function () {
@@ -953,6 +979,117 @@ BetaJS.UI.Interactions.DropList.Disabled.extend("BetaJS.UI.Interactions.DropList
 
 });
 
+BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Pinch", {
+	
+    constructor: function (element, options, data) {
+		options = BetaJS.Objs.extend({
+		}, options);
+		this._inherited(BetaJS.UI.Interactions.Pinch, "constructor", element, options);
+		this._host.initialize("BetaJS.UI.Interactions.Pinch.Idle");
+		this.data = data;
+	},
+	
+	_disable: function () {
+		this.stop();
+	},
+	
+	start: function () {
+		if (this._enabled)
+			this._host.state().next("Pinching");
+	},
+	
+	stop: function () {
+		if (this._enabled)
+			this._host.state().next("Idle");
+	},
+	
+	__eventData: function () {
+		var state = this._host.state();
+		return {
+			element: this.element(),
+			source: this,
+			data: this.data,
+			initial: state._initial_coords,
+			delta_last: state._delta_last
+		};
+	},
+	
+	__triggerEvent: function (label) {
+		this.trigger(label, this.__eventData());
+	}
+	
+});
+
+BetaJS.UI.Interactions.State.extend("BetaJS.UI.Interactions.Pinch.Idle", {
+	
+	_white_list: ["Pinching"],
+	
+	trigger: function (label) {
+		this.parent().__triggerEvent(label);
+	},
+	
+	_start: function () {
+		this.on(this.element(), "touchstart", function (event) {
+			if (!this.parent()._enabled)
+				return;
+			if (!event.originalEvent.touches || event.originalEvent.touches.length != 2)
+				return;
+			this.next("Pinching", {
+				initial_coords: BetaJS.UI.Events.Mouse.clientCoords(event, true)
+			});
+		});
+	}
+
+});
+
+BetaJS.UI.Interactions.Pinch.Idle.extend("BetaJS.UI.Interactions.Pinch.Pinching", {
+	
+	_white_list: ["Idle"],
+	_persistents: ["initial_coords", "current_coords"],
+
+	_start: function () {
+		this._last_coords = null;
+		this._current_coords = this._initial_coords;
+		this.trigger("pinchstart");
+		this.on(this.element(), "touchmove", function (event) {
+			if (!event.originalEvent.touches || event.originalEvent.touches.length != 2) {
+				this.next("Idle");
+				return;
+			}
+			this.__pinching(event);
+		});
+		this.on(this.element(), "touchend", function () {
+			this.next("Idle");
+		});
+	},
+	
+	_end: function () {
+		this.trigger("pinchstop");
+		this._inherited(BetaJS.UI.Interactions.Pinch.Pinching, "_end");
+	},
+	
+	__pinching: function (event) {
+		event.preventDefault();
+		this._last_coords = this._current_coords;
+		this._current_coords = BetaJS.UI.Events.Mouse.clientCoords(event, true);
+		this.__compute_values();
+		this.trigger("pinch");
+	},
+	
+	__compute_values: function () {
+		var min = function (obj, coord) {
+			return obj[0][coord] <= obj[1][coord] ? obj[0][coord] : obj[1][coord];
+		};
+		var max = function (obj, coord) {
+			return obj[0][coord] >= obj[1][coord] ? obj[0][coord] : obj[1][coord];
+		};
+		this._delta_last = {
+			x: min(this._last_coords, "x") - min(this._current_coords, "x") + max(this._current_coords, "x") - max(this._last_coords, "x"),
+			y: min(this._last_coords, "y") - min(this._current_coords, "y") + max(this._current_coords, "y") - max(this._last_coords, "y")
+		};
+	}
+	
+});
 BetaJS.States.CompetingHost.extend("BetaJS.UI.Gestures.ElementStateHost", {
     
     constructor: function (element, composite) {

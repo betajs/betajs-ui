@@ -3,7 +3,7 @@ body {
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
-	-webkit-overflow-scrolling: touch
+	-webkit-overflow-scrolling: touch;
 }
 .doodads {
 	-webkit-user-select: none;
@@ -34,4 +34,12 @@ body {
 }
 .doodads .other {
 	background-color: #C58917;
+}
+.pinch {
+	background-color: purple;
+	color: white;
+	vertical-align: middle;
+	display: table-cell;
+	text-align: center;
+	-webkit-overflow-scrolling: touch;
 }
