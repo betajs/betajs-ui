@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.0 - 2014-10-12
+betajs-ui - v1.0.0 - 2014-10-25
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -255,6 +255,7 @@ BetaJS.UI.Events.Mouse = {
 	downEvent: BetaJS.Browser.Info.isMobile() ? "touchstart" : "mousedown",	
 	moveEvent: BetaJS.Browser.Info.isMobile() ? "touchmove" : "mousemove",	
 	upEvent: BetaJS.Browser.Info.isMobile() ? "touchend" : "mouseup",
+	clickEvent: BetaJS.Browser.Info.isMobile() ? "touchstart" : "click",
 			
 	customCoords: function (event, type, multi) {
 		if (event.originalEvent.touches && event.originalEvent.touches.length) {
