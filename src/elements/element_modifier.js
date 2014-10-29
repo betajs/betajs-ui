@@ -13,7 +13,8 @@ BetaJS.Class.extend("BetaJS.UI.Elements.ElementModifier", {
 		if (this._element.css(key) === value)
 			return value;
 		if (!(key in this._css))
-			this._css[key] = this._element.css(key);
+			//this._css[key] = this._element.css(key);
+			this._css[key] = this._element.get(0).style[key];
 		this._element.css(key, value);
 		return value;
 	},

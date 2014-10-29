@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.0 - 2014-10-25
+betajs-ui - v1.0.0 - 2014-10-29
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -120,7 +120,8 @@ BetaJS.Class.extend("BetaJS.UI.Elements.ElementModifier", {
 		if (this._element.css(key) === value)
 			return value;
 		if (!(key in this._css))
-			this._css[key] = this._element.css(key);
+			//this._css[key] = this._element.css(key);
+			this._css[key] = this._element.get(0).style[key];
 		this._element.css(key, value);
 		return value;
 	},
@@ -430,6 +431,7 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Drag", 
 			draggable_x: true,
 			draggable_y: true,
 			clone_element: false,
+			drag_original_element: false,
 			droppable: false,
 			remove_element_on_drop: false,
 			revertable: true
@@ -556,25 +558,33 @@ BetaJS.UI.Interactions.State.extend("BetaJS.UI.Interactions.Drag.Idle", {
 BetaJS.UI.Interactions.Drag.Idle.extend("BetaJS.UI.Interactions.Drag.Dragging", {
 	
 	_white_list: ["Stopping"],
-	_persistents: ["initial_element_coords", "cloned_element", "cloned_modifier"],
+	_persistents: ["initial_element_coords", "cloned_element", "cloned_modifier", "placeholder_cloned_element"],
 
 	_start: function () {
 		var opts = this.parent().options();
 		this._page_coords = BetaJS.UI.Hardware.MouseCoords.coords;
 		if (opts.clone_element) {
-			this._cloned_element = this.element().clone();
-			this._cloned_element.css("position", "absolute");
-			this._cloned_element.css("width", this.element().width());
-			this._cloned_element.css("height", this.element().height());
-			this._cloned_element.css("z-index", this.element().css("z-index") + 1);
 			this._initial_element_coords = {
 				x: this.element().offset().left,
 				y: this.element().offset().top
 			};
-			this._cloned_element.css("left", this._initial_element_coords.x + "px");
-			this._cloned_element.css("top", this._initial_element_coords.y + "px");
-			BetaJS.$("body").append(this._cloned_element);
+			var zindex = this.element().css("z-index");
+			var width = this.element().width();
+			var height = this.element().height();
+			if (opts.drag_original_element) {
+				this._placeholder_cloned_element = this.element().clone();
+				this._cloned_element = this.element().replaceWith(this._placeholder_cloned_element);
+			} else {
+				this._cloned_element = this.element().clone();
+			}
 			this._cloned_modifier = new BetaJS.UI.Elements.ElementModifier(this._cloned_element); 
+			this._cloned_modifier.css("position", "absolute");
+			this._cloned_modifier.css("width", width + "px");
+			this._cloned_modifier.css("height", height + "px");
+			this._cloned_modifier.css("z-index", zindex + 1);
+			this._cloned_modifier.css("left", this._initial_element_coords.x + "px");
+			this._cloned_modifier.css("top", this._initial_element_coords.y + "px");
+			BetaJS.$("body").append(this._cloned_element);
 		} else {
 			var modifier = this.parent().modifier();
 			modifier.css("position", "relative");
@@ -626,7 +636,7 @@ BetaJS.UI.Interactions.Drag.Idle.extend("BetaJS.UI.Interactions.Drag.Dragging", 
 BetaJS.UI.Interactions.Drag.Idle.extend("BetaJS.UI.Interactions.Drag.Stopping", {
 	
 	_white_list: ["Idle"],
-	_locals: ["initial_element_coords", "cloned_element", "cloned_modifier", "immediately", "released"],
+	_locals: ["initial_element_coords", "cloned_element", "cloned_modifier", "immediately", "released", "placeholder_cloned_element"],
 	
 	_start: function () {
 		this.trigger("stopping");
@@ -659,10 +669,16 @@ BetaJS.UI.Interactions.Drag.Idle.extend("BetaJS.UI.Interactions.Drag.Stopping", 
 			this.__animation = null;
 			animation.complete();
 		}
-		if (this._cloned_modifier)
+		if (this._cloned_modifier) {
+			this._cloned_modifier.revert();
 			this._cloned_modifier.destroy();
-		if (this._cloned_element)
+		}
+		if (this._cloned_element) {
+			if (this._placeholder_cloned_element) {
+				this._cloned_element = this._placeholder_cloned_element.replaceWith(this._cloned_element);
+			}
 			this._cloned_element.remove();
+		}
 		this.parent().modifier().revert();
 		this.trigger("stop");
 		this._inherited(BetaJS.UI.Interactions.Drag.Stopping, "_end");
