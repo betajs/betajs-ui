@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.0 - 2014-10-29
+betajs-ui - v1.0.0 - 2014-11-11
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -345,7 +345,17 @@ BetaJS.Class.extend("BetaJS.UI.Interactions.ElementInteraction", [
 		this._host.parent = this;
 	},
 	
+	on: function (element, event, callback, context) {
+		var self = this;
+		var events = event.split(" ");
+		for (var i = 0; i < events.length; ++i)
+			BetaJS.$(element).on(events[i] + "." + BetaJS.Ids.objectId(this), function () {
+				callback.apply(context || self, arguments);
+			});
+	},
+	
 	destroy: function () {
+		this.element().off("." + BetaJS.Ids.objectId(this));
 		this.disable();
 		this._host.destroy();
 		BetaJS.UI.Hardware.MouseCoords.unrequire();
@@ -422,6 +432,209 @@ BetaJS.States.State.extend("BetaJS.UI.Interactions.State", {
 
 });
 
+BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Scroll", {
+	
+    constructor: function (element, options, data) {
+    	options = BetaJS.Objs.extend({
+    		discrete: false,
+    		currentCenter: false,
+    		currentTop: true,
+    		scrollEndTimeout: 50
+		}, options);
+		this._inherited(BetaJS.UI.Interactions.Scroll, "constructor", element, options);
+		this._disableScrollCounter = 0;
+		this._host.initialize(this.cls.classname + ".Idle");
+		this._scrollingDirection = true;
+		this._lastScrollTop = null;
+		this.on(this.element(), "scroll", function () {
+			var scrollTop = this.element().scrollTop();
+			if (this._lastScrollTop !== null)
+				this._scrollingDirection = scrollTop >= this._lastScrollTop;
+			this._lastScrollTop = scrollTop;
+		});
+    },
+    
+    scrollingDirection: function () {
+    	return this._scrollingDirection;
+    },
+    
+    currentElement: function () {
+    	var offset = this.element().offset();
+    	var h = this._options["currentTop"] ? 0 : this.element().innerHeight() - 1;
+    	var current = BetaJS.$(BetaJS.UI.Elements.Support.elementFromPoint(offset.left, offset.top + h));
+    	while (current && current.parent().get(0) != this.element().get(0))
+    		current = current.parent();
+    	if (!this._options.currentCenter)
+    		return current;    	
+    	if (this._options.currentTop) {
+    		var delta_top = this.element().offset().top - current.offset().top;
+    		if (delta_top > current.outerHeight() / 2)
+    			current = current.next();
+    	} else {
+    		var delta_bottom = this.element().offset().top + h - current.offset().top;
+    		if (delta_bottom < current.outerHeight() / 2)
+    			current = current.prev();
+    	}
+    	return current;
+    },
+    
+    scrollTo: function (position, options) {
+    	var scroll_top = position - (this._options["currentTop"] ? 0 : (this.element().innerHeight() - 1));
+    	options = options || {};
+    	options.scroll_top = scroll_top;
+    	this._host.state().next("ScrollingTo", options);
+    },
+    
+    scrollToElement: function (element, options) {
+    	var top = element.offset().top - this.element().offset().top + this.element().scrollTop();
+    	this.scrollTo(top + (this._options["currentTop"] ? 0 : (element.outerHeight() - 1)), options);
+    },
+    
+    disableScroll: function () {
+    	if (this._disableScrollCounter === 0)
+        	this.element().css("overflow", "hidden");
+    	this._disableScrollCounter++;
+    },
+    
+    enableScroll: function () {
+    	this._disableScrollCounter--;
+    	if (this._disableScrollCounter === 0)
+    		this.element().css("overflow", "scroll");
+    },
+    
+    scrolling: function () {
+    	return this._host.state().state_name() != "Idle";
+    }
+
+});
+
+
+BetaJS.UI.Interactions.State.extend("BetaJS.UI.Interactions.Scroll.Idle", {
+	
+	_start: function () {
+		this.on(this.element(), "scroll", function () {
+			this.next("Scrolling");
+		});
+	}
+	
+});
+
+
+BetaJS.UI.Interactions.Scroll.Idle.extend("BetaJS.UI.Interactions.Scroll.Scrolling", {
+	
+	_start: function () {
+		this.__timer = null;
+		this.on(this.element(), "scroll", function () {
+			this._scroll();
+			this.parent().trigger("scroll");
+			clearTimeout(this.__timer);
+			var opts = this.options();
+			var self = this;
+			this.__timer = setTimeout(function () {
+				self.parent().disableScroll();
+				self.parent().trigger("scrollend");
+				self._scrollend();
+				if (opts.discrete)
+					self.parent().scrollToElement(self.parent().currentElement(), {
+						animate: true,
+						abortable: true
+					});
+				else
+					self.eventualNext("Idle");
+			}, opts.scrollEndTimeout);
+		});
+	},
+	
+	_scroll: function () {
+	},
+	
+	_scrollend: function () {
+	},
+	
+    _end: function () {
+    	clearTimeout(this.__timer);
+		this.parent().enableScroll();
+		this._inherited(BetaJS.UI.Interactions.Scroll.Scrolling, "_end");
+	}
+
+});
+
+
+BetaJS.UI.Interactions.Scroll.Idle.extend("BetaJS.UI.Interactions.Scroll.ScrollingTo", {
+	
+	_locals: ["scroll_top", "animate", "abortable"],
+	
+	_start: function () {
+		if (!this._abortable)
+			this.parent().disableScroll();
+		this.parent().trigger("scrollto");
+		this.on(this.element(), "scroll", function () {
+			this._scroll();
+		});
+		if (this._abortable) {
+			this.on(this.element(), "wheel", function () {
+				this._moved = true;
+				this._abort();
+			});
+			this.on(this.element(), "touchstart", function () {
+				this._moved = true;
+				this._abort();
+			});
+		}
+		this.suspend();
+		if (this._animate) {
+			this._animation = new BetaJS.UI.Elements.DefaultAnimator(
+				this.element(),
+				{styles: {scrollTop: this._scroll_top}},
+				this._finished,
+				this);
+			this._animation.start();
+		} else {
+			this.element().scrollTop(this._scroll_top);
+			this._finished();
+		}
+	},
+	
+	_abort: function () {
+		if (this._aborted)
+				return;
+		this._aborted = true;
+		if (this._animate) {
+			if (this._animation)
+				this._animation.complete();
+			this._animation = null;
+		} else
+			this._finished();
+	},
+	
+	_finished: function () {
+		this.parent().trigger("scrolltoend");
+		this._scrollend();
+		if (this._transitioning)
+			this.eventualResume();
+		else {
+			this.resume();
+			this.eventualNext(this._moved ? "Scrolling" : "Idle");
+		}
+	},
+	
+	_scroll: function () {		
+	},
+
+	_scrollend: function () {		
+	},
+	
+    _transition: function () {
+    	this._abort();
+    },
+
+    _end: function () {
+    	if (!this._abortable)
+    		this.parent().enableScroll();
+		this._inherited(BetaJS.UI.Interactions.Scroll.ScrollingTo, "_end");
+	}
+	
+});
 BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Drag", {
 	
     constructor: function (element, options, data) {
@@ -996,6 +1209,233 @@ BetaJS.UI.Interactions.DropList.Disabled.extend("BetaJS.UI.Interactions.DropList
 
 });
 
+BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
+	
+    constructor: function (element, options, data) {
+    	options = BetaJS.Objs.extend({
+    		whitespace: 1000000,
+    		append_count: 25,
+    		prepend_count: 25,
+    		height_factor: 2,
+    		context: null,
+    		append: null, // function (count, callback); callback should say how many and whether there could be more
+    		prepend: null // function (count, callback); callback should say how many and whether there could be more 
+		}, options);
+		this._inherited(BetaJS.UI.Interactions.InfiniteScroll, "constructor", element, options);
+		this._can_append = !!options.append;
+		this._can_prepend = !!options.prepend;
+		this._extending = false;
+		if (options.prepend) {
+			this.__top_white_space = BetaJS.$("<whitespace></whitespace>");
+			this.__top_white_space.css("display", "block");
+			this.element().prepend(this.__top_white_space);
+			this.__top_white_space.css("height", this.options().whitespace + "px");
+			this.element().scrollTop(this.options().whitespace);
+		}
+		this.recount();
+    },
+    
+    append: function (count) {
+    	if (this._can_append && !this._extending) {
+    		this._extending = true;
+    		var self = this;
+    		this.options().append(count || this.options().append_count, function (added, done) {
+    			self._extending = false;
+    			self._can_append = done;
+    			self.appended(added);
+    		});
+    	}
+    },
+    
+    appendNeeded: function () {
+    	var total_height = this.element().get(0).scrollHeight;
+    	var element_height = this.element().innerHeight();
+    	var hidden_height = total_height - (this.element().scrollTop() + element_height);
+    	return hidden_height < this.options().height_factor * element_height;
+    },
+    
+    prependNeeded: function () {
+    	console.log("needed?");
+    	var element_height = this.element().innerHeight();
+    	var hidden_height = this.element().scrollTop() - parseInt(this.__top_white_space.css("height"), 10);
+    	return hidden_height < this.options().height_factor * element_height;
+    },
+    
+    prepend: function (count) {
+    	if (this._can_prepend) {
+    		this._extending = true;
+    		var self = this;
+    		this.options().prepend(count || this.options().prepend_count, function (added, done) {
+    			self.element().prepend(self.__top_white_space);
+    			self._extending = false;
+    			self._can_prepend = done;
+    			self.prepended(added);
+    		});
+    	}
+    },
+    
+    appended: function (count) {
+    	// nothing to do
+    },
+    
+    prepended: function (count) {
+    	var first = this.element().find(":nth-child(2)");
+    	var last = this.element().find(":nth-child(" + (1 + count) + ")");
+    	var h = last.offset().top - first.offset().top + last.outerHeight();
+    	console.log(h + " / " + this.scrolling() + " / " + (parseInt(this.__top_white_space.css("height"), 10) - h) + "px");    	
+    	if (this.scrolling())
+    		this.__top_white_space.css("height", (parseInt(this.__top_white_space.css("height"), 10) - h) + "px");
+    	else
+    		this.element().scrollTop(this.element().scrollTop() - h);
+    },
+    
+    recount: function () {
+    	this._count = this.element().children().length;
+    },
+    
+    extendFix: function () {
+    	if (this.scrollingDirection()) {
+    		if (this.appendNeeded())
+    			this.append();
+    	} else {
+    		if (this.prependNeeded())
+    			this.prepend();
+    	}
+    },
+    
+    _whitespaceFix: function () {
+    	if (!this.__top_white_space)
+    		return;
+		var h = parseInt(this.__top_white_space.css("height"), 10);
+		this.__top_white_space.css("height", this.options().whitespace + "px");
+		this.element().scrollTop(this.element().scrollTop() + this.options().whitespace - h);
+    }
+    
+
+});
+
+BetaJS.UI.Interactions.Scroll.Idle.extend("BetaJS.UI.Interactions.InfiniteScroll.Idle", {
+	
+});
+
+
+BetaJS.UI.Interactions.Scroll.Scrolling.extend("BetaJS.UI.Interactions.InfiniteScroll.Scrolling", {
+	
+	_scroll: function () {
+		this.parent().extendFix();
+	},
+	
+	_scrollend: function () {
+		this.parent()._whitespaceFix();
+	}
+
+});
+
+
+BetaJS.UI.Interactions.Scroll.ScrollingTo.extend("BetaJS.UI.Interactions.InfiniteScroll.ScrollingTo", {
+	
+	_scroll: function () {
+		this.parent().extendFix();
+	},
+	
+	_scrollend: function () {
+		this.parent()._whitespaceFix();
+	}
+
+});
+
+BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.LoopScroll", {
+	
+    constructor: function (element, options, data) {
+    	options = BetaJS.Objs.extend({
+    		whitespace: 1000000
+		}, options);
+		this._inherited(BetaJS.UI.Interactions.LoopScroll, "constructor", element, options);
+		this.__top_white_space = BetaJS.$("<whitespace></whitespace>");
+		this.element().prepend(this.__top_white_space);
+		this.__bottom_white_space = BetaJS.$("<whitespace></whitespace>");
+		this.element().append(this.__bottom_white_space);
+		this.__top_white_space.css("display", "block");
+		this.__bottom_white_space.css("display", "block");
+		this._whitespaceFix();
+    },
+    
+    _rotateFix: function () {
+    	var top_ws_height = parseInt(this.__top_white_space.css("height"), 10);
+    	var bottom_ws_height = parseInt(this.__bottom_white_space.css("height"), 10);
+    	var full_height = this.element().get(0).scrollHeight;
+    	var visible_height = this.element().innerHeight();
+    	var elements_height = full_height - top_ws_height - bottom_ws_height;
+    	var scroll_top = this.element().scrollTop();
+    	var count = this.element().children().length - 2;
+    	var top_elements = (scroll_top - top_ws_height) / elements_height * count; 
+    	var bottom_elements = (elements_height - (scroll_top - top_ws_height) - visible_height) / elements_height * count;
+    	if (top_elements < 0) {
+			top_ws_height = scroll_top - (elements_height - visible_height) / 2;
+			this.__top_white_space.css("height", top_ws_height + "px");
+    	} else if (bottom_elements < 0) {
+			top_ws_height = scroll_top - (elements_height - visible_height) / 2;
+			this.__top_white_space.css("height", top_ws_height + "px");
+    	} else if (top_elements < bottom_elements - 1) {
+	    	while (top_elements < bottom_elements - 1) {
+				var item = this.element().find(":nth-last-child(2)");
+				item.insertAfter(this.__top_white_space);
+				top_ws_height -= item.outerHeight();
+				this.__top_white_space.css("height", top_ws_height + "px");
+				bottom_elements--;
+				top_elements++;
+	    	}
+		} else if (bottom_elements < top_elements - 1) {
+	    	while (bottom_elements < top_elements - 1) {
+				item = this.element().find(":nth-child(2)");
+				item.insertBefore(this.__bottom_white_space);
+				top_ws_height += item.outerHeight();
+				this.__top_white_space.css("height", top_ws_height + "px");
+				bottom_elements++;
+				top_elements--;
+	    	}
+    	}
+    },
+    
+    _whitespaceFix: function () {
+		this.__bottom_white_space.css("height", this.options().whitespace + "px");
+		var h = parseInt(this.__top_white_space.css("height"), 10);
+		this.__top_white_space.css("height", this.options().whitespace + "px");
+		this.element().scrollTop(this.element().scrollTop() + this.options().whitespace - h);
+    }
+
+});
+
+BetaJS.UI.Interactions.Scroll.Idle.extend("BetaJS.UI.Interactions.LoopScroll.Idle", {
+	
+});
+
+
+BetaJS.UI.Interactions.Scroll.Scrolling.extend("BetaJS.UI.Interactions.LoopScroll.Scrolling", {
+	
+	_scroll: function () {
+		this.parent()._rotateFix();
+	},
+	
+	_scrollend: function () {
+		this.parent()._whitespaceFix();
+	}
+	
+
+});
+
+
+BetaJS.UI.Interactions.Scroll.ScrollingTo.extend("BetaJS.UI.Interactions.LoopScroll.ScrollingTo", {
+	
+	_scroll: function () {
+		this.parent()._rotateFix();
+	},
+	
+	_scrollend: function () {
+		this.parent()._whitespaceFix();
+	}
+
+});
 BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Pinch", {
 	
     constructor: function (element, options, data) {

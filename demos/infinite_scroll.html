@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="assets/jquery.min.js"></script>
+        <script src="assets/beta.js"></script>
+        <script src="assets/beta-browser.js"></script>
+        <script src="../dist/beta-ui.js"></script>
+        <link rel="stylesheet" href="assets/styles.css" /> 
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, minimum-scale=1, maximum-scale=1">
+		<style>
+			#scrollbox {
+				width: 300px;
+				height: 300px;
+				overflow: scroll;
+				-webkit-overflow-scrolling: touch;
+			}
+			.item {
+				border: 1px solid black;
+				height: 40px;
+			}
+		</style>
+	</head>
+	<body style="-webkit-overflow-scrolling: disable">
+		<div id="scrollbox">
+		</div>
+		<button>ScrollTo</button>
+		<script>
+			var element = $("#scrollbox");
+			var low = 0;
+			var high = 19;
+
+			for (var i = 0; i <= high; ++i)
+				element.append("<div class='item' id='it" + i + "'>Item " + i + "</div>");
+
+			var scroll = new BetaJS.UI.Interactions.InfiniteScroll(element, {
+				enabled: true,
+	    		append: function (count, callback) {
+					for (var i = high+1; i <= high+1 + count; ++i)
+						element.append("<div class='item' id='it" + i + "'>Item " + i + "</div>");
+					high += count;
+					document.title = low + " - " + high;
+					callback(count, true);
+	    		},
+	    		prepend: function (count, callback) {
+					for (var i = low-1; i >= low-1-count; --i)
+						element.prepend("<div class='item' id='it" + i + "'>Item " + i + "</div>");
+					low -= count;
+					document.title = low + " - " + high;
+					callback(count, true);
+	    		}
+			});
+			$("button").on("click", function () {
+				var ele = $($("#scrollbox").children().get(1));
+				scroll.scrollToElement(ele, {
+					animate: true
+				});
+			});
+		</script>
+    </body>
+</html>

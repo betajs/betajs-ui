@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.0 - 2014-10-02
+betajs - v1.0.0 - 2014-11-11
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -436,6 +436,28 @@ BetaJS.SyncAsync = {
 			func.apply(context || this, params || []);
 		}, 0);
 	},
+	
+	eventuallyOnce: function (func, params, context) {
+		var data = {
+			func: func,
+			params: params,
+			context: context
+		};
+		for (var key in this.__eventuallyOnce) {
+			if (BetaJS.Comparators.listEqual(this.__eventuallyOnce[key], data))
+				return;
+		}
+		this.__eventuallyOnceIdx++;
+		var index = this.__eventuallyOnceIdx;
+		this.__eventuallyOnce[index] = data;
+		this.eventually(function () {
+			delete this.__eventuallyOnce[index];
+			func.apply(context || this, params || []);
+		}, this);
+	},
+	
+	__eventuallyOnce: {},
+	__eventuallyOnceIdx: 1,
 	
     /** Converts a synchronous function to an asynchronous one and calls it
      * 
@@ -2665,6 +2687,69 @@ BetaJS.Classes.HelperClassMixin = {
 	}
 	
 };
+
+
+BetaJS.Class.extend("BetaJS.Classes.IdGenerator", {
+	
+	generate: function () {}
+	
+});
+
+BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.PrefixedIdGenerator", {
+
+	constructor: function (prefix, generator) {
+		this._inherited(BetaJS.Classes.PrefixedIdGenerator, "constructor");
+		this.__prefix = prefix;
+		this.__generator = generator;
+	},
+	
+	generate: function () {
+		return this.__prefix + this.__generator.generate();
+	}
+	
+});
+
+BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.RandomIdGenerator", {
+
+	constructor: function (length) {
+		this._inherited(BetaJS.Classes.PrefixedIdGenerator, "constructor");
+		this.__length = length || 16;
+	},
+	
+	generate: function () {
+		return BetaJS.Tokens.generate_token(this.__length);
+	}
+
+});
+
+BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.ConsecutiveIdGenerator", {
+
+	constructor: function (initial) {
+		this._inherited(BetaJS.Classes.ConsecutiveIdGenerator, "constructor");
+		this.__current = initial || 0;
+	},
+	
+	generate: function () {
+		this.__current++;
+		return this.__current;
+	}
+
+});
+
+BetaJS.Classes.IdGenerator.extend("BetaJS.Classes.TimedIdGenerator", {
+
+	constructor: function () {
+		this._inherited(BetaJS.Classes.TimedIdGenerator, "constructor");
+		this.__current = BetaJS.Time.now() - 1;
+	},
+	
+	generate: function () {
+		var now = BetaJS.Time.now();
+		this.__current = now > this.__current ? now : (this.__current + 1); 
+		return this.__current;
+	}
+
+});
 BetaJS.Properties = {};
 
 
@@ -3072,6 +3157,7 @@ BetaJS.Class.extend("BetaJS.Collections.CollectionData", {
 		this.__collection = collection;
 		this.__properties_data = {};
 		this.data = {};
+		this.properties = {};
 		this.__collection.iterate(this.__insert, this);
 		this.__collection.on("add", this.__insert, this);
 		this.__collection.on("remove", this.__remove, this);
@@ -3088,6 +3174,7 @@ BetaJS.Class.extend("BetaJS.Collections.CollectionData", {
 		var id = BetaJS.Ids.objectId(property);
 		this.__properties_data[id] = new BetaJS.Properties.PropertiesData(property);
 		this.data[id] = this.__properties_data[id].data;
+		this.properties[id] = property;
 	},
 	
 	__remove: function (property) {
@@ -3095,6 +3182,7 @@ BetaJS.Class.extend("BetaJS.Collections.CollectionData", {
 		this.__properties_data[id].destroy();
 		delete this.__properties_data[id];
 		delete this.data[id];
+		delete this.properties[id];
 	}
 	
 });
@@ -3186,6 +3274,29 @@ BetaJS.Comparators = {
 		if (a > b)
 			return 1;
 		return 0;
+	},
+	
+	listEqual: function (a, b) {
+		if (BetaJS.Types.is_array(a) && BetaJS.Types.is_array(b)) {
+			if (a.length != b.length)
+				return false;
+			for (var i = 0; i < a.length; ++i) {
+				if (a[i] !== b[i])
+					return false;
+			}
+			return true;
+		} else if (BetaJS.Types.is_object(a) && BetaJS.Types.is_object(b)) {
+			for (var key in a) {
+				if (b[key] !== a[key])
+					return false;
+			}
+			for (key in b) {
+				if (!(key in a))
+					return false;
+			}
+			return true;
+		} else
+			return false;
 	}
 		
 };
@@ -3369,8 +3480,28 @@ BetaJS.Time = {
 		return this.now() - t;
 	},
 	
+	floor_day: function (t) {
+		var d = new Date(t);
+		d.setMilliseconds(0);
+		d.setSeconds(0);
+		d.setMinutes(0);
+		d.setHours(0);
+		return d.getTime();
+	},
+	
 	days_ago: function (t) {
 		return this.days(this.ago(t));
+	},
+	
+	inc_day: function (t, inc) {
+		inc = typeof inc == 'undefined' ? 1 : inc;
+		var d = new Date(t);
+		d.setDate(d.getDate() + inc);
+		return d.getTime();
+	},
+	
+	inc_utc_day: function (t, inc) {
+		return t + (inc || 1) * 24 * 60 * 60 * 1000;
 	},
 	
 	format_ago: function (t) {
@@ -3696,6 +3827,7 @@ BetaJS.Class.extend("BetaJS.States.State", {
         this._starting = false;
         this._started = false;
         this._stopped = false;
+        this._transitioning = false;
         this.__next_state = null;
         this.__suspended = 0;
         args = args || {};
@@ -3737,6 +3869,12 @@ BetaJS.Class.extend("BetaJS.States.State", {
         this.destroy();
     },
     
+    eventualNext: function (state_name, args, transitionals) {
+    	BetaJS.SyncAsync.eventually(function () {
+    		this.next(state_name, args, transitionals);
+    	}, this);
+    },
+    
     next: function (state_name, args, transitionals) {
     	if (!this._starting || this._stopped || this.__next_state)
     		return;
@@ -3758,6 +3896,8 @@ BetaJS.Class.extend("BetaJS.States.State", {
             this._started = true;
         }
         this.__next_state = obj;
+        this._transitioning = true;
+        this._transition();
         if (this.__suspended <= 0)
         	this.__next();
     },
@@ -3771,8 +3911,17 @@ BetaJS.Class.extend("BetaJS.States.State", {
         host._afterNext(obj);
     },
     
+    _transition: function () {
+    },
+    
     suspend: function () {
     	this.__suspended++;
+    },
+    
+    eventualResumse: function () {
+    	BetaJS.SyncAsync.eventually(function () {
+    		this.resume();
+    	}, this);
     },
     
     resume: function () {
@@ -4674,6 +4823,118 @@ BetaJS.Structures.TreeMap = {
 	}
 
 };
+
+BetaJS.Class.extend("BetaJS.KeyValue.KeyValueStore", [
+	BetaJS.Events.EventsMixin,
+	{
+	
+	mem: function (key) {
+		return this._mem(key);
+	},
+	
+	get: function (key) {
+		return this._get(key);
+	},
+	
+	set: function (key, value) {
+		this._set(key, value);
+		this.trigger("change:" + key, value);
+	},
+	
+	remove: function (key) {
+		this._remove(key);
+	}
+	
+}]);
+
+
+BetaJS.KeyValue.KeyValueStore.extend("BetaJS.KeyValue.PrefixKeyValueStore", {
+	
+	constructor: function (kv, prefix) {
+		this._inherited(BetaJS.KeyValue.PrefixKeyValueStore, "constructor");
+		this.__kv = kv;
+		this.__prefix = prefix;
+	},
+	
+	_mem: function (key) {
+		return this.__kv.mem(this.__prefix + key);
+	},
+	
+	_get: function (key) {
+		return this.__kv.get(this.__prefix + key);
+	},
+	
+	_set: function (key, value) {
+		this.__kv.set(this.__prefix + key, value);
+	},
+	
+	_remove: function (key) {
+		this.__kv.remove(this.__prefix + key);
+	}
+	
+});
+
+
+BetaJS.KeyValue.KeyValueStore.extend("BetaJS.KeyValue.MemoryKeyValueStore", {
+	
+	constructor: function (data, clone) {
+		this._inherited(BetaJS.KeyValue.MemoryKeyValueStore, "constructor");
+		this.__data = BetaJS.Objs.clone(data, clone ? 1 : 0);
+	},
+	
+	_mem: function (key) {
+		return key in this.__data;
+	},
+	
+	_get: function (key) {
+		return this.__data[key];
+	},
+	
+	_set: function (key, value) {
+		this.__data[key] = value;
+	},
+	
+	_remove: function (key) {
+		delete this.__data[key];
+	}
+
+});
+
+
+BetaJS.KeyValue.MemoryKeyValueStore.extend("BetaJS.KeyValue.LocalKeyValueStore", {
+	
+	constructor: function () {
+		this._inherited(BetaJS.KeyValue.LocalKeyValueStore, "constructor", localStorage, false);
+	}
+	
+});
+
+
+BetaJS.KeyValue.KeyValueStore.extend("BetaJS.KeyValue.DefaultKeyValueStore", {
+	
+	constructor: function (kv, def) {
+		this._inherited(BetaJS.KeyValue.DefaultKeyValueStore, "constructor");
+		this.__kv = kv;
+		this.__def = def;
+	},
+	
+	_mem: function (key) {
+		return this.__kv.mem(key) || this.__def.mem(key);
+	},
+	
+	_get: function (key) {
+		return this.__kv.mem(key) ? this.__kv.get(key) : this.__def.get(key);
+	},
+	
+	_set: function (key, value) {
+		this.__kv.set(key, value);
+	},
+	
+	_remove: function (key) {
+		this.__kv.remove(key);
+	}
+
+});
 
 /*
  * <ul>

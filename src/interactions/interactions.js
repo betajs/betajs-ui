@@ -18,7 +18,17 @@ BetaJS.Class.extend("BetaJS.UI.Interactions.ElementInteraction", [
 		this._host.parent = this;
 	},
 	
+	on: function (element, event, callback, context) {
+		var self = this;
+		var events = event.split(" ");
+		for (var i = 0; i < events.length; ++i)
+			BetaJS.$(element).on(events[i] + "." + BetaJS.Ids.objectId(this), function () {
+				callback.apply(context || self, arguments);
+			});
+	},
+	
 	destroy: function () {
+		this.element().off("." + BetaJS.Ids.objectId(this));
 		this.disable();
 		this._host.destroy();
 		BetaJS.UI.Hardware.MouseCoords.unrequire();

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="assets/jquery.min.js"></script>
+        <script src="assets/beta.js"></script>
+        <script src="assets/beta-browser.js"></script>
+        <script src="../dist/beta-ui.js"></script>
+        <link rel="stylesheet" href="assets/styles.css" /> 
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, minimum-scale=1, maximum-scale=1">
+		<style>
+			#scrollbox {
+				width: 300px;
+				height: 300px;
+				overflow: scroll;
+				-webkit-overflow-scrolling: touch;
+			}
+			.item {
+				border: 1px solid black;
+				height: 40px;
+			}
+		</style>
+	</head>
+	<body style="-webkit-overflow-scrolling: disable">
+		<div id="scrollbox">
+		</div>
+		<button>Scroll To</button>
+		<script>
+			var element = $("#scrollbox");
+
+			for (var i = 0; i < 100; ++i)
+				element.append("<div class='item'>Item " + i + "</div>");
+
+			var scroll = new BetaJS.UI.Interactions.Scroll(element, {
+				enabled: true,
+				currentTop:true,
+				//discrete: true,
+				//scrollEndTimeout: 200
+			});
+			$("button").on("click", function () {
+				var ele = $($("#scrollbox").children().get(20));
+				scroll.scrollToElement(ele, {
+					animate: true
+				});
+			});
+		</script>
+    </body>
+</html>

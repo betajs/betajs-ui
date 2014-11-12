@@ -16,6 +16,7 @@ module.exports = function(grunt) {
 			        'src/events/*.js',
 			        'src/hardware/*.js',
 			        'src/interactions/interactions.js',
+			        'src/interactions/scroll.js',
 			        'src/interactions/*.js',
 			        'src/gestures/*.js',
 				]
