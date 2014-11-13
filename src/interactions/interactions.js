@@ -18,7 +18,7 @@ BetaJS.Class.extend("BetaJS.UI.Interactions.ElementInteraction", [
 		this._host.parent = this;
 	},
 	
-	on: function (element, event, callback, context) {
+	__on: function (element, event, callback, context) {
 		var self = this;
 		var events = event.split(" ");
 		for (var i = 0; i < events.length; ++i)

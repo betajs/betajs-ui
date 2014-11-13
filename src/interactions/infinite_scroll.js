@@ -5,7 +5,7 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
     		whitespace: 1000000,
     		append_count: 25,
     		prepend_count: 25,
-    		height_factor: 2,
+    		height_factor: 3,
     		context: null,
     		append: null, // function (count, callback); callback should say how many and whether there could be more
     		prepend: null // function (count, callback); callback should say how many and whether there could be more 
@@ -21,7 +21,6 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
 			this.__top_white_space.css("height", this.options().whitespace + "px");
 			this.element().scrollTop(this.options().whitespace);
 		}
-		this.recount();
     },
     
     append: function (count) {
@@ -44,7 +43,8 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
     },
     
     prependNeeded: function () {
-    	console.log("needed?");
+    	if (!this.options().prepend)
+    		return false;
     	var element_height = this.element().innerHeight();
     	var hidden_height = this.element().scrollTop() - parseInt(this.__top_white_space.css("height"), 10);
     	return hidden_height < this.options().height_factor * element_height;
@@ -71,15 +71,10 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
     	var first = this.element().find(":nth-child(2)");
     	var last = this.element().find(":nth-child(" + (1 + count) + ")");
     	var h = last.offset().top - first.offset().top + last.outerHeight();
-    	console.log(h + " / " + this.scrolling() + " / " + (parseInt(this.__top_white_space.css("height"), 10) - h) + "px");    	
     	if (this.scrolling())
     		this.__top_white_space.css("height", (parseInt(this.__top_white_space.css("height"), 10) - h) + "px");
     	else
     		this.element().scrollTop(this.element().scrollTop() - h);
-    },
-    
-    recount: function () {
-    	this._count = this.element().children().length;
     },
     
     extendFix: function () {

@@ -12,7 +12,7 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Scroll"
 		this._host.initialize(this.cls.classname + ".Idle");
 		this._scrollingDirection = true;
 		this._lastScrollTop = null;
-		this.on(this.element(), "scroll", function () {
+		this.__on(this.element(), "scroll", function () {
 			var scrollTop = this.element().scrollTop();
 			if (this._lastScrollTop !== null)
 				this._scrollingDirection = scrollTop >= this._lastScrollTop;
