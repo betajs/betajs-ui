@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.0 - 2014-11-13
+betajs-ui - v1.0.0 - 2014-11-16
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -442,6 +442,7 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Scroll"
     		scrollEndTimeout: 50
 		}, options);
 		this._inherited(BetaJS.UI.Interactions.Scroll, "constructor", element, options);
+		this._itemsElement = options.itemsElement || element;
 		this._disableScrollCounter = 0;
 		this._host.initialize(this.cls.classname + ".Idle");
 		this._scrollingDirection = true;
@@ -454,6 +455,10 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Scroll"
 		});
     },
     
+    itemsElement: function () {
+    	return this._itemsElement;
+    },
+    
     scrollingDirection: function () {
     	return this._scrollingDirection;
     },
@@ -462,7 +467,7 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Scroll"
     	var offset = this.element().offset();
     	var h = this._options["currentTop"] ? 0 : this.element().innerHeight() - 1;
     	var current = BetaJS.$(BetaJS.UI.Elements.Support.elementFromPoint(offset.left, offset.top + h));
-    	while (current && current.parent().get(0) != this.element().get(0))
+    	while (current && current.parent().get(0) != this.itemsElement().get(0))
     		current = current.parent();
     	if (!this._options.currentCenter)
     		return current;    	
@@ -510,6 +515,10 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Scroll"
 
 
 BetaJS.UI.Interactions.State.extend("BetaJS.UI.Interactions.Scroll.Idle", {
+	
+	itemsElement: function () {
+		return this.parent().itemsElement();
+	},
 	
 	_start: function () {
 		this.on(this.element(), "scroll", function () {
@@ -1225,10 +1234,10 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
 		this._can_append = !!options.append;
 		this._can_prepend = !!options.prepend;
 		this._extending = false;
-		if (options.prepend) {
+		if (options.prepend && options.whitespace) {
 			this.__top_white_space = BetaJS.$("<whitespace></whitespace>");
 			this.__top_white_space.css("display", "block");
-			this.element().prepend(this.__top_white_space);
+			this.itemsElement().prepend(this.__top_white_space);
 			this.__top_white_space.css("height", this.options().whitespace + "px");
 			this.element().scrollTop(this.options().whitespace);
 		}
@@ -1257,7 +1266,7 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
     	if (!this.options().prepend)
     		return false;
     	var element_height = this.element().innerHeight();
-    	var hidden_height = this.element().scrollTop() - parseInt(this.__top_white_space.css("height"), 10);
+    	var hidden_height = this.element().scrollTop() - (this.__top_white_space ? parseInt(this.__top_white_space.css("height"), 10) : 0);
     	return hidden_height < this.options().height_factor * element_height;
     },
     
@@ -1266,7 +1275,8 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
     		this._extending = true;
     		var self = this;
     		this.options().prepend(count || this.options().prepend_count, function (added, done) {
-    			self.element().prepend(self.__top_white_space);
+    			if (self.__top_white_space)
+    				self.element().prepend(self.__top_white_space);
     			self._extending = false;
     			self._can_prepend = done;
     			self.prepended(added);
@@ -1279,12 +1289,13 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
     },
     
     prepended: function (count) {
-    	var first = this.element().find(":nth-child(2)");
-    	var last = this.element().find(":nth-child(" + (1 + count) + ")");
+    	var first = this.itemsElement().find(":nth-child(2)");
+    	var last = this.itemsElement().find(":nth-child(" + (1 + count) + ")");
     	var h = last.offset().top - first.offset().top + last.outerHeight();
-    	if (this.scrolling())
-    		this.__top_white_space.css("height", (parseInt(this.__top_white_space.css("height"), 10) - h) + "px");
-    	else
+    	if (this.scrolling()) {
+    		if (this.__top_white_space)
+    			this.__top_white_space.css("height", (parseInt(this.__top_white_space.css("height"), 10) - h) + "px");
+    	} else
     		this.element().scrollTop(this.element().scrollTop() - h);
     },
     
@@ -1347,9 +1358,9 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.LoopScroll", {
 		}, options);
 		this._inherited(BetaJS.UI.Interactions.LoopScroll, "constructor", element, options);
 		this.__top_white_space = BetaJS.$("<whitespace></whitespace>");
-		this.element().prepend(this.__top_white_space);
+		this.itemsElement().prepend(this.__top_white_space);
 		this.__bottom_white_space = BetaJS.$("<whitespace></whitespace>");
-		this.element().append(this.__bottom_white_space);
+		this.itemsElement().append(this.__bottom_white_space);
 		this.__top_white_space.css("display", "block");
 		this.__bottom_white_space.css("display", "block");
 		this._whitespaceFix();
@@ -1362,7 +1373,7 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.LoopScroll", {
     	var visible_height = this.element().innerHeight();
     	var elements_height = full_height - top_ws_height - bottom_ws_height;
     	var scroll_top = this.element().scrollTop();
-    	var count = this.element().children().length - 2;
+    	var count = this.itemsElement().children().length - 2;
     	var top_elements = (scroll_top - top_ws_height) / elements_height * count; 
     	var bottom_elements = (elements_height - (scroll_top - top_ws_height) - visible_height) / elements_height * count;
     	if (top_elements < 0) {
@@ -1373,7 +1384,7 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.LoopScroll", {
 			this.__top_white_space.css("height", top_ws_height + "px");
     	} else if (top_elements < bottom_elements - 1) {
 	    	while (top_elements < bottom_elements - 1) {
-				var item = this.element().find(":nth-last-child(2)");
+				var item = this.itemsElement().find(":nth-last-child(2)");
 				item.insertAfter(this.__top_white_space);
 				top_ws_height -= item.outerHeight();
 				this.__top_white_space.css("height", top_ws_height + "px");
@@ -1382,7 +1393,7 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.LoopScroll", {
 	    	}
 		} else if (bottom_elements < top_elements - 1) {
 	    	while (bottom_elements < top_elements - 1) {
-				item = this.element().find(":nth-child(2)");
+				item = this.itemsElement().find(":nth-child(2)");
 				item.insertBefore(this.__bottom_white_space);
 				top_ws_height += item.outerHeight();
 				this.__top_white_space.css("height", top_ws_height + "px");

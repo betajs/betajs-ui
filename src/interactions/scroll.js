@@ -8,6 +8,7 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Scroll"
     		scrollEndTimeout: 50
 		}, options);
 		this._inherited(BetaJS.UI.Interactions.Scroll, "constructor", element, options);
+		this._itemsElement = options.itemsElement || element;
 		this._disableScrollCounter = 0;
 		this._host.initialize(this.cls.classname + ".Idle");
 		this._scrollingDirection = true;
@@ -20,6 +21,10 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Scroll"
 		});
     },
     
+    itemsElement: function () {
+    	return this._itemsElement;
+    },
+    
     scrollingDirection: function () {
     	return this._scrollingDirection;
     },
@@ -28,7 +33,7 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Scroll"
     	var offset = this.element().offset();
     	var h = this._options["currentTop"] ? 0 : this.element().innerHeight() - 1;
     	var current = BetaJS.$(BetaJS.UI.Elements.Support.elementFromPoint(offset.left, offset.top + h));
-    	while (current && current.parent().get(0) != this.element().get(0))
+    	while (current && current.parent().get(0) != this.itemsElement().get(0))
     		current = current.parent();
     	if (!this._options.currentCenter)
     		return current;    	
@@ -76,6 +81,10 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Scroll"
 
 
 BetaJS.UI.Interactions.State.extend("BetaJS.UI.Interactions.Scroll.Idle", {
+	
+	itemsElement: function () {
+		return this.parent().itemsElement();
+	},
 	
 	_start: function () {
 		this.on(this.element(), "scroll", function () {

@@ -14,10 +14,10 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
 		this._can_append = !!options.append;
 		this._can_prepend = !!options.prepend;
 		this._extending = false;
-		if (options.prepend) {
+		if (options.prepend && options.whitespace) {
 			this.__top_white_space = BetaJS.$("<whitespace></whitespace>");
 			this.__top_white_space.css("display", "block");
-			this.element().prepend(this.__top_white_space);
+			this.itemsElement().prepend(this.__top_white_space);
 			this.__top_white_space.css("height", this.options().whitespace + "px");
 			this.element().scrollTop(this.options().whitespace);
 		}
@@ -46,7 +46,7 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
     	if (!this.options().prepend)
     		return false;
     	var element_height = this.element().innerHeight();
-    	var hidden_height = this.element().scrollTop() - parseInt(this.__top_white_space.css("height"), 10);
+    	var hidden_height = this.element().scrollTop() - (this.__top_white_space ? parseInt(this.__top_white_space.css("height"), 10) : 0);
     	return hidden_height < this.options().height_factor * element_height;
     },
     
@@ -55,7 +55,8 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
     		this._extending = true;
     		var self = this;
     		this.options().prepend(count || this.options().prepend_count, function (added, done) {
-    			self.element().prepend(self.__top_white_space);
+    			if (self.__top_white_space)
+    				self.element().prepend(self.__top_white_space);
     			self._extending = false;
     			self._can_prepend = done;
     			self.prepended(added);
@@ -68,12 +69,13 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
     },
     
     prepended: function (count) {
-    	var first = this.element().find(":nth-child(2)");
-    	var last = this.element().find(":nth-child(" + (1 + count) + ")");
+    	var first = this.itemsElement().find(":nth-child(2)");
+    	var last = this.itemsElement().find(":nth-child(" + (1 + count) + ")");
     	var h = last.offset().top - first.offset().top + last.outerHeight();
-    	if (this.scrolling())
-    		this.__top_white_space.css("height", (parseInt(this.__top_white_space.css("height"), 10) - h) + "px");
-    	else
+    	if (this.scrolling()) {
+    		if (this.__top_white_space)
+    			this.__top_white_space.css("height", (parseInt(this.__top_white_space.css("height"), 10) - h) + "px");
+    	} else
     		this.element().scrollTop(this.element().scrollTop() - h);
     },
     

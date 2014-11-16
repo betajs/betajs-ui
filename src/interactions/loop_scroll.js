@@ -6,9 +6,9 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.LoopScroll", {
 		}, options);
 		this._inherited(BetaJS.UI.Interactions.LoopScroll, "constructor", element, options);
 		this.__top_white_space = BetaJS.$("<whitespace></whitespace>");
-		this.element().prepend(this.__top_white_space);
+		this.itemsElement().prepend(this.__top_white_space);
 		this.__bottom_white_space = BetaJS.$("<whitespace></whitespace>");
-		this.element().append(this.__bottom_white_space);
+		this.itemsElement().append(this.__bottom_white_space);
 		this.__top_white_space.css("display", "block");
 		this.__bottom_white_space.css("display", "block");
 		this._whitespaceFix();
@@ -21,7 +21,7 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.LoopScroll", {
     	var visible_height = this.element().innerHeight();
     	var elements_height = full_height - top_ws_height - bottom_ws_height;
     	var scroll_top = this.element().scrollTop();
-    	var count = this.element().children().length - 2;
+    	var count = this.itemsElement().children().length - 2;
     	var top_elements = (scroll_top - top_ws_height) / elements_height * count; 
     	var bottom_elements = (elements_height - (scroll_top - top_ws_height) - visible_height) / elements_height * count;
     	if (top_elements < 0) {
@@ -32,7 +32,7 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.LoopScroll", {
 			this.__top_white_space.css("height", top_ws_height + "px");
     	} else if (top_elements < bottom_elements - 1) {
 	    	while (top_elements < bottom_elements - 1) {
-				var item = this.element().find(":nth-last-child(2)");
+				var item = this.itemsElement().find(":nth-last-child(2)");
 				item.insertAfter(this.__top_white_space);
 				top_ws_height -= item.outerHeight();
 				this.__top_white_space.css("height", top_ws_height + "px");
@@ -41,7 +41,7 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.LoopScroll", {
 	    	}
 		} else if (bottom_elements < top_elements - 1) {
 	    	while (bottom_elements < top_elements - 1) {
-				item = this.element().find(":nth-child(2)");
+				item = this.itemsElement().find(":nth-child(2)");
 				item.insertBefore(this.__bottom_white_space);
 				top_ws_height += item.outerHeight();
 				this.__top_white_space.css("height", top_ws_height + "px");
