@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.0 - 2014-11-16
+betajs-ui - v1.0.0 - 2014-11-20
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -1354,21 +1354,55 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.LoopScroll", {
 	
     constructor: function (element, options, data) {
     	options = BetaJS.Objs.extend({
-    		whitespace: 1000000
+    		whitespace: 1000000,
+            display_type: "auto"
 		}, options);
 		this._inherited(BetaJS.UI.Interactions.LoopScroll, "constructor", element, options);
-		this.__top_white_space = BetaJS.$("<whitespace></whitespace>");
+		this.__top_white_space = this._whitespaceCreate();
 		this.itemsElement().prepend(this.__top_white_space);
-		this.__bottom_white_space = BetaJS.$("<whitespace></whitespace>");
+		this.__bottom_white_space = this._whitespaceCreate();
 		this.itemsElement().append(this.__bottom_white_space);
-		this.__top_white_space.css("display", "block");
-		this.__bottom_white_space.css("display", "block");
-		this._whitespaceFix();
+        this.reset();
     },
-    
+
+    _whitespaceType: function () {
+        if (this.options().display_type != 'auto')
+            return this.options().display_type;
+        return this.element().css("display") == "flex" ? "flex" : "default";
+    },
+
+    _whitespaceCreate: function () {
+        var whitespace = BetaJS.$("<whitespace></whitespace>");
+        var type = this._whitespaceType();
+
+        if (type == "flex") {
+            whitespace.css("display", "-ms-flexbox");
+            whitespace.css("display", "-webkit-flex");
+            whitespace.css("display", "flex");
+        } else
+            whitespace.css("display", "block");
+
+        return whitespace;
+    },
+
+    _whitespaceGetHeight: function (whitespace) {
+        return parseInt(whitespace.css("height"), 10);
+    },
+
+    _whitespaceSetHeight: function (whitespace, height) {
+        var type = this._whitespaceType();
+
+        if (type == "flex") {
+            whitespace.css("-webkit-flex", "0 0 " + height + "px");
+            whitespace.css("-ms-flex", "0 0 " + height + "px");
+            whitespace.css("flex", "0 0 " + height + "px");
+        } else
+            whitespace.css("height", height + "px");
+    },
+
     _rotateFix: function () {
-    	var top_ws_height = parseInt(this.__top_white_space.css("height"), 10);
-    	var bottom_ws_height = parseInt(this.__bottom_white_space.css("height"), 10);
+    	var top_ws_height = this._whitespaceGetHeight(this.__top_white_space);
+    	var bottom_ws_height = this._whitespaceGetHeight(this.__bottom_white_space);
     	var full_height = this.element().get(0).scrollHeight;
     	var visible_height = this.element().innerHeight();
     	var elements_height = full_height - top_ws_height - bottom_ws_height;
@@ -1378,16 +1412,16 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.LoopScroll", {
     	var bottom_elements = (elements_height - (scroll_top - top_ws_height) - visible_height) / elements_height * count;
     	if (top_elements < 0) {
 			top_ws_height = scroll_top - (elements_height - visible_height) / 2;
-			this.__top_white_space.css("height", top_ws_height + "px");
+			this._whitespaceSetHeight(this.__top_white_space, top_ws_height);
     	} else if (bottom_elements < 0) {
 			top_ws_height = scroll_top - (elements_height - visible_height) / 2;
-			this.__top_white_space.css("height", top_ws_height + "px");
+            this._whitespaceSetHeight(this.__top_white_space, top_ws_height);
     	} else if (top_elements < bottom_elements - 1) {
 	    	while (top_elements < bottom_elements - 1) {
 				var item = this.itemsElement().find(":nth-last-child(2)");
 				item.insertAfter(this.__top_white_space);
 				top_ws_height -= item.outerHeight();
-				this.__top_white_space.css("height", top_ws_height + "px");
+                this._whitespaceSetHeight(this.__top_white_space, top_ws_height);
 				bottom_elements--;
 				top_elements++;
 	    	}
@@ -1396,7 +1430,7 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.LoopScroll", {
 				item = this.itemsElement().find(":nth-child(2)");
 				item.insertBefore(this.__bottom_white_space);
 				top_ws_height += item.outerHeight();
-				this.__top_white_space.css("height", top_ws_height + "px");
+                this._whitespaceSetHeight(this.__top_white_space, top_ws_height);
 				bottom_elements++;
 				top_elements--;
 	    	}
@@ -1404,10 +1438,16 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.LoopScroll", {
     },
     
     _whitespaceFix: function () {
-		this.__bottom_white_space.css("height", this.options().whitespace + "px");
-		var h = parseInt(this.__top_white_space.css("height"), 10);
-		this.__top_white_space.css("height", this.options().whitespace + "px");
+        this._whitespaceSetHeight(this.__bottom_white_space, this.options().whitespace);
+		var h = this._whitespaceGetHeight(this.__top_white_space);
+        this._whitespaceSetHeight(this.__top_white_space, this.options().whitespace);
 		this.element().scrollTop(this.element().scrollTop() + this.options().whitespace - h);
+    },
+
+    reset: function () {
+        this._whitespaceSetHeight(this.__bottom_white_space, this.options().whitespace);
+        this._whitespaceSetHeight(this.__top_white_space, this.options().whitespace);
+        this.element().scrollTop(this.element().scrollTop() + this.options().whitespace);
     }
 
 });
