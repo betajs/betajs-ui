@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.0 - 2014-11-20
+betajs-ui - v1.0.0 - 2014-11-21
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -439,7 +439,9 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Scroll"
     		discrete: false,
     		currentCenter: false,
     		currentTop: true,
-    		scrollEndTimeout: 50
+    		scrollEndTimeout: 50,
+    		whitespace: 10000,
+    		display_type: ""
 		}, options);
 		this._inherited(BetaJS.UI.Interactions.Scroll, "constructor", element, options);
 		this._itemsElement = options.itemsElement || element;
@@ -455,6 +457,43 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Scroll"
 		});
     },
     
+    _whitespaceType: function () {
+        if (this.options().display_type)
+            return this.options().display_type;
+        return this.element().css("display").indexOf('flex') >= 0 ? "flex" : "default";
+    },
+
+    _whitespaceCreate: function () {
+        var whitespace = BetaJS.$("<whitespace></whitespace>");
+        var type = this._whitespaceType();
+
+        if (type == "flex") {
+            whitespace.css("display", "-ms-flexbox");
+            whitespace.css("display", "-webkit-flex");
+            whitespace.css("display", "flex");
+        } else
+            whitespace.css("display", "block");
+
+        return whitespace;
+    },
+
+    _whitespaceGetHeight: function (whitespace) {
+        return whitespace ? parseInt(whitespace.css("height"), 10) : 0;
+    },
+
+    _whitespaceSetHeight: function (whitespace, height) {
+    	if (!whitespace)
+    		return;
+        var type = this._whitespaceType();
+
+        if (type == "flex") {
+            whitespace.css("-webkit-flex", "0 0 " + height + "px");
+            whitespace.css("-ms-flex", "0 0 " + height + "px");
+            whitespace.css("flex", "0 0 " + height + "px");
+        } else
+            whitespace.css("height", height + "px");
+    },
+
     itemsElement: function () {
     	return this._itemsElement;
     },
@@ -1226,24 +1265,21 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
 	
     constructor: function (element, options, data) {
     	options = BetaJS.Objs.extend({
-    		whitespace: 1000000,
     		append_count: 25,
     		prepend_count: 25,
     		height_factor: 3,
     		context: null,
     		append: null, // function (count, callback); callback should say how many and whether there could be more
-    		prepend: null // function (count, callback); callback should say how many and whether there could be more 
+    		prepend: null // function (count, callback); callback should say how many and whether there could be more
 		}, options);
 		this._inherited(BetaJS.UI.Interactions.InfiniteScroll, "constructor", element, options);
 		this._can_append = !!options.append;
 		this._can_prepend = !!options.prepend;
 		this._extending = false;
-		if (options.prepend && options.whitespace) {
-			this.__top_white_space = BetaJS.$("<whitespace></whitespace>");
-			this.__top_white_space.css("display", "block");
+		if (options.prepend && this.options().whitespace) {
+			this.__top_white_space = this._whitespaceCreate();
 			this.itemsElement().prepend(this.__top_white_space);
-			this.__top_white_space.css("height", this.options().whitespace + "px");
-			this.element().scrollTop(this.options().whitespace);
+			this.reset();
 		}
     },
     
@@ -1270,7 +1306,7 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
     	if (!this.options().prepend)
     		return false;
     	var element_height = this.element().innerHeight();
-    	var hidden_height = this.element().scrollTop() - (this.__top_white_space ? parseInt(this.__top_white_space.css("height"), 10) : 0);
+    	var hidden_height = this.element().scrollTop() - this._whitespaceGetHeight(this.__top_white_space);
     	return hidden_height < this.options().height_factor * element_height;
     },
     
@@ -1280,7 +1316,7 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
     		var self = this;
     		this.options().prepend(count || this.options().prepend_count, function (added, done) {
     			if (self.__top_white_space)
-    				self.element().prepend(self.__top_white_space);
+    				self.itemsElement().prepend(self.__top_white_space);
     			self._extending = false;
     			self._can_prepend = done;
     			self.prepended(added);
@@ -1297,8 +1333,7 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
     	var last = this.itemsElement().find(":nth-child(" + (1 + count) + ")");
     	var h = last.offset().top - first.offset().top + last.outerHeight();
     	if (this.scrolling()) {
-    		if (this.__top_white_space)
-    			this.__top_white_space.css("height", (parseInt(this.__top_white_space.css("height"), 10) - h) + "px");
+    		this._whitespaceSetHeight(this.__top_white_space, this._whitespaceGetHeight(this.__top_white_space) - h);
     	} else
     		this.element().scrollTop(this.element().scrollTop() - h);
     },
@@ -1316,9 +1351,14 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.InfiniteScroll", {
     _whitespaceFix: function () {
     	if (!this.__top_white_space)
     		return;
-		var h = parseInt(this.__top_white_space.css("height"), 10);
-		this.__top_white_space.css("height", this.options().whitespace + "px");
+		var h = this._whitespaceGetHeight(this.__top_white_space);
+        this._whitespaceSetHeight(this.__top_white_space, this.options().whitespace);
 		this.element().scrollTop(this.element().scrollTop() + this.options().whitespace - h);
+    },
+
+    reset: function () {
+        this._whitespaceSetHeight(this.__top_white_space, this.options().whitespace);
+        this.element().scrollTop(this.element().scrollTop() + this.options().whitespace);
     }
     
 
@@ -1357,51 +1397,12 @@ BetaJS.UI.Interactions.Scroll.ScrollingTo.extend("BetaJS.UI.Interactions.Infinit
 BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.LoopScroll", {
 	
     constructor: function (element, options, data) {
-    	options = BetaJS.Objs.extend({
-    		whitespace: 1000000,
-            display_type: "auto"
-		}, options);
 		this._inherited(BetaJS.UI.Interactions.LoopScroll, "constructor", element, options);
 		this.__top_white_space = this._whitespaceCreate();
 		this.itemsElement().prepend(this.__top_white_space);
 		this.__bottom_white_space = this._whitespaceCreate();
 		this.itemsElement().append(this.__bottom_white_space);
         this.reset();
-    },
-
-    _whitespaceType: function () {
-        if (this.options().display_type != 'auto')
-            return this.options().display_type;
-        return this.element().css("display").indexOf('flex') >= 0 ? "flex" : "default";
-    },
-
-    _whitespaceCreate: function () {
-        var whitespace = BetaJS.$("<whitespace></whitespace>");
-        var type = this._whitespaceType();
-
-        if (type == "flex") {
-            whitespace.css("display", "-ms-flexbox");
-            whitespace.css("display", "-webkit-flex");
-            whitespace.css("display", "flex");
-        } else
-            whitespace.css("display", "block");
-
-        return whitespace;
-    },
-
-    _whitespaceGetHeight: function (whitespace) {
-        return parseInt(whitespace.css("height"), 10);
-    },
-
-    _whitespaceSetHeight: function (whitespace, height) {
-        var type = this._whitespaceType();
-
-        if (type == "flex") {
-            whitespace.css("-webkit-flex", "0 0 " + height + "px");
-            whitespace.css("-ms-flex", "0 0 " + height + "px");
-            whitespace.css("flex", "0 0 " + height + "px");
-        } else
-            whitespace.css("height", height + "px");
     },
 
     _rotateFix: function () {

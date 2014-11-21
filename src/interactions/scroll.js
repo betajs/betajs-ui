@@ -5,7 +5,9 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Scroll"
     		discrete: false,
     		currentCenter: false,
     		currentTop: true,
-    		scrollEndTimeout: 50
+    		scrollEndTimeout: 50,
+    		whitespace: 10000,
+    		display_type: ""
 		}, options);
 		this._inherited(BetaJS.UI.Interactions.Scroll, "constructor", element, options);
 		this._itemsElement = options.itemsElement || element;
@@ -21,6 +23,43 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Scroll"
 		});
     },
     
+    _whitespaceType: function () {
+        if (this.options().display_type)
+            return this.options().display_type;
+        return this.element().css("display").indexOf('flex') >= 0 ? "flex" : "default";
+    },
+
+    _whitespaceCreate: function () {
+        var whitespace = BetaJS.$("<whitespace></whitespace>");
+        var type = this._whitespaceType();
+
+        if (type == "flex") {
+            whitespace.css("display", "-ms-flexbox");
+            whitespace.css("display", "-webkit-flex");
+            whitespace.css("display", "flex");
+        } else
+            whitespace.css("display", "block");
+
+        return whitespace;
+    },
+
+    _whitespaceGetHeight: function (whitespace) {
+        return whitespace ? parseInt(whitespace.css("height"), 10) : 0;
+    },
+
+    _whitespaceSetHeight: function (whitespace, height) {
+    	if (!whitespace)
+    		return;
+        var type = this._whitespaceType();
+
+        if (type == "flex") {
+            whitespace.css("-webkit-flex", "0 0 " + height + "px");
+            whitespace.css("-ms-flex", "0 0 " + height + "px");
+            whitespace.css("flex", "0 0 " + height + "px");
+        } else
+            whitespace.css("height", height + "px");
+    },
+
     itemsElement: function () {
     	return this._itemsElement;
     },
