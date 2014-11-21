@@ -32,9 +32,12 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Scroll"
     currentElement: function () {
     	var offset = this.element().offset();
     	var h = this._options["currentTop"] ? 0 : this.element().innerHeight() - 1;
-    	var current = BetaJS.$(BetaJS.UI.Elements.Support.elementFromPoint(offset.left, offset.top + h));
-    	while (current && current.parent().get(0) != this.itemsElement().get(0))
+    	var w = this.element().innerWidth() / 2;
+    	var current = BetaJS.$(BetaJS.UI.Elements.Support.elementFromPoint(offset.left + w, offset.top + h));
+    	while (current && current.get(0) && current.parent().get(0) != this.itemsElement().get(0))
     		current = current.parent();
+    	if (!current || !current.get(0))
+    		return null;
     	if (!this._options.currentCenter)
     		return current;    	
     	if (this._options.currentTop) {
@@ -109,8 +112,9 @@ BetaJS.UI.Interactions.Scroll.Idle.extend("BetaJS.UI.Interactions.Scroll.Scrolli
 				self.parent().disableScroll();
 				self.parent().trigger("scrollend");
 				self._scrollend();
-				if (opts.discrete)
-					self.parent().scrollToElement(self.parent().currentElement(), {
+				var current = self.parent().currentElement();
+				if (opts.discrete && current)
+					self.parent().scrollToElement(current, {
 						animate: true,
 						abortable: true
 					});

@@ -16,7 +16,7 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.LoopScroll", {
     _whitespaceType: function () {
         if (this.options().display_type != 'auto')
             return this.options().display_type;
-        return this.element().css("display") == "flex" ? "flex" : "default";
+        return this.element().css("display").indexOf('flex') >= 0 ? "flex" : "default";
     },
 
     _whitespaceCreate: function () {
