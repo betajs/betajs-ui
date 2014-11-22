@@ -164,11 +164,15 @@ BetaJS.UI.Gestures.ElementEvent.extend("BetaJS.UI.Gestures.ElementMouseMoveOutEv
     constructor: function (box, element, callback, context) {
         this._inherited(BetaJS.UI.Gestures.ElementMouseMoveOutEvent, "constructor", element, callback, context);
         var position = BetaJS.UI.Hardware.MouseCoords.coords;
+        console.log("Current:" + JSON.stringify(position));
         var delta = {x: 0, y: 0};
         this.on(BetaJS.UI.Events.Mouse.moveEvent, function (event) {
+        	if (!position.x && !position.y)
+        		position = BetaJS.UI.Events.Mouse.pageCoords(event);
             var current = BetaJS.UI.Events.Mouse.pageCoords(event);
             delta.x = Math.max(delta.x, Math.abs(position.x - current.x));
             delta.y = Math.max(delta.y, Math.abs(position.y - current.y));
+            console.log(position, current, delta);
             if (("x" in box && box.x >= 0 && delta.x >= box.x) || ("y" in box && box.y >= 0 && delta.y >= box.y)) {
                 this.callback();
             }

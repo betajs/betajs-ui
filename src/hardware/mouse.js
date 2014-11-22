@@ -12,7 +12,9 @@ BetaJS.UI.Hardware.MouseCoords = {
 			var events = [BetaJS.UI.Events.Mouse.moveEvent, BetaJS.UI.Events.Mouse.upEvent, BetaJS.UI.Events.Mouse.downEvent];
 			for (var i = 0; i < events.length; ++i)
 				BetaJS.$("body").on(events[i] + "." + BetaJS.Ids.objectId(this), function (event) {
-					self.coords = BetaJS.UI.Events.Mouse.pageCoords(event); 
+					var result = BetaJS.UI.Events.Mouse.pageCoords(event);
+					if (result.x && result.y)
+						self.coords = result; 
 				});
 		}
 		this.__required++;

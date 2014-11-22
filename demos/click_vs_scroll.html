@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="assets/jquery.min.js"></script>
+        <script src="assets/beta.js"></script>
+        <script src="assets/beta-browser.js"></script>
+        <script src="../dist/beta-ui.js"></script>
+        <link rel="stylesheet" href="assets/styles.css" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    </head>
+    <body>
+    	<div class="doodads">
+	        <div class="doodad"><div class="inner">Doodad 1</div></div>
+	        <div class="doodad"><div class="inner">Doodad 2</div></div>
+	        <div class="doodad"><div class="inner">Doodad 3</div></div>
+	        <div class="doodad"><div class="inner">Doodad 4</div></div>
+	        <div class="doodad"><div class="inner">Doodad 5</div></div>
+	        <div class="doodad"><div class="inner">Doodad 6</div></div>
+	        <div class="doodad"><div class="inner">Doodad 7</div></div>
+	        <div class="doodad"><div class="inner">Doodad 8</div></div>
+	        <div class="doodad"><div class="inner">Doodad 9</div></div>
+	        <div class="doodad"><div class="inner">Doodad 10</div></div>
+	        <div class="doodad"><div class="inner">Doodad 11</div></div>
+	        <div class="doodad"><div class="inner">Doodad 12</div></div>
+	        <div class="doodad"><div class="inner">Doodad 13</div></div>
+	        <div class="doodad"><div class="inner">Doodad 14</div></div>
+	        <div class="doodad"><div class="inner">Doodad 15</div></div>
+	        <div class="doodad"><div class="inner">Doodad 16</div></div>
+	        <div class="doodad"><div class="inner">Doodad 17</div></div>
+	        <div class="doodad"><div class="inner">Doodad 18</div></div>
+	        <div class="doodad"><div class="inner">Doodad 19</div></div>
+	        <div class="doodad"><div class="inner">Doodad 20</div></div>
+    	</div>
+        <script>
+	        $(".inner").each(function () {
+	        	var element = $(this);
+		        var click_gesture = new BetaJS.UI.Gestures.Gesture(element, BetaJS.UI.Gestures.defaultGesture({
+			    	mouse_up_activate: true,
+			        wait_time: 250,
+			        wait_activate: false,
+			        disable_x: 10,
+			        disable_y: 10,
+			        enable_x: -1,
+			        enable_y: -1,
+	            }));
+	            click_gesture.on("activate", function () {
+	            	alert("click");
+	            });
+	        });
+        </script>    
+    </body>
+</html>

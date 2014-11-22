@@ -6,7 +6,7 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.LoopScroll", {
 		this.itemsElement().prepend(this.__top_white_space);
 		this.__bottom_white_space = this._whitespaceCreate();
 		this.itemsElement().append(this.__bottom_white_space);
-        this.reset();
+        this.reset(true);
     },
 
     _rotateFix: function () {
@@ -53,10 +53,10 @@ BetaJS.UI.Interactions.Scroll.extend("BetaJS.UI.Interactions.LoopScroll", {
 		this.element().scrollTop(this.element().scrollTop() + this.options().whitespace - h);
     },
 
-    reset: function () {
+    reset: function (increment) {
         this._whitespaceSetHeight(this.__bottom_white_space, this.options().whitespace);
         this._whitespaceSetHeight(this.__top_white_space, this.options().whitespace);
-        this.element().scrollTop(this.element().scrollTop() + this.options().whitespace);
+        this.element().scrollTop(this.options().whitespace + (increment ? this.element().scrollTop() : 0));
     }
 
 });
