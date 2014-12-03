@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.0 - 2014-11-22
+betajs-ui - v1.0.0 - 2014-12-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -443,7 +443,8 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Scroll"
     		currentTop: true,
     		scrollEndTimeout: 50,
     		whitespace: 10000,
-    		display_type: ""
+    		display_type: "",
+			elementMargin: 20
 		}, options);
 		this._inherited(BetaJS.UI.Interactions.Scroll, "constructor", element, options);
 		this._itemsElement = options.itemsElement || element;
@@ -506,9 +507,11 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Scroll"
     
     currentElement: function () {
     	var offset = this.element().offset();
-    	var h = this._options["currentTop"] ? 0 : this.element().innerHeight() - 1;
+    	var h = this._options["currentTop"] ? this._options['elementMargin'] : (this.element().innerHeight() - 1 - this._options['elementMargin']);
     	var w = this.element().innerWidth() / 2;
     	var current = BetaJS.$(BetaJS.UI.Elements.Support.elementFromPoint(offset.left + w, offset.top + h));
+		console.log(offset.left + w, offset.top + h);
+		console.log(current);
     	while (current && current.get(0) && current.parent().get(0) != this.itemsElement().get(0))
     		current = current.parent();
     	if (!current || !current.get(0))
