@@ -10,7 +10,10 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Drag", 
 			drag_original_element: false,
 			droppable: false,
 			remove_element_on_drop: false,
-			revertable: true
+			revertable: true,
+			draggable: function () {
+				return true;
+			}
 		}, options);
 		this._inherited(BetaJS.UI.Interactions.Drag, "constructor", element, options);
 		this._host.initialize("BetaJS.UI.Interactions.Drag.Idle");
@@ -36,7 +39,7 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Drag", 
 	},
 	
 	start: function () {
-		if (this._enabled)
+		if (this._enabled )
 			this._host.state().next("Dragging");
 	},
 	
@@ -44,7 +47,11 @@ BetaJS.UI.Interactions.ElementInteraction.extend("BetaJS.UI.Interactions.Drag", 
 		if (this._enabled)
 			this._host.state().next("Stopping");
 	},
-	
+
+	draggable: function () {
+		return this._options.draggable.call(this._options.context, this);
+	},
+
 	abort: function () {
 		if (this._enabled)
 			this._host.state().next("Idle");
