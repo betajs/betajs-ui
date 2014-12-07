@@ -1,9 +1,5 @@
 /*!
-<<<<<<< HEAD
 betajs-ui - v1.0.0 - 2014-12-06
-=======
-betajs-ui - v1.0.0 - 2014-12-02
->>>>>>> 17ca6eda28e27ac1eb4c865d007553fc574c9554
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
