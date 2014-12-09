@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.0 - 2014-12-06
+betajs-ui - v1.0.0 - 2014-12-09
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -341,7 +341,7 @@ BetaJS.Class.extend("BetaJS.UI.Interactions.ElementInteraction", [
 			var enabled = this._options.enabled;
 			delete this._options.enabled;
 			if (enabled) 
-				BetaJS.SyncAsync.eventually(this.enable, this);
+				BetaJS.Async.eventually(this.enable, this);
 		}
 		this._host = new BetaJS.States.Host();
 		this._host.parent = this;
