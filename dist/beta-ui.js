@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.0 - 2014-12-09
+betajs-ui - v1.0.0 - 2014-12-12
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -1044,6 +1044,8 @@ BetaJS.UI.Interactions.Drop.Disabled.extend("BetaJS.UI.Interactions.Drop.Idle", 
 
 	_start: function () {
 		this.on(this.element(), "drag-hover", function (event) {
+			if (!this.parent()._enabled)
+				return;
 			var drag_source = event.originalEvent.detail;
 			if (this.parent()._is_hovering(drag_source))
 				this.next(this.parent().droppable(drag_source) ? "Hover" : "InvalidHover", {drag_source: drag_source});
