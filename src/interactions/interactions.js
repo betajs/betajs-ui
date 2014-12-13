@@ -13,7 +13,7 @@ BetaJS.Class.extend("BetaJS.UI.Interactions.ElementInteraction", [
 			var enabled = this._options.enabled;
 			delete this._options.enabled;
 			if (enabled) 
-				BetaJS.SyncAsync.eventually(this.enable, this);
+				BetaJS.Async.eventually(this.enable, this);
 		}
 		this._host = new BetaJS.States.Host();
 		this._host.parent = this;
