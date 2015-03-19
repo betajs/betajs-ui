@@ -1,23 +1,26 @@
 {
-  "name": "betajs-ui",
-  "version": "1.0.0",
-  "description": "BetaJS-UI is a library for enabling gestures and interactions such as drag and drop.",
-  "homepage": "http://betajs.com",
-  "contributors": [
-  	"Oliver Friedmann",
-  	"Victor Lingenthal"
-  ],
-  "license": "MIT",
-  "devDependencies": {
-    "grunt": "",
-    "grunt-contrib-jshint": "",
-    "grunt-contrib-nodeunit": "",
-    "grunt-contrib-concat": "",
-    "grunt-contrib-uglify": "",
-    "grunt-shell": "",
-    "grunt-newer": "",
-    "grunt-contrib-clean": "",
-    "grunt-preprocess": "",
-    "grunt-git-revision-count": ""
-  }
+	"name": "betajs-ui",
+	"version": "1.0.0",
+	"description": "BetaJS-UI is a library for enabling gestures and interactions such as drag and drop.",
+	"homepage": "http://betajs.com",
+	"contributors": ["Oliver Friedmann", "Victor Lingenthal"],
+	"license": "MIT",
+	"devDependencies": {
+		"grunt": "",
+		"grunt-contrib-jshint": "",
+		"grunt-contrib-nodeunit": "",
+		"grunt-contrib-concat": "",
+		"grunt-contrib-uglify": "",
+		"grunt-shell": "",
+		"grunt-newer": "",
+		"grunt-contrib-clean": "",
+		"grunt-preprocess": "",
+		"grunt-git-revision-count": "",
+		"grunt-closure-tools": "",
+		"grunt-wget": ""
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/betajs/betajs-ui.git"
+	}
 }
