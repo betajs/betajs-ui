@@ -5,8 +5,9 @@ Scoped.define("module:Interactions.ElementInteraction", [
 	    "jquery:",
 	    "base:Async",
 	    "base:States.Host",
-	    "base:Ids"
-	], function (Class, EventsMixin, MouseCoords, $, Async, StateHost, Ids, scoped) {
+	    "base:Ids",
+	    "base:Objs"
+	], function (Class, EventsMixin, MouseCoords, $, Async, StateHost, Ids, Objs, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 
@@ -29,10 +30,11 @@ Scoped.define("module:Interactions.ElementInteraction", [
 			__on: function (element, event, callback, context) {
 				var self = this;
 				var events = event.split(" ");
-				for (var i = 0; i < events.length; ++i)
-					$(element).on(events[i] + "." + Ids.objectId(this), function () {
+		        Objs.iter(events, function (eventName) {
+					$(element).on(eventName + "." + Ids.objectId(this), function () {
 						callback.apply(context || self, arguments);
 					});
+		        }, this);
 			},
 			
 			destroy: function () {
@@ -90,8 +92,9 @@ Scoped.define("module:Interactions.ElementInteraction", [
 Scoped.define("module:Interactions.State", [
  	    "base:States.State",
  	    "jquery:",
- 	    "base:Ids"
- 	], function (State, $, Ids, scoped) {
+ 	    "base:Ids",
+ 	    "base:Objs"
+ 	], function (State, $, Ids, Objs, scoped) {
  	return State.extend({scoped: scoped}, {
 		
 		parent: function () {
@@ -109,10 +112,11 @@ Scoped.define("module:Interactions.State", [
 		on: function (element, event, callback, context) {
 			var self = this;
 			var events = event.split(" ");
-			for (var i = 0; i < events.length; ++i)
-				$(element).on(events[i] + "." + Ids.objectId(this), function () {
+	        Objs.iter(events, function (eventName) {
+				$(element).on(eventName + "." + Ids.objectId(this), function () {
 					callback.apply(context || self, arguments);
 				});
+	        }, this);
 		},
 		
 		_end: function () {

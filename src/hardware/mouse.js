@@ -1,8 +1,9 @@
 Scoped.define("module:Hardware.MouseCoords", [
 	    "base:Ids",
+	    "base:Objs",
 	    "jquery:",
 	    "module:Events.Mouse"
-	], function (Ids, $, MouseEvents) {
+	], function (Ids, Objs, $, MouseEvents) {
 	return {		
 			
 		__required: 0,
@@ -13,12 +14,13 @@ Scoped.define("module:Hardware.MouseCoords", [
 			if (this.__required === 0) {
 				var self = this;
 				var events = [MouseEvents.moveEvent, MouseEvents.upEvent, MouseEvents.downEvent];
-				for (var i = 0; i < events.length; ++i)
-					$("body").on(events[i] + "." + Ids.objectId(this), function (event) {
+				Objs.iter(events, function (eventName) {
+					$("body").on(eventName + "." + Ids.objectId(this), function (event) {
 						var result = MouseEvents.pageCoords(event);
 						if (result.x && result.y)
 							self.coords = result; 
 					});
+				}, this);
 			}
 			this.__required++;
 		},

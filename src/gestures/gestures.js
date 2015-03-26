@@ -58,8 +58,9 @@ Scoped.define("module:Gestures.Gesture", [
 
 Scoped.define("module:Gestures.Gesture.ElementState", [
   	    "base:States.CompetingState",
-  	    "base:Ids"
-  	], function (CompetingState, Ids, scoped) {
+  	    "base:Ids",
+  	    "base:Objs"
+  	], function (CompetingState, Ids, Objs, scoped) {
   	return CompetingState.extend({scoped: scoped}, function (inherited) {
   		return {
 
@@ -87,11 +88,11 @@ Scoped.define("module:Gestures.Gesture.ElementState", [
 		    on: function (event, func) {
 		        var self = this;
 		        var events = event.split(" ");
-		        for (var i = 0; i < events.length; ++i) {
-		            this.element().on(events[i] + "." + Ids.objectId(this), function (event) {
+		        Objs.iter(events, function (eventName) {
+		            this.element().on(eventName + "." + Ids.objectId(this), function (event) {
 		                func.call(self, event);
 		            });
-		        }
+		        }, this);
 		    },
 		    
 		    _end: function () {
@@ -110,8 +111,9 @@ Scoped.define("module:Gestures.Gesture.ElementState", [
 Scoped.define("module:Gestures.ElementEvent", [
  	    "base:Class",
  	    "base:Ids",
+ 	    "base:Objs",
  	    "jquery:"
- 	], function (Class, Ids, $, scoped) {
+ 	], function (Class, Ids, Objs, $, scoped) {
  	return Class.extend({scoped: scoped}, function (inherited) {
  		return {
 		    
@@ -131,11 +133,11 @@ Scoped.define("module:Gestures.ElementEvent", [
 		        var self = this;
 		        var events = event.split(" ");
 		        element = element || this._element;
-		        for (var i = 0; i < events.length; ++i) {
-		            element.on(events[i] + "." + Ids.objectId(this), function (event) {
+		        Objs.iter(events, function (eventName) {
+		            element.on(eventName + "." + Ids.objectId(this), function (event) {
 		                func.call(context || self, event);
 		            });
-		        }
+		        }, this);
 		    },
 		
 		    destroy: function () {
@@ -245,6 +247,10 @@ Scoped.define("module:Gestures.GestureStates.EventDrivenState", [
 		    _persistents: ["client_pos", "screen_pos", "state_descriptor"],
 		    _locals: ["current_state"],
 		    
+		    /* Defining for linter */
+		    _state_descriptor: null,
+		    _current_state: null,
+		    
 		    current_state: function () {
 		        return this._state_descriptor[this._current_state];
 		    },
@@ -263,14 +269,13 @@ Scoped.define("module:Gestures.GestureStates.EventDrivenState", [
 		        if (state.start)
 		            state.start.apply(this);
 		        state.events = state.events || [];
-		        for (var i = 0; i < state.events.length; ++i) {
-		            function helper(event) {
-		                this._auto_destroy(new Gestures[event.event](event.args, this.element(), function () {
-		                    this.nextDrivenState(event.target);
-		                }, this));
-		            }
+	            var helper = function (event) {
+	                this._auto_destroy(new Gestures[event.event](event.args, this.element(), function () {
+	                    this.nextDrivenState(event.target);
+	                }, this));
+	            };
+		        for (var i = 0; i < state.events.length; ++i)
 		            helper.call(this, state.events[i]);
-		        }
 		    },
 		    
 		    _end: function () {

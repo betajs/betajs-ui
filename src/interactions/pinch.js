@@ -73,6 +73,9 @@ Scoped.define("module:Interactions.PinchStates.Pinching", ["module:Interactions.
 			
 			_white_list: ["Idle"],
 			_persistents: ["initial_coords", "current_coords"],
+			
+			/* Linter */
+			_initial_coords: null,
 		
 			_start: function () {
 				this._last_coords = null;

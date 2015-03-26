@@ -204,7 +204,7 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
 				}
 				if (opts.draggable_y) {
 					var top = modifier.css("top");
-					if (top === "auto" || !left)
+					if (top === "auto" || !top)
 						modifier.css("top", "0px");
 					this._initial_element_coords.y = parseInt(modifier.css("top"), 10);
 				}
@@ -251,6 +251,9 @@ Scoped.define("module:Interactions.DragStates.Stopping", [
 			
 			_white_list: ["Idle"],
 			_locals: ["initial_element_coords", "cloned_element", "cloned_modifier", "immediately", "released", "placeholder_cloned_element"],
+			
+			/* Linter */
+			_immediately: null,
 			
 			_start: function () {
 				this.trigger("stopping");

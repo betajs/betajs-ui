@@ -38,9 +38,9 @@ Scoped.define("module:Interactions.LoopScroll", ["module:Interactions.Scroll"], 
 			    	}
 				} else if (bottom_elements < top_elements - 1) {
 			    	while (bottom_elements < top_elements - 1) {
-						item = this.itemsElement().find(":nth-child(2)");
-						item.insertBefore(this.__bottom_white_space);
-						top_ws_height += item.outerHeight();
+						var item2 = this.itemsElement().find(":nth-child(2)");
+						item2.insertBefore(this.__bottom_white_space);
+						top_ws_height += item2.outerHeight();
 		                this._whitespaceSetHeight(this.__top_white_space, top_ws_height);
 						bottom_elements++;
 						top_elements--;

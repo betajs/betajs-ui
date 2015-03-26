@@ -1,10 +1,10 @@
 /*!
-betajs-ui - v1.0.0 - 2015-03-19
+betajs-ui - v1.0.0 - 2015-03-26
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
 /*!
-betajs-scoped - v0.0.1 - 2015-03-17
+betajs-scoped - v0.0.1 - 2015-03-26
 Copyright (c) Oliver Friedmann
 MIT Software License.
 */
@@ -482,19 +482,20 @@ function newScope (parent, parentNamespace, rootNamespace, globalNamespace) {
 			var deps = [];
 			var environment = {};
 			if (count) {
+				var f = function (value) {
+					if (this.i < deps.length)
+						deps[this.i] = value;
+					count--;
+					if (count === 0) {
+						deps.push(environment);
+						args.callback.apply(args.context || this.ctx, deps);
+					}
+				};
 				for (var i = 0; i < allDependencies.length; ++i) {
 					var ns = this.resolve(allDependencies[i]);
 					if (i < dependencies.length)
 						deps.push(null);
-					ns.namespace.obtain(ns.path, function (value) {
-						if (this.i < deps.length)
-							deps[this.i] = value;
-						count--;
-						if (count === 0) {
-							deps.push(environment);
-							args.callback.apply(args.context || this.ctx, deps);
-						}
-					}, {
+					ns.namespace.obtain(ns.path, f, {
 						ctx: this,
 						i: i
 					});
@@ -522,7 +523,7 @@ var rootScope = newScope(null, rootNamespace, rootNamespace, globalNamespace);
 var Public = Helper.extend(rootScope, {
 		
 	guid: "4b6878ee-cb6a-46b3-94ac-27d91f58d666",
-	version: '8.1426613087189',
+	version: '9.1427403679672',
 		
 	upgrade: Attach.upgrade,
 	attach: Attach.attach,
@@ -536,7 +537,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.0 - 2015-03-19
+betajs-ui - v1.0.0 - 2015-03-26
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -553,7 +554,7 @@ Scoped.binding("jquery", "global:jQuery");
 Scoped.define("module:", function () {
 	return {
 		guid: "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-		version: '36.1426798153779'
+		version: '37.1427412549019'
 	};
 });
 
@@ -883,9 +884,10 @@ Scoped.define("module:Events.Support", [
 
 Scoped.define("module:Hardware.MouseCoords", [
 	    "base:Ids",
+	    "base:Objs",
 	    "jquery:",
 	    "module:Events.Mouse"
-	], function (Ids, $, MouseEvents) {
+	], function (Ids, Objs, $, MouseEvents) {
 	return {		
 			
 		__required: 0,
@@ -896,12 +898,13 @@ Scoped.define("module:Hardware.MouseCoords", [
 			if (this.__required === 0) {
 				var self = this;
 				var events = [MouseEvents.moveEvent, MouseEvents.upEvent, MouseEvents.downEvent];
-				for (var i = 0; i < events.length; ++i)
-					$("body").on(events[i] + "." + Ids.objectId(this), function (event) {
+				Objs.iter(events, function (eventName) {
+					$("body").on(eventName + "." + Ids.objectId(this), function (event) {
 						var result = MouseEvents.pageCoords(event);
 						if (result.x && result.y)
 							self.coords = result; 
 					});
+				}, this);
 			}
 			this.__required++;
 		},
@@ -1121,7 +1124,7 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
 				}
 				if (opts.draggable_y) {
 					var top = modifier.css("top");
-					if (top === "auto" || !left)
+					if (top === "auto" || !top)
 						modifier.css("top", "0px");
 					this._initial_element_coords.y = parseInt(modifier.css("top"), 10);
 				}
@@ -1168,6 +1171,9 @@ Scoped.define("module:Interactions.DragStates.Stopping", [
 			
 			_white_list: ["Idle"],
 			_locals: ["initial_element_coords", "cloned_element", "cloned_modifier", "immediately", "released", "placeholder_cloned_element"],
+			
+			/* Linter */
+			_immediately: null,
 			
 			_start: function () {
 				this.trigger("stopping");
@@ -1742,8 +1748,9 @@ Scoped.define("module:Interactions.ElementInteraction", [
 	    "jquery:",
 	    "base:Async",
 	    "base:States.Host",
-	    "base:Ids"
-	], function (Class, EventsMixin, MouseCoords, $, Async, StateHost, Ids, scoped) {
+	    "base:Ids",
+	    "base:Objs"
+	], function (Class, EventsMixin, MouseCoords, $, Async, StateHost, Ids, Objs, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 
@@ -1766,10 +1773,11 @@ Scoped.define("module:Interactions.ElementInteraction", [
 			__on: function (element, event, callback, context) {
 				var self = this;
 				var events = event.split(" ");
-				for (var i = 0; i < events.length; ++i)
-					$(element).on(events[i] + "." + Ids.objectId(this), function () {
+		        Objs.iter(events, function (eventName) {
+					$(element).on(eventName + "." + Ids.objectId(this), function () {
 						callback.apply(context || self, arguments);
 					});
+		        }, this);
 			},
 			
 			destroy: function () {
@@ -1827,8 +1835,9 @@ Scoped.define("module:Interactions.ElementInteraction", [
 Scoped.define("module:Interactions.State", [
  	    "base:States.State",
  	    "jquery:",
- 	    "base:Ids"
- 	], function (State, $, Ids, scoped) {
+ 	    "base:Ids",
+ 	    "base:Objs"
+ 	], function (State, $, Ids, Objs, scoped) {
  	return State.extend({scoped: scoped}, {
 		
 		parent: function () {
@@ -1846,10 +1855,11 @@ Scoped.define("module:Interactions.State", [
 		on: function (element, event, callback, context) {
 			var self = this;
 			var events = event.split(" ");
-			for (var i = 0; i < events.length; ++i)
-				$(element).on(events[i] + "." + Ids.objectId(this), function () {
+	        Objs.iter(events, function (eventName) {
+				$(element).on(eventName + "." + Ids.objectId(this), function () {
 					callback.apply(context || self, arguments);
 				});
+	        }, this);
 		},
 		
 		_end: function () {
@@ -1900,9 +1910,9 @@ Scoped.define("module:Interactions.LoopScroll", ["module:Interactions.Scroll"], 
 			    	}
 				} else if (bottom_elements < top_elements - 1) {
 			    	while (bottom_elements < top_elements - 1) {
-						item = this.itemsElement().find(":nth-child(2)");
-						item.insertBefore(this.__bottom_white_space);
-						top_ws_height += item.outerHeight();
+						var item2 = this.itemsElement().find(":nth-child(2)");
+						item2.insertBefore(this.__bottom_white_space);
+						top_ws_height += item2.outerHeight();
 		                this._whitespaceSetHeight(this.__top_white_space, top_ws_height);
 						bottom_elements++;
 						top_elements--;
@@ -2037,6 +2047,9 @@ Scoped.define("module:Interactions.PinchStates.Pinching", ["module:Interactions.
 			
 			_white_list: ["Idle"],
 			_persistents: ["initial_coords", "current_coords"],
+			
+			/* Linter */
+			_initial_coords: null,
 		
 			_start: function () {
 				this._last_coords = null;
@@ -2163,7 +2176,7 @@ Scoped.define("module:Interactions.Scroll", [
 		    
 		    currentElement: function () {
 		    	var offset = this.element().offset();
-		    	var h = this._options["currentTop"] ? this._options['elementMargin'] : (this.element().innerHeight() - 1 - this._options['elementMargin']);
+		    	var h = this._options.currentTop ? this._options.elementMargin : (this.element().innerHeight() - 1 - this._options.elementMargin);
 		    	var w = this.element().innerWidth() / 2;
 		    	var current = $(ElemSupp.elementFromPoint(offset.left + w, offset.top + h));
 		    	while (current && current.get(0) && current.parent().get(0) != this.itemsElement().get(0))
@@ -2185,7 +2198,7 @@ Scoped.define("module:Interactions.Scroll", [
 		    },
 		    
 		    scrollTo: function (position, options) {
-		    	var scroll_top = position - (this._options["currentTop"] ? 0 : (this.element().innerHeight() - 1));
+		    	var scroll_top = position - (this._options.currentTop ? 0 : (this.element().innerHeight() - 1));
 		    	options = options || {};
 		    	options.scroll_top = scroll_top;
 		    	this._host.state().next("ScrollingTo", options);
@@ -2193,7 +2206,7 @@ Scoped.define("module:Interactions.Scroll", [
 		    
 		    scrollToElement: function (element, options) {
 		    	var top = element.offset().top - this.element().offset().top + this.element().scrollTop();
-		    	this.scrollTo(top + (this._options["currentTop"] ? 0 : (element.outerHeight() - 1)), options);
+		    	this.scrollTo(top + (this._options.currentTop ? 0 : (element.outerHeight() - 1)), options);
 		    },
 		    
 		    disableScroll: function () {
@@ -2284,6 +2297,10 @@ Scoped.define("module:Interactions.ScrollStates.ScrollingTo", ["module:Interacti
 		return {
 			
 			_locals: ["scroll_top", "animate", "abortable"],
+			
+			/* Linter */
+			_scroll_top: null,
+			_abortable: null,
 			
 			_start: function () {
 				if (!this._abortable)
@@ -2418,8 +2435,9 @@ Scoped.define("module:Gestures.Gesture", [
 
 Scoped.define("module:Gestures.Gesture.ElementState", [
   	    "base:States.CompetingState",
-  	    "base:Ids"
-  	], function (CompetingState, Ids, scoped) {
+  	    "base:Ids",
+  	    "base:Objs"
+  	], function (CompetingState, Ids, Objs, scoped) {
   	return CompetingState.extend({scoped: scoped}, function (inherited) {
   		return {
 
@@ -2447,11 +2465,11 @@ Scoped.define("module:Gestures.Gesture.ElementState", [
 		    on: function (event, func) {
 		        var self = this;
 		        var events = event.split(" ");
-		        for (var i = 0; i < events.length; ++i) {
-		            this.element().on(events[i] + "." + Ids.objectId(this), function (event) {
+		        Objs.iter(events, function (eventName) {
+		            this.element().on(eventName + "." + Ids.objectId(this), function (event) {
 		                func.call(self, event);
 		            });
-		        }
+		        }, this);
 		    },
 		    
 		    _end: function () {
@@ -2470,8 +2488,9 @@ Scoped.define("module:Gestures.Gesture.ElementState", [
 Scoped.define("module:Gestures.ElementEvent", [
  	    "base:Class",
  	    "base:Ids",
+ 	    "base:Objs",
  	    "jquery:"
- 	], function (Class, Ids, $, scoped) {
+ 	], function (Class, Ids, Objs, $, scoped) {
  	return Class.extend({scoped: scoped}, function (inherited) {
  		return {
 		    
@@ -2491,11 +2510,11 @@ Scoped.define("module:Gestures.ElementEvent", [
 		        var self = this;
 		        var events = event.split(" ");
 		        element = element || this._element;
-		        for (var i = 0; i < events.length; ++i) {
-		            element.on(events[i] + "." + Ids.objectId(this), function (event) {
+		        Objs.iter(events, function (eventName) {
+		            element.on(eventName + "." + Ids.objectId(this), function (event) {
 		                func.call(context || self, event);
 		            });
-		        }
+		        }, this);
 		    },
 		
 		    destroy: function () {
@@ -2605,6 +2624,10 @@ Scoped.define("module:Gestures.GestureStates.EventDrivenState", [
 		    _persistents: ["client_pos", "screen_pos", "state_descriptor"],
 		    _locals: ["current_state"],
 		    
+		    /* Defining for linter */
+		    _state_descriptor: null,
+		    _current_state: null,
+		    
 		    current_state: function () {
 		        return this._state_descriptor[this._current_state];
 		    },
@@ -2623,14 +2646,13 @@ Scoped.define("module:Gestures.GestureStates.EventDrivenState", [
 		        if (state.start)
 		            state.start.apply(this);
 		        state.events = state.events || [];
-		        for (var i = 0; i < state.events.length; ++i) {
-		            function helper(event) {
-		                this._auto_destroy(new Gestures[event.event](event.args, this.element(), function () {
-		                    this.nextDrivenState(event.target);
-		                }, this));
-		            }
+	            var helper = function (event) {
+	                this._auto_destroy(new Gestures[event.event](event.args, this.element(), function () {
+	                    this.nextDrivenState(event.target);
+	                }, this));
+	            };
+		        for (var i = 0; i < state.events.length; ++i)
 		            helper.call(this, state.events[i]);
-		        }
 		    },
 		    
 		    _end: function () {

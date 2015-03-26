@@ -1,5 +1,5 @@
 /*!
-betajs-browser - v1.0.0 - 2015-03-17
+betajs-browser - v1.0.0 - 2015-03-26
 Copyright (c) Oliver Friedmann
 MIT Software License.
 */
@@ -19,7 +19,7 @@ Scoped.define("base:$", ["jquery:"], function (jquery) {
 Scoped.define("module:", function () {
 	return {
 		guid: "02450b15-9bbf-4be2-b8f6-b483bc015d06",
-		version: '11.1426642740112'
+		version: '13.1427409166594'
 	};
 });
 
@@ -125,6 +125,7 @@ Scoped.define("module:Dom", ["base:Objs", "jquery:"], function (Objs, $) {
 			return this.traverseNext(node.parentNode, true);
 		},
 		
+		/** @suppress {checkTypes} */
 		selectNode : function(node, offset) {
 			node = $(node).get(0);
 			var selection = null;
@@ -147,6 +148,7 @@ Scoped.define("module:Dom", ["base:Objs", "jquery:"], function (Objs, $) {
 			}
 		},
 	
+		/** @suppress {checkTypes} */
 		selectionStartNode : function() {
 			if (window.getSelection)
 				return $(window.getSelection().getRangeAt(0).startContainer);
@@ -155,6 +157,7 @@ Scoped.define("module:Dom", ["base:Objs", "jquery:"], function (Objs, $) {
 			return null;
 		},
 		
+		/** @suppress {checkTypes} */
 		selectedHtml : function() {
 			if (window.getSelection)
 				return window.getSelection().toString();
@@ -163,6 +166,7 @@ Scoped.define("module:Dom", ["base:Objs", "jquery:"], function (Objs, $) {
 			return "";
 		},
 		
+		/** @suppress {checkTypes} */
 		selectionAncestor : function() {
 			if (window.getSelection)
 				return $(window.getSelection().getRangeAt(0).commonAncestorContainer);
@@ -171,6 +175,7 @@ Scoped.define("module:Dom", ["base:Objs", "jquery:"], function (Objs, $) {
 			return null;
 		},
 		
+		/** @suppress {checkTypes} */
 		selectionStartOffset: function () {
 			if (window.getSelection)
 				return window.getSelection().getRangeAt(0).startOffset;
@@ -179,6 +184,7 @@ Scoped.define("module:Dom", ["base:Objs", "jquery:"], function (Objs, $) {
 			return null;
 		},
 		
+		/** @suppress {checkTypes} */
 		selectionEndOffset: function () {
 			if (window.getSelection)
 				return window.getSelection().getRangeAt(0).endOffset;
@@ -187,6 +193,7 @@ Scoped.define("module:Dom", ["base:Objs", "jquery:"], function (Objs, $) {
 			return null;
 		},
 	
+		/** @suppress {checkTypes} */
 		selectionStart : function() {
 			if (window.getSelection)
 				return $(window.getSelection().getRangeAt(0).startContainer);
@@ -195,6 +202,7 @@ Scoped.define("module:Dom", ["base:Objs", "jquery:"], function (Objs, $) {
 			return null;
 		},
 	
+		/** @suppress {checkTypes} */
 		selectionEnd : function() {
 			if (window.getSelection)
 				return $(window.getSelection().getRangeAt(0).endContainer);
@@ -203,16 +211,19 @@ Scoped.define("module:Dom", ["base:Objs", "jquery:"], function (Objs, $) {
 			return null;
 		},
 		
+		/** @suppress {checkTypes} */
 		selectionNonEmpty: function () {
 			var start = this.selectionStart();
 			var end = this.selectionEnd();
 			return start && end && start.get(0) && end.get(0) && (start.get(0) != end.get(0) || this.selectionStartOffset() != this.selectionEndOffset());
 		},
 		
+		/** @suppress {checkTypes} */
 		selectionContained: function (node) {
 			return node.has(this.selectionStart()).length > 0 && node.has(this.selectionEnd()).length > 0;
 		},
 	
+		/** @suppress {checkTypes} */
 		selectionNodes: function () {
 			var result = [];
 			var start = this.selectionStart();
@@ -226,6 +237,7 @@ Scoped.define("module:Dom", ["base:Objs", "jquery:"], function (Objs, $) {
 			return result;
 		},
 		
+		/** @suppress {checkTypes} */
 		selectionLeaves: function () {
 			return Objs.filter(this.selectionNodes(), function (node) { return node.children().length === 0; });
 		},
@@ -251,6 +263,7 @@ Scoped.define("module:Dom", ["base:Objs", "jquery:"], function (Objs, $) {
 			}
 		},
 		
+		/** @suppress {checkTypes} */
 		selectionSplitOffsets: function () {
 			var startOffset = this.selectionStartOffset();
 			var endOffset = this.selectionEndOffset();
@@ -272,6 +285,7 @@ Scoped.define("module:Dom", ["base:Objs", "jquery:"], function (Objs, $) {
 			this.selectRange(start, end);
 		},
 		
+		/** @suppress {checkTypes} */
 		selectRange: function (start_node, end_node, start_offset, end_offset) {
 			start_node = $(start_node);
 			end_node = $(end_node);
@@ -306,6 +320,260 @@ Scoped.define("module:Dom", ["base:Objs", "jquery:"], function (Objs, $) {
 				
 	};
 });
+/*
+Copyright (c) Copyright (c) 2007, Carl S. Yestrau All rights reserved.
+Code licensed under the BSD License: http://www.featureblend.com/license.txt
+Version: 1.0.4
+*/
+
+Scoped.define("module:FlashDetect", ["base:Class"], function (Class, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function () {
+				inherited.constructor.call(this);
+				this.__version = null;
+		        if (navigator.plugins && navigator.plugins.length > 0) {
+		            var type = 'application/x-shockwave-flash';
+		            var mimeTypes = navigator.mimeTypes;
+		            if (mimeTypes && mimeTypes[type] && mimeTypes[type].enabledPlugin && mimeTypes[type].enabledPlugin.description)
+		                this.__version = this.parseVersion(mimeTypes[type].enabledPlugin.description);
+		        } else if (navigator.appVersion.indexOf("Mac") == -1 && window.execScript) {
+		            for (var i = 0; i < this.__activeXDetectRules.length; i++) {
+				        try {
+				            var obj = new ActiveXObject(this.__activeXDetectRules[i].name);
+				            var version = this.__activeXDetectRules[i].version(obj);
+		                    if (version) {
+		                    	this.__version = this.parseActiveXVersion(version);
+		                    	break;
+		                    }
+				        } catch (err) { }
+				    }
+				}
+			},
+			
+		    parseVersion: function(str) {
+		        var descParts = str.split(/ +/);
+		        var majorMinor = descParts[2].split(/\./);
+		        var revisionStr = descParts[3];
+		        return {
+		            "raw": str,
+		            "major": parseInt(majorMinor[0], 10),
+		            "minor": parseInt(majorMinor[1], 10), 
+		            "revisionStr": revisionStr,
+		            "revision": parseInt(revisionStr.replace(/[a-zA-Z]/g, ""), 10)
+		        };
+		    },
+			
+		    parseActiveXVersion : function(str) {
+		        var versionArray = str.split(",");
+		        return {
+		            "raw": str,
+		            "major": parseInt(versionArray[0].split(" ")[1], 10),
+		            "minor": parseInt(versionArray[1], 10),
+		            "revision": parseInt(versionArray[2], 10),
+		            "revisionStr": versionArray[2]
+		        };
+		    },
+			
+			version: function () {
+				return this.__version;
+			},
+			
+			installed: function () {
+				return this.__version !== null;
+			},
+			
+			supported: function () {
+				var ua = navigator.userAgent;
+				return this.installed() || !(ua.indexOf('iPhone') != -1 || ua.indexOf('iPod') != -1 || ua.indexOf('iPad') != -1);
+			},
+			
+		    majorAtLeast : function (version) {
+		        return this.installed() && this.version().major >= version;
+		    },
+		
+		    minorAtLeast : function (version) {
+		        return this.installed() && this.version().minor >= version;
+		    },
+		
+		    revisionAtLeast : function (version) {
+		        return this.installed() && this.version().revision >= version;
+		    },
+		
+		    versionAtLeast : function (major) {
+		    	if (!this.installed())
+		    		return false;
+		        var properties = [this.version().major, this.version().minor, this.version().revision];
+		        var len = Math.min(properties.length, arguments.length);
+		        for (var i = 0; i < len; i++) {
+		            if (properties[i] != arguments[i]) 
+		            	return properties[i] > arguments[i];
+		        }
+		        return true;
+		    },
+			
+		    __activeXDetectRules: [{
+		        name: "ShockwaveFlash.ShockwaveFlash.7",
+		        version: function(obj) {
+			        try {
+			            return obj.GetVariable("$version");
+			        } catch(err) {
+			        	return null;
+			        }
+			    }
+			}, {
+				name: "ShockwaveFlash.ShockwaveFlash.6",
+		        version: function(obj) {
+		            try {
+		                obj.AllowScriptAccess = "always";
+				        try {
+				            return obj.GetVariable("$version");
+				        } catch(err) {
+				        	return null;
+				        }
+		            } catch(err) {
+		            	return "6,0,21";
+		            }
+		        }
+			}, {
+				name: "ShockwaveFlash.ShockwaveFlash",
+				version: function(obj) {
+			        try {
+			            return obj.GetVariable("$version");
+			        } catch(err) {
+			        	return null;
+			        }
+		        }
+		    }]
+		    
+		};
+	});
+});
+
+
+Scoped.define("module:FlashHelper", [
+    "base:Time", "base:Objs", "base:Types", "base:Net.Uri", "module:Info", "jquery:"
+], function (Time, Objs, Types, Uri, Info, $) {
+	return {
+		
+		getFlashObject: function (container) {
+			var embed = $(container).find("embed").get(0);
+			if (Info.isInternetExplorer() && Info.internetExplorerVersion() <= 10)
+				embed = null;
+			if (!embed)
+				embed = $(container).find("object").get(0);
+			if (!embed) {
+				var objs = $("object");
+				for (var i = 0; i < objs.length; ++i) {
+					if ($(objs[i]).closest(container).length > 0)
+						embed = $(objs[i]);
+				}
+			}
+			return embed;
+		},
+		
+		embedTemplate: function (options) {
+			options = options || {};
+			var params = [];
+			params.push({
+				"objectKey": "classid",
+				"value": "clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"
+			});
+			params.push({
+				"objectKey": "codebase",
+				"value": "http://fpdownload.macromedia.com/get/flashplayer/current/swflash.cab"
+			});
+			params.push({
+				"embedKey": "align",
+				"value": "middle"
+			});
+			params.push({
+				"embedKey": "play",
+				"value": "true"
+			});
+			params.push({
+				"embedKey": "loop",
+				"value": "false"
+			});
+			params.push({
+				"embedKey": "type",
+				"value": "application/x-shockwave-flash"
+			});
+			params.push({
+				"embedKey": "pluginspage",
+				"value": "http://www.adobe.com/go/getflashplayer"
+			});
+			params.push({
+				"objectParam": "quality",
+				"embedKey": "quality",
+				"value": "high"
+			});
+			params.push({
+				"objectParam": "allowScriptAccess",
+				"embedKey": "allowScriptAccess",
+				"value": "always"
+			});
+			params.push({
+				"objectParam": "wmode",
+				"embedKey": "wmode",
+				"value": "opaque"
+			});
+			params.push({
+				"objectParam": "movie",
+				"embedKey": "src",
+				"value": options.flashFile + (options.forceReload ? "?" + Time.now() : "") 
+			});
+			if (options.width) {
+				params.push({
+					"objectKey": "width",
+					"embedKey": "width",
+					"value": options.width
+				});
+			}
+			if (options.height) {
+				params.push({
+					"objectKey": "height",
+					"embedKey": "height",
+					"value": options.height
+				});
+			}
+			if (options.bgcolor) {
+				params.push({
+					"objectParam": "bgcolor",
+					"embedKey": "bgcolor",
+					"value": options.bgcolor
+				});
+			}
+			if (options.FlashVars) {
+				params.push({
+					"objectParam": "FlashVars",
+					"embedKey": "FlashVars",
+					"value": Types.is_object(options.FlashVars) ? Uri.encodeUriParams(options.FlashVars) : options.FlashVars
+				});
+			}
+			var objectKeys = [];
+			var objectParams = [];
+			var embedKeys = [];
+			Objs.iter(params, function (param) {
+				if (param.objectKey)
+					objectKeys.push(param.objectKey + '="' + param.value + '"');
+				if (param.embedKey)
+					embedKeys.push(param.embedKey + '="' + param.value + '"');
+				if (param.objectParam)
+					objectParams.push('<param name="' + param.objectParam + '" value="' + param.value + '" />');
+			}, this);
+			return "<object " + objectKeys.join(" ") + ">" + objectParams.join(" ") + "<embed " + embedKeys.join(" ") + "></embed></object>";
+		},
+		
+		embedFlashObject: function (container, options) {
+			$(container).html(this.embedTemplate(options));
+			return this.getFlashObject(container);
+		}
+		
+	};	
+});
+
 /*
  * Uses modified portions of:
  * 
@@ -604,12 +872,14 @@ Scoped.define("module:Info", ["module:FlashDetect"], function (FlashDetect) {
 		internetExplorerVersion: function () {
 			if (navigator.appName == 'Microsoft Internet Explorer') {
 			    var re = new RegExp("MSIE ([0-9]{1,}[\.0-9]{0,})");
-			    if (re.exec(navigator.userAgent))
-			    	return parseFloat(RegExp.$1);
+			    var ma = re.exec(navigator.userAgent);
+			    if (ma)
+			    	return ma[1];
 			} else if (navigator.appName == 'Netscape') {
 			    var re2 = new RegExp("Trident/.*rv:([0-9]{1,}[\.0-9]{0,})");
-			    if (re2.exec(navigator.userAgent))
-			    	return parseFloat(RegExp.$1);
+			    var ma2 = re2.exec(navigator.userAgent); 
+			    if (ma2)
+			    	return parseFloat(ma2[1]);
 			}
 			return null;
 		},
@@ -685,139 +955,6 @@ Scoped.define("module:Info", ["module:FlashDetect"], function (FlashDetect) {
 	};
 });	
 
-
-
-
-/*
-Copyright (c) Copyright (c) 2007, Carl S. Yestrau All rights reserved.
-Code licensed under the BSD License: http://www.featureblend.com/license.txt
-Version: 1.0.4
-*/
-
-Scoped.define("module:FlashDetect", ["base:Class"], function (Class, scoped) {
-	return Class.extend({scoped: scoped}, function (inherited) {
-		return {
-			
-			constructor: function () {
-				inherited.constructor.call(this);
-				this.__version = null;
-		        if (navigator.plugins && navigator.plugins.length > 0) {
-		            var type = 'application/x-shockwave-flash';
-		            var mimeTypes = navigator.mimeTypes;
-		            if (mimeTypes && mimeTypes[type] && mimeTypes[type].enabledPlugin && mimeTypes[type].enabledPlugin.description)
-		                this.__version = this.parseVersion(mimeTypes[type].enabledPlugin.description);
-		        } else if (navigator.appVersion.indexOf("Mac") == -1 && window.execScript) {
-		            for (var i = 0; i < this.__activeXDetectRules.length; i++) {
-				        try {
-				            var obj = new ActiveXObject(this.__activeXDetectRules[i].name);
-				            var version = this.__activeXDetectRules[i].version(obj);
-		                    if (version) {
-		                    	this.__version = this.parseActiveXVersion(version);
-		                    	break;
-		                    }
-				        } catch (err) { }
-				    }
-				}
-			},
-			
-		    parseVersion: function(str) {
-		        var descParts = str.split(/ +/);
-		        var majorMinor = descParts[2].split(/\./);
-		        var revisionStr = descParts[3];
-		        return {
-		            "raw": str,
-		            "major": parseInt(majorMinor[0], 10),
-		            "minor": parseInt(majorMinor[1], 10), 
-		            "revisionStr": revisionStr,
-		            "revision": parseInt(revisionStr.replace(/[a-zA-Z]/g, ""), 10)
-		        };
-		    },
-			
-		    parseActiveXVersion : function(str) {
-		        var versionArray = str.split(",");
-		        return {
-		            "raw": str,
-		            "major": parseInt(versionArray[0].split(" ")[1], 10),
-		            "minor": parseInt(versionArray[1], 10),
-		            "revision": parseInt(versionArray[2], 10),
-		            "revisionStr": versionArray[2]
-		        };
-		    },
-			
-			version: function () {
-				return this.__version;
-			},
-			
-			installed: function () {
-				return this.__version !== null;
-			},
-			
-			supported: function () {
-				var ua = navigator.userAgent;
-				return this.installed() || !(ua.indexOf('iPhone') != -1 || ua.indexOf('iPod') != -1 || ua.indexOf('iPad') != -1);
-			},
-			
-		    majorAtLeast : function (version) {
-		        return this.installed() && this.version().major >= version;
-		    },
-		
-		    minorAtLeast : function (version) {
-		        return this.installed() && this.version().minor >= version;
-		    },
-		
-		    revisionAtLeast : function (version) {
-		        return this.installed() && this.version().revision >= version;
-		    },
-		
-		    versionAtLeast : function (major) {
-		    	if (!this.installed())
-		    		return false;
-		        var properties = [this.version().major, this.version().minor, this.version().revision];
-		        var len = Math.min(properties.length, arguments.length);
-		        for (var i = 0; i < len; i++) {
-		            if (properties[i] != arguments[i]) 
-		            	return properties[i] > arguments[i];
-		        }
-		        return true;
-		    },
-			
-		    __activeXDetectRules: [{
-		        name: "ShockwaveFlash.ShockwaveFlash.7",
-		        version: function(obj) {
-			        try {
-			            return obj.GetVariable("$version");
-			        } catch(err) {
-			        	return null;
-			        }
-			    }
-			}, {
-				name: "ShockwaveFlash.ShockwaveFlash.6",
-		        version: function(obj) {
-		            try {
-		                obj.AllowScriptAccess = "always";
-				        try {
-				            return obj.GetVariable("$version");
-				        } catch(err) {
-				        	return null;
-				        }
-		            } catch(err) {
-		            	return "6,0,21";
-		            }
-		        }
-			}, {
-				name: "ShockwaveFlash.ShockwaveFlash",
-				version: function(obj) {
-			        try {
-			            return obj.GetVariable("$version");
-			        } catch(err) {
-			        	return null;
-			        }
-		        }
-		    }]
-		    
-		};
-	});
-});
 Scoped.define("module:Loader", ["jquery:"], function ($) {
 	return {				
 		
@@ -917,6 +1054,7 @@ Scoped.define("module:Router", [
 			 *  }
 			 * }
 			 */	
+			/** @suppress {checkTypes} */
 			routes: [],
 			
 			/** Creates a new router with options
@@ -932,10 +1070,10 @@ Scoped.define("module:Router", [
 				if (!Types.is_array(routes))
 					routes = [routes];
 				if ("routes" in options) {
-					if (Types.is_array(options["routes"]))
-						routes = routes.concat(options["routes"]);
+					if (Types.is_array(options.routes))
+						routes = routes.concat(options.routes);
 					else
-						routes.push(options["routes"]);
+						routes.push(options.routes);
 				}
 				this.__routes = [];
 				this.__paths = {};
@@ -960,7 +1098,7 @@ Scoped.define("module:Router", [
 						this.__paths[obj.path] = obj;
 					}, this);
 				}, this);
-				if ("actions" in options)
+				if (options.actions)
 					Objs.iter(options.actions, function (action, key) {
 						this[key] = action;
 					}, this);
@@ -982,17 +1120,19 @@ Scoped.define("module:Router", [
 					if (result !== null) {
 						result.shift(1);
 						var applicable = true;
-						Objs.iter(obj.applicable, function (s) {
+						for (var j = 0; j < obj.applicable.length; ++j) {
+							var s = obj.applicable[j];
 							var f = Types.is_string(s) ? this[s] : s;
 							applicable = applicable && f.apply(this, result);
-						}, this);
+						}
 						if (!applicable)
 							continue;
 						var valid = true;
-						Objs.iter(obj.valid, function (s) {
-							var f = Types.is_string(s) ? this[s] : s;
-							valid = valid && f.apply(this, result);
-						}, this);
+						for (var k = 0; k < obj.valid.length; ++k) {
+							var t = obj.valid[k];
+							var g = Types.is_string(t) ? this[t] : t;
+							valid = valid && g.apply(this, result);
+						}
 						if (!valid)
 							return null;
 						return {
@@ -1014,7 +1154,7 @@ Scoped.define("module:Router", [
 			
 			/** Returns the route of a path description
 			 * @param pth the path descriptor
-			 * @param parameters parameters that should be attached to the route (capturing groups)
+			 * param parameters parameters that should be attached to the route (capturing groups)
 			 */
 			path: function (pth) {
 				var key = this.object(pth).key;

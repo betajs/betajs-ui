@@ -78,7 +78,7 @@ Scoped.define("module:Interactions.Scroll", [
 		    
 		    currentElement: function () {
 		    	var offset = this.element().offset();
-		    	var h = this._options["currentTop"] ? this._options['elementMargin'] : (this.element().innerHeight() - 1 - this._options['elementMargin']);
+		    	var h = this._options.currentTop ? this._options.elementMargin : (this.element().innerHeight() - 1 - this._options.elementMargin);
 		    	var w = this.element().innerWidth() / 2;
 		    	var current = $(ElemSupp.elementFromPoint(offset.left + w, offset.top + h));
 		    	while (current && current.get(0) && current.parent().get(0) != this.itemsElement().get(0))
@@ -100,7 +100,7 @@ Scoped.define("module:Interactions.Scroll", [
 		    },
 		    
 		    scrollTo: function (position, options) {
-		    	var scroll_top = position - (this._options["currentTop"] ? 0 : (this.element().innerHeight() - 1));
+		    	var scroll_top = position - (this._options.currentTop ? 0 : (this.element().innerHeight() - 1));
 		    	options = options || {};
 		    	options.scroll_top = scroll_top;
 		    	this._host.state().next("ScrollingTo", options);
@@ -108,7 +108,7 @@ Scoped.define("module:Interactions.Scroll", [
 		    
 		    scrollToElement: function (element, options) {
 		    	var top = element.offset().top - this.element().offset().top + this.element().scrollTop();
-		    	this.scrollTo(top + (this._options["currentTop"] ? 0 : (element.outerHeight() - 1)), options);
+		    	this.scrollTo(top + (this._options.currentTop ? 0 : (element.outerHeight() - 1)), options);
 		    },
 		    
 		    disableScroll: function () {
@@ -199,6 +199,10 @@ Scoped.define("module:Interactions.ScrollStates.ScrollingTo", ["module:Interacti
 		return {
 			
 			_locals: ["scroll_top", "animate", "abortable"],
+			
+			/* Linter */
+			_scroll_top: null,
+			_abortable: null,
 			
 			_start: function () {
 				if (!this._abortable)
