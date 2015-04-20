@@ -18,10 +18,40 @@
 		"grunt-node-qunit": "",
 		"grunt-contrib-jshint": "",
 		"grunt-wget": "",
-		"grunt-jsdoc": "beta"
+		"grunt-jsdoc": "beta",
+		"grunt-shell": "",
+		"grunt-template": ""
 	},
 	"repository": {
 		"type": "git",
 		"url": "git://github.com/betajs/betajs-ui.git"
+	},
+	"meta": {
+		"status": "Active, In Development",
+		"weakDependencies": {
+			"betajs-scoped": "https://github.com/betajs/betajs-scoped"
+		},
+		"dependencies": {
+			"betajs": "https://github.com/betajs/betajs",
+			"betajs-browser": "https://github.com/betajs/betajs-browser"
+		},
+		"compatability": {
+			"Firefox": "4 - Latest",
+			"Chrome": "14 - Latest",
+			"Safari": "4 - Latest",
+			"Opera": "12 - Latest",
+			"Internet Explorer": "9 - Latest",
+			"iOS": "7.0 - Latest",
+			"Android": "4.0 - Latest"
+		},
+		"tests": {
+			"Test Suite": "http://rawgit.com/betajs/betajs-ui/master/tests/tests.html"
+		},
+		"cdn": {
+			"beta-ui.js": "http://cdn.rawgit.com/betajs/betajs-ui/master/dist/beta-ui.js",
+			"beta-ui.min.js": "http://cdn.rawgit.com/betajs/betajs-ui/master/dist/beta-ui.min.js",
+			"beta-ui-noscoped.js": "http://cdn.rawgit.com/betajs/betajs-ui/master/dist/beta-ui-noscoped.js",
+			"beta-ui-noscoped.min.js": "http://cdn.rawgit.com/betajs/betajs-ui/master/dist/beta-ui-noscoped.min.js"
+		}
 	}
 }
