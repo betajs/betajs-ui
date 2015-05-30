@@ -31,10 +31,11 @@ Scoped.define("module:Interactions.InfiniteScroll", [
 		    },
 		    
 		    append: function (count) {
+		    	var opts = this.options();
 		    	if (this._can_append && !this._extending) {
 		    		this._extending = true;
 		    		var self = this;
-		    		this.options().append(count || this.options().append_count, function (added, done) {
+		    		opts.append.call(opts.context, count || opts.append_count, function (added, done) {
 		    			if (self.__bottom_white_space)
 		    				self.itemsElement().append(self.__bottom_white_space);
 		    			self._extending = false;
@@ -60,10 +61,11 @@ Scoped.define("module:Interactions.InfiniteScroll", [
 		    },
 		    
 		    prepend: function (count) {
+		    	var opts = this.options();
 		    	if (this._can_prepend) {
 		    		this._extending = true;
 		    		var self = this;
-		    		this.options().prepend(count || this.options().prepend_count, function (added, done) {
+		    		opts.prepend(opts.context, count || opts.prepend_count, function (added, done) {
 		    			if (self.__top_white_space)
 		    				self.itemsElement().prepend(self.__top_white_space);
 		    			self._extending = false;

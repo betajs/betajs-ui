@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.0 - 2015-03-26
+betajs-ui - v1.0.0 - 2015-05-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -537,7 +537,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.0 - 2015-03-26
+betajs-ui - v1.0.0 - 2015-05-30
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -554,7 +554,7 @@ Scoped.binding("jquery", "global:jQuery");
 Scoped.define("module:", function () {
 	return {
 		guid: "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-		version: '37.1427412549019'
+		version: '39.1433007835145'
 	};
 });
 
@@ -1621,10 +1621,11 @@ Scoped.define("module:Interactions.InfiniteScroll", [
 		    },
 		    
 		    append: function (count) {
+		    	var opts = this.options();
 		    	if (this._can_append && !this._extending) {
 		    		this._extending = true;
 		    		var self = this;
-		    		this.options().append(count || this.options().append_count, function (added, done) {
+		    		opts.append.call(opts.context, count || opts.append_count, function (added, done) {
 		    			if (self.__bottom_white_space)
 		    				self.itemsElement().append(self.__bottom_white_space);
 		    			self._extending = false;
@@ -1650,10 +1651,11 @@ Scoped.define("module:Interactions.InfiniteScroll", [
 		    },
 		    
 		    prepend: function (count) {
+		    	var opts = this.options();
 		    	if (this._can_prepend) {
 		    		this._extending = true;
 		    		var self = this;
-		    		this.options().prepend(count || this.options().prepend_count, function (added, done) {
+		    		opts.prepend(opts.context, count || opts.prepend_count, function (added, done) {
 		    			if (self.__top_white_space)
 		    				self.itemsElement().prepend(self.__top_white_space);
 		    			self._extending = false;
