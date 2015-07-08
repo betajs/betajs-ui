@@ -141,7 +141,7 @@ Scoped.define("module:Interactions.DropStates.Hover", ["module:Interactions.Drop
 });
 
 
-Scoped.define("module:Interactions.Drop.InvalidHover", ["module:Interactions.Drop.Disabled"], function (State, scoped) {
+Scoped.define("module:Interactions.DropStates.InvalidHover", ["module:Interactions.DropStates.Disabled"], function (State, scoped) {
    	return State.extend({scoped: scoped}, function (inherited) {
 		return {
 			

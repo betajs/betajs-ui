@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.0 - 2015-05-30
+betajs-ui - v1.0.0 - 2015-07-08
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -16,7 +16,7 @@ Scoped.binding("jquery", "global:jQuery");
 Scoped.define("module:", function () {
 	return {
 		guid: "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-		version: '39.1433007835145'
+		version: '40.1436390619498'
 	};
 });
 
@@ -829,7 +829,7 @@ Scoped.define("module:Interactions.DropStates.Hover", ["module:Interactions.Drop
 });
 
 
-Scoped.define("module:Interactions.Drop.InvalidHover", ["module:Interactions.Drop.Disabled"], function (State, scoped) {
+Scoped.define("module:Interactions.DropStates.InvalidHover", ["module:Interactions.DropStates.Disabled"], function (State, scoped) {
    	return State.extend({scoped: scoped}, function (inherited) {
 		return {
 			
