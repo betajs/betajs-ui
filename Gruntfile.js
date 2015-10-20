@@ -16,7 +16,7 @@ module.exports = function(grunt) {
 						banner : module.banner
 					},
 					dist_raw : {
-						dest : 'dist/beta-ui-raw.js',
+						dest : 'dist/betajs-ui-raw.js',
 						src : [ 'src/fragments/begin.js-fragment',
 								'src/elements/*.js', 'src/events/*.js',
 								'src/hardware/*.js', 'src/interactions/*.js',
@@ -24,8 +24,8 @@ module.exports = function(grunt) {
 								'src/fragments/end.js-fragment' ]
 					},
 					dist_scoped : {
-						dest : 'dist/beta-ui.js',
-						src : [ 'vendors/scoped.js', 'dist/beta-ui-noscoped.js' ]
+						dest : 'dist/betajs-ui.js',
+						src : [ 'vendors/scoped.js', 'dist/betajs-ui-noscoped.js' ]
 					}
 				},
 				preprocess : {
@@ -36,14 +36,15 @@ module.exports = function(grunt) {
 						}
 					},
 					dist : {
-						src : 'dist/beta-ui-raw.js',
-						dest : 'dist/beta-ui-noscoped.js'
+						src : 'dist/betajs-ui-raw.js',
+						dest : 'dist/betajs-ui-noscoped.js'
 					}
 				},
 				clean : { 
-					raw: "dist/beta-ui-raw.js", 
-					closure: "dist/beta-ui-closure.js",
-					browserstack : [ "./browserstack.json", "BrowserStackLocal" ]
+					raw: "dist/betajs-ui-raw.js", 
+					closure: "dist/betajs-ui-closure.js",
+					browserstack : [ "./browserstack.json", "BrowserStackLocal" ],
+					jsdoc : ['./jsdoc.conf.json']
 				},
 				uglify : {
 					options : {
@@ -51,8 +52,8 @@ module.exports = function(grunt) {
 					},
 					dist : {
 						files : {
-							'dist/beta-ui-noscoped.min.js' : [ 'dist/beta-ui-noscoped.js' ],
-							'dist/beta-ui.min.js' : [ 'dist/beta-ui.js' ]
+							'dist/betajs-ui-noscoped.min.js' : [ 'dist/betajs-ui-noscoped.js' ],
+							'dist/betajs-ui.min.js' : [ 'dist/betajs-ui.js' ]
 						}
 					}
 				},
@@ -62,7 +63,7 @@ module.exports = function(grunt) {
 						es3: true
 					},
 					source : [ "./src/**/*.js"],
-					dist : [ "./dist/beta-ui-noscoped.js", "./dist/beta-ui.js" ],
+					dist : [ "./dist/betajs-ui-noscoped.js", "./dist/betajs-ui.js" ],
 					gruntfile : [ "./Gruntfile.js" ],
 					tests: [ './tests/tests/scroll.js' ]
 				},
@@ -78,6 +79,18 @@ module.exports = function(grunt) {
 						}
 					}
 				},
+				jsdoc : {
+					dist : {
+						src : [ './README.md', './src/*/*.js' ],					
+						options : {
+							destination : 'docs',
+							template : "node_modules/grunt-betajs-docs-compile",
+							configure : "./jsdoc.conf.json",
+							tutorials: "./docsrc/tutorials",
+							recurse: true
+						}
+					}
+				},
 				closureCompiler : {
 					options : {
 						compilerFile : process.env.CLOSURE_PATH + "/compiler.jar",
@@ -90,8 +103,8 @@ module.exports = function(grunt) {
 					dist : {
 						src : [ "./vendors/beta.js",
 								"./vendors/beta-browser-noscoped.js",
-								"./dist/beta-ui-noscoped.js" ],
-						dest : "./dist/beta-ui-closure.js"
+								"./dist/betajs-ui-noscoped.js" ],
+						dest : "./dist/betajs-ui-closure.js"
 					}
 				},
 				wget : {
@@ -108,6 +121,44 @@ module.exports = function(grunt) {
 					}
 				},
 				template : {
+					"jsdoc": {
+						options: {
+							data: {
+								data: {
+									"tags": {
+										"allowUnknownTags": true
+									},
+									"plugins": ["plugins/markdown"],
+									"templates": {
+										"cleverLinks": false,
+										"monospaceLinks": false,
+										"dateFormat": "ddd MMM Do YYYY",
+										"outputSourceFiles": true,
+										"outputSourcePath": true,
+										"systemName": "BetaJS",
+										"footer": "",
+										"copyright": "BetaJS (c) - MIT License",
+										"navType": "vertical",
+										"theme": "cerulean",
+										"linenums": true,
+										"collapseSymbols": false,
+										"inverseNav": true,
+										"highlightTutorialCode": true,
+										"protocol": "fred://",
+										"singleTutorials": true,
+										"emptyTutorials": true
+									},
+									"markdown": {
+										"parser": "gfm",
+										"hardwrap": true
+									}
+								}
+							}
+						},
+						files : {
+							"jsdoc.conf.json": ["json.tpl"]
+						}
+					},
 					"readme" : {
 						options : {
 							data: {
@@ -189,6 +240,7 @@ module.exports = function(grunt) {
 	grunt.registerTask('default', [ 'revision-count', 'concat:dist_raw',
 			'preprocess', 'clean:raw', 'concat:dist_scoped', 'uglify' ]);
 	grunt.registerTask('qunit', [ 'shell:tests' ]);
+	grunt.registerTask('docs', ['template:jsdoc', 'jsdoc', 'clean:jsdoc']);
 	grunt.registerTask('lint', [ 'jshint:source', 'jshint:dist',
 	                 			 'jshint:gruntfile', 'jshint:tests' ]);
 	grunt.registerTask('check', [ 'lint', "qunit" ]);
