@@ -6,6 +6,9 @@ Scoped.binding("module", "global:BetaJS.UI");
 Scoped.binding("base", "global:BetaJS");
 Scoped.binding("browser", "global:BetaJS.Browser");
 
+// Optional
+Scoped.binding("dynamics", "global:BetaJS.Dynamics");
+
 Scoped.binding("jquery", "global:jQuery");
 
 Scoped.define("module:", function () {

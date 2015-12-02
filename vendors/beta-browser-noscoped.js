@@ -1,5 +1,5 @@
 /*!
-betajs-browser - v1.0.1 - 2015-10-15
+betajs-browser - v1.0.6 - 2015-12-01
 Copyright (c) Oliver Friedmann
 MIT Software License.
 */
@@ -21,7 +21,7 @@ Scoped.define("base:$", ["jquery:"], function (jquery) {
 Scoped.define("module:", function () {
 	return {
 		guid: "02450b15-9bbf-4be2-b8f6-b483bc015d06",
-		version: '38.1444943619002'
+		version: '49.1449022123008'
 	};
 });
 
@@ -89,6 +89,131 @@ Scoped.define("module:JQueryAjax", [
 	});
 });
 	
+Scoped.define("module:Apps", [
+    "base:Time",
+    "base:Async",
+    "base:Promise",
+    "module:Info",
+    "module:Loader"
+], function (Time, Async, Promise, Info, Loader) {
+	return {
+		
+		STATE_INCOMPATIBLE_DEVICE: 1,
+		STATE_APP_LAUNCHED: 2,
+		STATE_APP_INSTALLED_AND_LAUNCHED: 3,
+		STATE_APP_NOT_INSTALLED: 4,
+		STATE_UNKNOWN: 5,
+				
+		//ios.launch, ios.install, android.intent, android.launch, android.install
+		launch: function (options) {			
+			var promise = Promise.create();
+			var start = Time.now();
+			if (Info.isiOS() && options.ios) {
+				Async.eventually(function () {
+					if (Time.now() - start > 3000)
+						promise.asyncSuccess(this.STATE_APP_LAUNCHED);
+					else {
+						start = Time.now();
+						Async.eventually(function () {
+							if (Time.now() - start > 3000)
+								promise.asyncSuccess(this.STATE_APP_INSTALLED_AND_LAUNCHED);
+							else 
+								promise.asyncError(this.STATE_APP_NOT_INSTALLED);
+						}, this, 2500);
+						document.location = options.ios.install;
+					}
+				}, this, 2500);
+				document.location = options.ios.launch;
+			} else /*if (Info.isAndroid() && options.android) {
+				if (Info.isOpera()) {
+					Loader.loadByIFrame({
+						url: options.android.launch
+					}, function () {
+						document.location
+					}, this);
+				} else if (Info.isFirefox()) {
+				} else {
+					document.location = options.android.intent;
+					promise.asyncSuccess(this.STATE_UNKNOWN);
+				}
+			} else*/
+				promise.asyncError(this.STATE_INCOMPATIBLE_DEVICE);
+			return promise;
+		},
+		
+		appStoreLink: function (appIdent) {
+			return "itms://itunes.apple.com/us/app/" + appIdent + "?mt=8&uo=4";
+		},
+		
+		playStoreLink: function (appIdent) {
+			return "http://play.google.com/store/apps/details?id=<" + appIdent + ">";
+		},
+		
+		iOSAppURL: function (protocol, url) {
+			return protocol + "://" + url;
+		},
+		
+		androidAppUrl: function (protocol, url) {
+			return protocol + "://" + url;
+		},
+		
+		googleIntent: function (protocol, url, appIdent) {
+			return "intent://" + uri + ";scheme=" + protocol + ";package=" + appIdent + ";end";
+		}
+		
+	};
+});
+
+
+/*
+function launchAndroidApp(el) {
+    heartbeat = setInterval(intervalHeartbeat, 200);
+    if (navigator.userAgent.match(/Opera/) || navigator.userAgent.match(/OPR/)) {
+        tryIframeApproach();
+    } else if (navigator.userAgent.match(/Firefox/)) {
+        webkitApproach();
+        iframe_timer = setTimeout(function () {
+            tryIframeApproach();
+        }, 1500);
+    } else if (navigator.userAgent.match(/Chrome/)) {
+        document.location = googleIntent; // Use google intent
+    } else { // Native browser ?
+        document.location = googleIntent; // Use google intent
+    }
+}
+
+function webkitApproach() {
+    document.location = nativeAndroidUrl;
+    timer = setTimeout(function () {
+        document.location = googlePlayStore;
+    }, 2500);
+}
+
+function clearTimers() {
+    clearTimeout(timer);
+    clearTimeout(heartbeat);
+    clearTimeout(iframe_timer);
+}
+
+function intervalHeartbeat() {
+    if (document.webkitHidden || document.hidden) {
+        clearTimers();
+    }
+}
+
+function tryIframeApproach() {
+    var iframe = document.createElement("iframe");
+    iframe.style.border = "none";
+    iframe.style.width = "1px";
+    iframe.style.height = "1px";
+    iframe.onload = function () {
+        document.location = googlePlayStore;
+    };
+    iframe.src = nativeAndroidUrl;
+    document.body.appendChild(iframe);
+}
+
+ */
 Scoped.define("module:Cookies", ["base:Objs", "base:Types"], function (Objs, Types) {
 	return {
 		
@@ -158,7 +283,9 @@ Scoped.define("module:Cookies", ["base:Objs", "base:Types"], function (Objs, Typ
 	};
 });
 
-Scoped.define("module:Dom", ["base:Objs", "jquery:"], function (Objs, $) {
+Scoped.define("module:Dom", [
+    "base:Objs", "jquery:", "base:Types"
+], function (Objs, $, Types) {
 	return {	
 		
 		changeTag: function (node, name) {
@@ -374,10 +501,141 @@ Scoped.define("module:Dom", ["base:Objs", "jquery:"], function (Objs, $) {
 			if (start_offset > 0) 
 				node = $(node.get(0).splitText(start_offset));
 			return node;
+		},
+		
+		entitiesToUnicode: function (s) {
+			if (!s || !Types.is_string(s) || s.indexOf("&") < 0)
+				return s;
+			var temp = document.createElement("span");
+			temp.innerHTML = s;
+			s = temp.innerText;
+			temp.remove();
+			return s;
 		}
 				
 	};
 });
+Scoped.define("module:DomExtend.DomExtension", [
+    "base:Class", "jquery:", "base:Objs", "base:Functions", "base:Async"                                                   
+], function (Class, jquery, Objs, Functions, Async, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			_domMethods: [],
+			_domAttrs: {},
+			
+			constructor: function (element, attrs) {
+				inherited.constructor.call(this);
+				this._element = element;
+				this._$element = $(element);
+				element.domExtension = this;
+				this._actualBB = null;
+				this._idealBB = null;
+				this._attrs = attrs || {};
+				Objs.iter(this._domMethods, function (method) {
+					this._element[method] = Functions.as_method(this[method], this);
+				}, this);
+				Objs.iter(['get', 'set'], function (method) {
+					this._element[method] = Functions.as_method(this[method], this);
+				}, this);
+				Async.eventually(function () {
+					var self = this;
+					$(document).on("DOMNodeRemoved." + this.cid(), function (event) {
+						if (event.target === element) {
+							self.weakDestroy();
+						}
+					});
+					$(window).on("resize." + this.cid(), function () {
+						self.recomputeBB();
+						self._notify("resized");
+					});
+				}, this);
+				if (!this._$element.css("display") || this._$element.css("display") == "inline")
+					this._$element.css("display", "inline-block");
+			},
+			
+			destroy: function () {
+				$(window).off("." + this.cid());
+				$(document).off("." + this.cid());
+				inherited.destroy.call(this);
+			},
+			
+			domEvent: function (eventName) {
+				this._$element.trigger(eventName);
+			},
+			
+			readAttr: function (key) {
+				return key in this._element.attributes ? this._element.attributes[key].value : (key in this._element ? this._element[key] : this._attrs[key]);
+			},
+			
+			hasAttr: function (key) {
+				return key in this._element.attributes || key in this._element || key in this._attrs;
+			},
+
+			writeAttr: function (key, value) {
+				if (key in this._element.attributes)
+					this._element.attributes[key].value = value;
+				else if (key in this._element)
+					this._element[key] = value;
+				else
+					this._attrs[key] = value;
+			},
+			
+			unsetAttr: function (key) {
+				delete this._element[key];
+				this._element.removeAttribute(key);
+				delete this._attrs[key];
+			},
+			
+			get: function (key) {
+				var meta = this._domAttrs[key] || {};
+				if (!(meta.get))
+					return this.readAttr(key);
+				var value = Functions.callWithin(this, meta.get);
+				this.writeAttr(key, value);
+				return value;
+			},
+			
+			set: function (key, value) {
+				this.writeAttr(key, value);
+				var meta = this._domAttrs[key] || {};
+				if (meta.set)
+					Functions.callWithin(this, meta.set, value);
+			},
+			
+			computeActualBB: function (idealBB) {
+				var width = this._$element.width();
+				if (this._$element.width() < idealBB.width && !this._element.style.width) {
+					this._element.style.width = idealBB.width + "px";
+					width = this._$element.width();
+					delete this._element.style.width;
+				}
+				return {
+					width: width,
+					height: Math.round(width * idealBB.height / idealBB.width)
+				};
+			},
+			
+			idealBB: function () {
+				return null;
+			},
+			
+			recomputeBB: function () {
+				var idealBB = this.idealBB();
+				if (!idealBB)
+					return;
+				var actualBB = this.computeActualBB(idealBB);
+				this._idealBB = idealBB;
+				this._actualBB = actualBB;
+				this.setActualBB(actualBB);
+			},
+			
+			setActualBB: function (actualBB) {}
+			
+		};
+	});
+});
+
 /*
 Copyright (c) Copyright (c) 2007, Carl S. Yestrau All rights reserved.
 Code licensed under the BSD License: http://www.featureblend.com/license.txt
@@ -511,8 +769,8 @@ Scoped.define("module:FlashDetect", ["base:Class"], function (Class, scoped) {
 
 
 Scoped.define("module:FlashHelper", [
-    "base:Time", "base:Objs", "base:Types", "base:Net.Uri", "module:Info", "jquery:"
-], function (Time, Objs, Types, Uri, Info, $) {
+    "base:Time", "base:Objs", "base:Types", "base:Net.Uri", "base:Ids", "module:Info", "jquery:"
+], function (Time, Objs, Types, Uri, Ids, Info, $) {
 	return {
 		
 		getFlashObject: function (container) {
@@ -610,12 +868,10 @@ Scoped.define("module:FlashHelper", [
 					"value": Types.is_object(options.FlashVars) ? Uri.encodeUriParams(options.FlashVars) : options.FlashVars
 				});
 			}
-			if (options.objectId) {
-				params.push({
-					"objectKey": "id",
-					"value": options.objectId
-				});
-			}
+			params.push({
+				"objectKey": "id",
+				"value": options.objectId || Ids.uniqueId("flash")
+			});
 			var objectKeys = [];
 			var objectParams = [];
 			var embedKeys = [];
@@ -883,6 +1139,12 @@ Scoped.define("module:Info", [
 			});
 		},
 		
+		isCordova: function () {
+			return this.__cached("isCordova", function () {
+				return !!window.cordova || !!window._cordovaNative || document.location.href.indexOf("file:///android_asset/www") === 0 || document.location.href.indexOf("file:///var/mobile/Containers/Bundle/Application") === 0;
+			});
+		},
+		
 		isChrome: function () {
 			return this.__cached("isChrome", function (nav, ua) {
 				return (nav.window_chrome || ua.indexOf('CriOS') != -1) && !this.isOpera() && !this.isEdge();
@@ -891,7 +1153,7 @@ Scoped.define("module:Info", [
 		
 		isOpera: function () {
 			return this.__cached("isOpera", function (nav, ua) {
-				return nav.window_opera || ua.indexOf(' OPR/') >= 0 || ua.indexOf("OPiOS") >= 0;
+				return nav.window_opera || ua.indexOf(' OPR/') >= 0 || ua.indexOf("OPiOS") >= 0 || ua.indexOf('Opera') >= 0;
 			});
 		},
 		
@@ -953,13 +1215,13 @@ Scoped.define("module:Info", [
 		
 		isFirefox: function () {
 			return this.__cached("isFirefox", function (nav, ua, ualc) {
-				return ualc.indexOf("firefox") != -1;
+				return ualc.indexOf("firefox") != -1 || ualc.indexOf("fxios") != -1;
 			});
 		},
 		
 		isSafari: function () {
 			return this.__cached("isSafari", function (nav, ua, ualc) {
-				return !this.isChrome() && !this.isOpera() && !this.isEdge() && ualc.indexOf("safari") != -1;
+				return !this.isChrome() && !this.isOpera() && !this.isEdge() && !this.isFirefox() && ualc.indexOf("safari") != -1;
 			});
 		},
 		
@@ -1223,6 +1485,24 @@ Scoped.define("module:Loader", ["jquery:"], function ($) {
 				if (document.scripts[i].src.toLowerCase().indexOf(substr.toLowerCase()) >= 0)
 					return document.scripts[i];
 			return null;
+		},
+		
+		loadByIframe: function (options, callback, context) {
+		    var iframe = document.createElement("iframe");
+		    if (options.visible) {
+			    iframe.style.border = "none";
+			    iframe.style.width = "1px";
+			    iframe.style.height = "1px";
+		    } else {
+		    	iframe.style.display = "none";
+		    }
+		    iframe.onload = function () {
+		        callback.call(context || this);
+		        if (options.remove)
+		        	iframe.remove();
+		    };
+		    iframe.src = options.url;
+		    document.body.appendChild(iframe);
 		}
 
 	};
@@ -1641,6 +1921,10 @@ Scoped.define("module:Upload.ResumableFileUploader", [
 					self._successCallback(message);
 				},
 				error: function (jqXHR, textStatus, errorThrown) {
+					if (self._options.resumable.acceptedAssembleError && self._options.resumable.acceptedAssembleError == jqXHR.status) {
+						self._successCallback(message);
+						return;
+					}
 					Async.eventually(function () {
 						self._resumableSuccessCallback(file, message, resilience - 1);
 					}, self._options.resumable.assembleResilienceTimeout || 0);
@@ -1660,4 +1944,51 @@ Scoped.define("module:Upload.ResumableFileUploader", [
 	
 	return Cls;
 });
+
+
+
+Scoped.define("module:Upload.CordovaFileUploader", [
+     "module:Upload.FileUploader"
+], function (FileUploader, scoped) {
+	var Cls = FileUploader.extend({scoped: scoped}, {
+ 		
+ 		_upload: function () {
+ 			var self = this;
+ 		    //var fileURI = this._options.source.localURL;
+ 			var fileURI = this._options.source.fullPath.split(':')[1];
+ 		    var fileUploadOptions = new FileUploadOptions();
+ 		    fileUploadOptions.fileKey = "file";
+ 		    fileUploadOptions.fileName = fileURI.substr(fileURI.lastIndexOf('/') + 1);
+ 		    fileUploadOptions.mimeType = this._options.source.type;
+ 		    fileUploadOptions.httpMethod = "POST";
+ 		    fileUploadOptions.params = this._options.data;
+ 		    var fileTransfer = new FileTransfer();
+ 		    fileTransfer.upload(fileURI, this._options.url, function (data) {
+	    		self._successCallback(data);
+ 		    }, function (data) {
+ 		    	self._errorCallback(data);
+ 		    }, fileUploadOptions);
+ 		}
+ 		
+ 	}, {
+ 		
+ 		supported: function (options) {
+ 			var result =
+ 				!!navigator.device &&
+ 				!!navigator.device.capture &&
+ 				!!navigator.device.capture.captureVideo &&
+ 				!!window.FileTransfer &&
+ 				!!window.FileUploadOptions &&
+ 				!options.isBlob &&
+ 				("localURL" in options.source);
+ 			return result;
+ 		}
+ 		
+ 	});	
+ 	
+ 	FileUploader.register(Cls, 4);
+ 	
+ 	return Cls;
+ });
+
 }).call(Scoped);

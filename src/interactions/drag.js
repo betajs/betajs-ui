@@ -50,7 +50,7 @@ Scoped.define("module:Interactions.Drag", [
 			},
 			
 			start: function () {
-				if (this._enabled )
+				if (this._enabled)
 					this._host.state().next("Dragging");
 			},
 			
