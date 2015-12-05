@@ -102,7 +102,7 @@ module.exports = function(grunt) {
 					},
 					dist : {
 						src : [ "./vendors/beta.js",
-								"./vendors/beta-browser-noscoped.js",
+								"./vendors/betajs-browser-noscoped.js",
 								"./dist/betajs-ui-noscoped.js" ],
 						dest : "./dist/betajs-ui-closure.js"
 					}
@@ -115,7 +115,7 @@ module.exports = function(grunt) {
 						files : {
 							"./vendors/scoped.js" : "https://raw.githubusercontent.com/betajs/betajs-scoped/master/dist/scoped.js",
 							"./vendors/beta.js" : "https://raw.githubusercontent.com/betajs/betajs/master/dist/beta.js",
-							"./vendors/beta-browser-noscoped.js" : "https://raw.githubusercontent.com/betajs/betajs-browser/master/dist/beta-browser-noscoped.js",
+							"./vendors/betajs-browser-noscoped.js" : "https://raw.githubusercontent.com/betajs/betajs-browser/master/dist/betajs-browser-noscoped.js",
 							"./vendors/betajs-dynamics-noscoped.js" : "https://raw.githubusercontent.com/betajs/betajs-dynamics/master/dist/betajs-dynamics-noscoped.js",
 							"./vendors/jquery-1.9.closure-extern.js" : "https://raw.githubusercontent.com/google/closure-compiler/master/contrib/externs/jquery-1.9.js"
 						}
