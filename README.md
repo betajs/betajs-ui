@@ -1,4 +1,4 @@
-# betajs-ui 1.0.0
+# betajs-ui 1.0.2
 
 BetaJS-UI is a library for enabling gestures and interactions such as drag and drop.
 
@@ -30,10 +30,10 @@ Active, In Development
 ## CDN
 | Resource | URL |
 | :----- | -------: |
-| beta-ui.js | [http://cdn.rawgit.com/betajs/betajs-ui/master/dist/beta-ui.js](http://cdn.rawgit.com/betajs/betajs-ui/master/dist/beta-ui.js) |
-| beta-ui.min.js | [http://cdn.rawgit.com/betajs/betajs-ui/master/dist/beta-ui.min.js](http://cdn.rawgit.com/betajs/betajs-ui/master/dist/beta-ui.min.js) |
-| beta-ui-noscoped.js | [http://cdn.rawgit.com/betajs/betajs-ui/master/dist/beta-ui-noscoped.js](http://cdn.rawgit.com/betajs/betajs-ui/master/dist/beta-ui-noscoped.js) |
-| beta-ui-noscoped.min.js | [http://cdn.rawgit.com/betajs/betajs-ui/master/dist/beta-ui-noscoped.min.js](http://cdn.rawgit.com/betajs/betajs-ui/master/dist/beta-ui-noscoped.min.js) |
+| beta-ui.js | [http://cdn.rawgit.com/betajs/betajs-ui/master/dist/betajs-ui.js](http://cdn.rawgit.com/betajs/betajs-ui/master/dist/betajs-ui.js) |
+| beta-ui.min.js | [http://cdn.rawgit.com/betajs/betajs-ui/master/dist/betajs-ui.min.js](http://cdn.rawgit.com/betajs/betajs-ui/master/dist/betajs-ui.min.js) |
+| beta-ui-noscoped.js | [http://cdn.rawgit.com/betajs/betajs-ui/master/dist/betajs-ui-noscoped.js](http://cdn.rawgit.com/betajs/betajs-ui/master/dist/betajs-ui-noscoped.js) |
+| beta-ui-noscoped.min.js | [http://cdn.rawgit.com/betajs/betajs-ui/master/dist/betajs-ui-noscoped.min.js](http://cdn.rawgit.com/betajs/betajs-ui/master/dist/betajs-ui-noscoped.min.js) |
 
 
 ## Unit Tests
