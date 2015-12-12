@@ -56,7 +56,7 @@ Scoped.define("module:Gestures.Gesture", [
 });
 
 
-Scoped.define("module:Gestures.Gesture.ElementState", [
+Scoped.define("module:Gestures.ElementState", [
   	    "base:States.CompetingState",
   	    "base:Ids",
   	    "base:Objs"
@@ -238,7 +238,7 @@ Scoped.define("module:Gestures.ElementMouseMoveOutEvent", [
 
 
 Scoped.define("module:Gestures.GestureStates.EventDrivenState", [
-       "module:Gestures.Gesture.ElementState",
+       "module:Gestures.ElementState",
        "module:Gestures"
    ], function (ElementState, Gestures, scoped) {
 	return ElementState.extend({scoped: scoped}, function (inherited) {

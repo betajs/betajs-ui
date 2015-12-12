@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.2 - 2015-12-01
+betajs-ui - v1.0.3 - 2015-12-12
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -19,10 +19,12 @@ Scoped.binding("jquery", "global:jQuery");
 Scoped.define("module:", function () {
 	return {
 		guid: "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-		version: '42.1449031861036'
+		version: '45.1449951913496'
 	};
 });
 
+Scoped.assumeVersion("base:version", 444);
+Scoped.assumeVersion("browser:version", 58);
 Scoped.define("module:Elements.Animators", [
 	    "base:Class",
 	    "base:Objs"
@@ -1900,7 +1902,7 @@ Scoped.define("module:Gestures.Gesture", [
 });
 
 
-Scoped.define("module:Gestures.Gesture.ElementState", [
+Scoped.define("module:Gestures.ElementState", [
   	    "base:States.CompetingState",
   	    "base:Ids",
   	    "base:Objs"
@@ -2082,7 +2084,7 @@ Scoped.define("module:Gestures.ElementMouseMoveOutEvent", [
 
 
 Scoped.define("module:Gestures.GestureStates.EventDrivenState", [
-       "module:Gestures.Gesture.ElementState",
+       "module:Gestures.ElementState",
        "module:Gestures"
    ], function (ElementState, Gestures, scoped) {
 	return ElementState.extend({scoped: scoped}, function (inherited) {
