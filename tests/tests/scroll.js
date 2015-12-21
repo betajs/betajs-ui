@@ -6,7 +6,7 @@ test("test loop scroll", function() {
 	for (var i = 0; i < 20; ++i)
 		element.append("<div style='height:40px'>Item " + i + "</div>");
 
-	var scroll = new BetaJS.UI.Interactions.LoopScroll(element, {
+	var scroll = new BetaJS.UI.Interactions.Loopscroll(element, {
 		enabled: true,
 		currentTop: true,
 		discrete: true,

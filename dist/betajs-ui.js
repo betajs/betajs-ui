@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.3 - 2015-12-12
+betajs-ui - v1.0.4 - 2015-12-21
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -670,7 +670,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.3 - 2015-12-12
+betajs-ui - v1.0.4 - 2015-12-21
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -690,7 +690,7 @@ Scoped.binding("jquery", "global:jQuery");
 Scoped.define("module:", function () {
 	return {
 		guid: "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-		version: '45.1449951913496'
+		version: '46.1450740845552'
 	};
 });
 
@@ -1726,7 +1726,7 @@ Scoped.define("module:Interactions.DropListStates.Dropping", ["module:Interactio
 	});
 });
 
-Scoped.define("module:Interactions.InfiniteScroll", [
+Scoped.define("module:Interactions.Infinitescroll", [
         "module:Interactions.Scroll",
 	    "base:Objs"
 	], function (Scroll, Objs, scoped) {
@@ -1793,7 +1793,7 @@ Scoped.define("module:Interactions.InfiniteScroll", [
 		    	if (this._can_prepend) {
 		    		this._extending = true;
 		    		var self = this;
-		    		opts.prepend(opts.context, count || opts.prepend_count, function (added, done) {
+		    		opts.prepend.call(opts.context, count || opts.prepend_count, function (added, done) {
 		    			if (self.__top_white_space)
 		    				self.itemsElement().prepend(self.__top_white_space);
 		    			self._extending = false;
@@ -1848,12 +1848,12 @@ Scoped.define("module:Interactions.InfiniteScroll", [
 });
 
 
-Scoped.define("module:Interactions.InfiniteScrollStates.Idle", ["module:Interactions.ScrollStates.Idle"], function (State, scoped) {
+Scoped.define("module:Interactions.InfinitescrollStates.Idle", ["module:Interactions.ScrollStates.Idle"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {});
 });
 
 
-Scoped.define("module:Interactions.InfiniteScrollStates.Scrolling", ["module:Interactions.ScrollStates.Scrolling"], function (State, scoped) {
+Scoped.define("module:Interactions.InfinitescrollStates.Scrolling", ["module:Interactions.ScrollStates.Scrolling"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {
 
    		_scroll: function () {
@@ -1868,7 +1868,7 @@ Scoped.define("module:Interactions.InfiniteScrollStates.Scrolling", ["module:Int
 });
 
 
-Scoped.define("module:Interactions.InfiniteScrollStates.ScrollingTo", ["module:Interactions.ScrollStates.ScrollingTo"], function (State, scoped) {
+Scoped.define("module:Interactions.InfinitescrollStates.ScrollingTo", ["module:Interactions.ScrollStates.ScrollingTo"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {
 
    		_scroll: function () {
@@ -2010,7 +2010,7 @@ Scoped.define("module:Interactions.State", [
  	});
 });
 
-Scoped.define("module:Interactions.LoopScroll", ["module:Interactions.Scroll"], function (Scroll, scoped) {
+Scoped.define("module:Interactions.Loopscroll", ["module:Interactions.Scroll"], function (Scroll, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -2078,12 +2078,12 @@ Scoped.define("module:Interactions.LoopScroll", ["module:Interactions.Scroll"], 
 });
 
 
-Scoped.define("module:Interactions.LoopScrollStates.Idle", ["module:Interactions.ScrollStates.Idle"], function (State, scoped) {
+Scoped.define("module:Interactions.LoopscrollStates.Idle", ["module:Interactions.ScrollStates.Idle"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {});
 });
 
 
-Scoped.define("module:Interactions.LoopScrollStates.Scrolling", ["module:Interactions.ScrollStates.Scrolling"], function (State, scoped) {
+Scoped.define("module:Interactions.LoopscrollStates.Scrolling", ["module:Interactions.ScrollStates.Scrolling"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {
 
    		_scroll: function () {
@@ -2098,7 +2098,7 @@ Scoped.define("module:Interactions.LoopScrollStates.Scrolling", ["module:Interac
 });
 
 
-Scoped.define("module:Interactions.LoopScrollStates.ScrollingTo", ["module:Interactions.ScrollStates.ScrollingTo"], function (State, scoped) {
+Scoped.define("module:Interactions.LoopscrollStates.ScrollingTo", ["module:Interactions.ScrollStates.ScrollingTo"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {
 
    		_scroll: function () {
@@ -2907,7 +2907,12 @@ Scoped.define("module:Dynamics.GesturePartial", [
 					handler.call(value.deactivate_event, value.data, this._node, gesture);
 				if (value.interaction && node.interactions && node.interactions[value.interaction] && node.interactions[value.interaction].stop)
 					node.interactions[value.interaction].stop();
-			}, this);			
+			}, this);		
+			if (value.transition_event) {
+				gesture.on("start", function () {
+					handler.call(value.transition_event, this._node._$element, gesture);
+				}, this);
+			}
 		},
 		
 		_deactivate: function () {

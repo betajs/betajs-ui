@@ -26,7 +26,12 @@ Scoped.define("module:Dynamics.GesturePartial", [
 					handler.call(value.deactivate_event, value.data, this._node, gesture);
 				if (value.interaction && node.interactions && node.interactions[value.interaction] && node.interactions[value.interaction].stop)
 					node.interactions[value.interaction].stop();
-			}, this);			
+			}, this);		
+			if (value.transition_event) {
+				gesture.on("start", function () {
+					handler.call(value.transition_event, this._node._$element, gesture);
+				}, this);
+			}
 		},
 		
 		_deactivate: function () {

@@ -1,4 +1,4 @@
-Scoped.define("module:Interactions.LoopScroll", ["module:Interactions.Scroll"], function (Scroll, scoped) {
+Scoped.define("module:Interactions.Loopscroll", ["module:Interactions.Scroll"], function (Scroll, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -66,12 +66,12 @@ Scoped.define("module:Interactions.LoopScroll", ["module:Interactions.Scroll"], 
 });
 
 
-Scoped.define("module:Interactions.LoopScrollStates.Idle", ["module:Interactions.ScrollStates.Idle"], function (State, scoped) {
+Scoped.define("module:Interactions.LoopscrollStates.Idle", ["module:Interactions.ScrollStates.Idle"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {});
 });
 
 
-Scoped.define("module:Interactions.LoopScrollStates.Scrolling", ["module:Interactions.ScrollStates.Scrolling"], function (State, scoped) {
+Scoped.define("module:Interactions.LoopscrollStates.Scrolling", ["module:Interactions.ScrollStates.Scrolling"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {
 
    		_scroll: function () {
@@ -86,7 +86,7 @@ Scoped.define("module:Interactions.LoopScrollStates.Scrolling", ["module:Interac
 });
 
 
-Scoped.define("module:Interactions.LoopScrollStates.ScrollingTo", ["module:Interactions.ScrollStates.ScrollingTo"], function (State, scoped) {
+Scoped.define("module:Interactions.LoopscrollStates.ScrollingTo", ["module:Interactions.ScrollStates.ScrollingTo"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {
 
    		_scroll: function () {

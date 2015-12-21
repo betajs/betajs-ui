@@ -1,5 +1,5 @@
 /*!
-betajs-dynamics - v0.0.21 - 2015-12-12
+betajs-dynamics - v0.0.25 - 2015-12-21
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -16,10 +16,12 @@ Scoped.binding("jquery", "global:jQuery");
 Scoped.define("module:", function () {
 	return {
 		guid: "d71ebf84-e555-4e9b-b18a-11d74fdcefe2",
-		version: '194.1449936033018'
+		version: '206.1450728414902'
 	};
 });
 
+Scoped.assumeVersion("base:version", 444);
+Scoped.assumeVersion("browser:version", 58);
 Scoped.define("module:Data.Mesh", [
 	    "base:Class",
 	    "base:Events.EventsMixin",
@@ -434,9 +436,10 @@ Scoped.define("module:Data.Scope", [
 	    "base:Ids",
 	    "base:Properties.Properties",
 	    "base:Collections.Collection",
+	    "base:Strings",
 	    "module:Data.ScopeManager",
 	    "module:Data.MultiScope"
-	], function (Class, EventsMixin, ListenMixin, ObjectIdMixin, Functions, Types, Objs, Ids, Properties, Collection, ScopeManager, MultiScope, scoped) {
+	], function (Class, EventsMixin, ListenMixin, ObjectIdMixin, Functions, Types, Objs, Ids, Properties, Collection, Strings, ScopeManager, MultiScope, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, ListenMixin, ObjectIdMixin, function (inherited) {
 		return {
 				
@@ -449,10 +452,11 @@ Scoped.define("module:Data.Scope", [
 					bind: {},
 					attrs: {},
 					extendables: [],
-					collections: {}
+					collections: {},
+					computed: {}
 				}, options);
-				if (options.initialbind)
-					options.bind = Objs.extend(options.bind, options.initialbind);
+				if (options.bindings)
+					options.bind = Objs.extend(options.bind, options.bindings);
 				var parent = options.parent;
 				this.__manager = parent ? parent.__manager : this._auto_destroy(new ScopeManager(this));
 				inherited.constructor.call(this);
@@ -481,6 +485,10 @@ Scoped.define("module:Data.Scope", [
 				Objs.iter(options.bind, function (value, key) {
 					var i = value.indexOf(":");
 					this.bind(this.scope(value.substring(0, i)), key, {secondKey: value.substring(i + 1)});
+				}, this);
+				Objs.iter(options.computed, function (value, key) {
+					var splt = Strings.splitHead(":");
+					this.__properties.compute(splt.head, value, splt.tail.split(","));
 				}, this);
 			},
 			
@@ -555,7 +563,10 @@ Scoped.define("module:Data.Scope", [
 			call: function (name) {
 				var args = Functions.getArguments(arguments, 1);
 				try {					
-					return this.__functions[name].apply(this, args);
+					if (Types.is_string(name))
+						return this.__functions[name].apply(this, args);
+					else
+						return name.apply(this, args);
 				} catch (e) {
 					return this.handle_call_exception(name, args, e);
 				}
@@ -1056,6 +1067,7 @@ Scoped.define("module:Handlers.HandlerMixin", [
 						this.template = template;
 						this.activate();
 					}, this);
+					return;
 				}
 			}
 			
@@ -1436,8 +1448,12 @@ Scoped.define("module:Handlers.Node", [
 					this._dyn.value = value;
 					if ("textContent" in this._element)
 						this._element.textContent = Dom.entitiesToUnicode(value);
-					else
+					else if (Info.isInternetExplorer() && Info.internetExplorerVersion() < 9 && ("data" in this._element))
+						this._element.data = Dom.entitiesToUnicode(value === null ? "" : value);
+					else {
+						// OF: Not clear if this is ever executed and whether it actually does something meaningful.
 						this._$element.replaceWith(value);
+					}
 				}
 			},
 				
@@ -1557,6 +1573,8 @@ Scoped.define("module:Partials.AttrsPartial", ["module:Handlers.Partial"], funct
  	var Cls = Partial.extend({scoped: scoped}, {
 		
 		_apply: function (value) {
+			if (!this._active)
+				return;
 			var props = this._node._tagHandler ? this._node._tagHandler.properties() : this._node.properties();
 			for (var key in value)
 				props.set(key, value[key]);
@@ -1568,44 +1586,6 @@ Scoped.define("module:Partials.AttrsPartial", ["module:Handlers.Partial"], funct
 
  	});
  	Cls.register("ba-attrs");
-	return Cls;
-});
-
-
-Scoped.define("module:Partials.DataPartial", ["module:Handlers.Partial"], function (Partial, scoped) {
-  	var Cls = Partial.extend({scoped: scoped},  {
-  		
-		_apply: function (value) {
-			this._node._tagHandler.data(this._postfix, value);
-		},
-		
-		bindTagHandler: function (handler) {
-			this._apply(this._value);
-		}
-	
- 	}, {
- 		
- 		meta: {
- 			requires_tag_handler: true
- 		}
- 		
- 	});
- 	Cls.register("ba-data");
-	return Cls;
-});
-
-
-Scoped.define("module:Partials.FunctionsPartial", ["module:Handlers.Partial", "browser:Info", "base:Objs"], function (Partial, Info, Objs, scoped) {
- 	var Cls = Partial.extend({scoped: scoped}, function (inherited) {
- 		return {
-			
- 			bindTagHandler: function (handler) { 				
- 				Objs.extend(handler.__functions, this._value); 
- 			}
- 		
- 		};
- 	});
- 	Cls.register("ba-functions");
 	return Cls;
 });
 
@@ -1681,6 +1661,29 @@ Scoped.define("module:Partials.ClickPartial", ["module:Handlers.Partial"], funct
 	return Cls;
 });
 
+
+Scoped.define("module:Partials.DataPartial", ["module:Handlers.Partial"], function (Partial, scoped) {
+  	var Cls = Partial.extend({scoped: scoped},  {
+  		
+		_apply: function (value) {
+			this._node._tagHandler.data(this._postfix, value);
+		},
+		
+		bindTagHandler: function (handler) {
+			this._apply(this._value);
+		}
+	
+ 	}, {
+ 		
+ 		meta: {
+ 			requires_tag_handler: true
+ 		}
+ 		
+ 	});
+ 	Cls.register("ba-data");
+	return Cls;
+});
+
 Scoped.define("module:Partials.EventPartial", ["module:Handlers.Partial"], function (Partial, scoped) {
   	var Cls = Partial.extend({scoped: scoped}, {
 			
@@ -1692,6 +1695,21 @@ Scoped.define("module:Partials.EventPartial", ["module:Handlers.Partial"], funct
  		
  	});
  	Cls.register("ba-event");
+	return Cls;
+});
+
+
+Scoped.define("module:Partials.FunctionsPartial", ["module:Handlers.Partial", "browser:Info", "base:Objs"], function (Partial, Info, Objs, scoped) {
+ 	var Cls = Partial.extend({scoped: scoped}, function (inherited) {
+ 		return {
+			
+ 			bindTagHandler: function (handler) { 				
+ 				Objs.extend(handler.__functions, this._value); 
+ 			}
+ 		
+ 		};
+ 	});
+ 	Cls.register("ba-functions");
 	return Cls;
 });
 
@@ -2025,15 +2043,12 @@ Scoped.define("module:Partials.RepeatPartial", [
  				var result = [];
  				var self = this;
  				var elements = this._newItemElements();
- 				var elementArr = [];
  				elements.each(function () {
  					result.push(self._node._registerChild(this, locals));
- 					elementArr.push($(this));
  				});
  				this._collectionChildren[item.cid()] = {
 					item: item,
-					nodes: result,
-					elements: elementArr
+					nodes: result
 				};
  				var idx = this._collection.getIndex(item);
  				if (idx < this._collection.count() - 1)
@@ -2055,23 +2070,34 @@ Scoped.define("module:Partials.RepeatPartial", [
  				return this._collectionChildren[item.cid()];
  			},
  			
- 			_prependItem: function (base, item) {
- 				var baseData = this._itemData(base);
+ 			_itemDataElements: function (item) {
  				var itemData = this._itemData(item);
- 				if (!baseData || !itemData)
+ 				if (!itemData)
+ 					return null;
+ 				var result = [];
+ 				Objs.iter(itemData.nodes, function (node) {
+ 					result.push(node.$element());
+ 				});
+ 				return result;
+ 			},
+ 			
+ 			_prependItem: function (base, item) {
+ 				var baseDataElements = this._itemDataElements(base);
+ 				var itemDataElements = this._itemDataElements(item);
+ 				if (!baseDataElements || !itemDataElements)
  					return;
- 				Objs.iter(itemData.elements, function (element) {
- 					element.insertBefore(baseData.elements[0]);
+ 				Objs.iter(itemDataElements, function (element) {
+ 					element.insertBefore(baseDataElements[0]);
  				});
  			},
  			
  			_appendItem: function (base, item) {
- 				var baseData = this._itemData(base);
- 				var itemData = this._itemData(item);
- 				if (!baseData || !itemData)
+ 				var baseDataElements = this._itemDataElements(base);
+ 				var itemDataElements = this._itemDataElements(item);
+ 				if (!baseDataElements || !itemDataElements)
  					return;
- 				var current = baseData.elements[baseData.elements.length - 1];
- 				Objs.iter(itemData.elements, function (element) {
+ 				var current = baseDataElements[baseDataElements.length - 1];
+ 				Objs.iter(itemDataElements, function (element) {
  					current.after(element);
  					current = element;
  				});
@@ -2234,7 +2260,7 @@ Scoped.define("module:Partials.TemplatePartial",
  		
  		meta: {
  			requires_tag_handler: true,
- 			hidden_value: true
+ 			value_hidden: true
  		}
  		
  	});
@@ -2358,7 +2384,7 @@ Scoped.define("module:Dynamic", [
 	}], {
 		
 		__initialForward: [
-		    "functions", "attrs", "extendables", "collections", "template", "create", "scopes"
+		    "functions", "attrs", "extendables", "collections", "template", "create", "scopes", "bindings", "computed"
         ],
 		
 		canonicName: function () {

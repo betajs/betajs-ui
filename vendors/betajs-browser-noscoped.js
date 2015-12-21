@@ -1,5 +1,5 @@
 /*!
-betajs-browser - v1.0.12 - 2015-12-12
+betajs-browser - v1.0.15 - 2015-12-17
 Copyright (c) Oliver Friedmann
 MIT Software License.
 */
@@ -21,7 +21,7 @@ Scoped.define("base:$", ["jquery:"], function (jquery) {
 Scoped.define("module:", function () {
 	return {
 		guid: "02450b15-9bbf-4be2-b8f6-b483bc015d06",
-		version: '58.1449951831697'
+		version: '62.1450385743675'
 	};
 });
 
@@ -509,7 +509,7 @@ Scoped.define("module:Dom", [
 				return s;
 			var temp = document.createElement("span");
 			temp.innerHTML = s;
-			s = temp.innerText;
+			s = $(temp).text();
 			if (temp.remove)
 				temp.remove();
 			return s;
@@ -607,10 +607,15 @@ Scoped.define("module:DomExtend.DomExtension", [
 			
 			computeActualBB: function (idealBB) {
 				var width = this._$element.width();
-				if (this._$element.width() < idealBB.width && !this._element.style.width) {
+				if (this._$element.width() <= idealBB.width && !this._element.style.width) {
 					this._element.style.width = idealBB.width + "px";
 					width = this._$element.width();
-					delete this._element.style.width;
+					var current = this._$element;
+					while (current.get(0) != document) {
+						current = current.parent();
+						width = Math.min(width, current.width());
+					}
+					this._element.style.width = null;
 				}
 				return {
 					width: width,
@@ -1136,7 +1141,7 @@ Scoped.define("module:Info", [
 		
 		isiOS: function () {
 			return this.__cached("isiOS", function (nav, ua) {
-				if (this.isInternetExplorer())
+				if (this.isInternetExplorer() || this.isIEMobile())
 					return false;
 				return ua.indexOf('iPhone') != -1 || ua.indexOf('iPod') != -1 || ua.indexOf('iPad') != -1;
 			});
@@ -1154,9 +1159,27 @@ Scoped.define("module:Info", [
 			});
 		},
 		
+		isLocalCordova: function () {
+			return this.__cached("isLocalCordova", function () {
+				return this.isCordova() && document.location.href.indexOf("http") !== 0;
+			});
+		},
+
 		isChrome: function () {
 			return this.__cached("isChrome", function (nav, ua) {
 				return (nav.window_chrome || ua.indexOf('CriOS') != -1) && !this.isOpera() && !this.isEdge();
+			});
+		},
+		
+		isChromium: function () {
+			return this.__cached("isChromium", function (nav, ua, ualc) {
+				return !this.isChrome() && this.isAndroid() && ualc.indexOf("linux") >= 0;
+			});
+		},
+		
+		isChromiumBased: function () {
+			return this.__cached("isChromiumBased", function () {
+				return this.isChrome() || this.isChromium();
 			});
 		},
 		
@@ -1218,10 +1241,16 @@ Scoped.define("module:Info", [
 		isInternetExplorer: function () {
 			return this.__cached("isInternetExplorer", function () {
 				//return navigator.appName == 'Microsoft Internet Explorer';
-				return this.internetExplorerVersion() !== null;
+				return !this.isIEMobile() && this.internetExplorerVersion() !== null;
 			});
 		},
 		
+		isIEMobile: function () {
+			return this.__cached("isIEMobile", function (nav, ua, ualc) {
+				return ualc.indexOf("iemobile") >= 0;
+			});
+		},
+
 		isFirefox: function () {
 			return this.__cached("isFirefox", function (nav, ua, ualc) {
 				return ualc.indexOf("firefox") != -1 || ualc.indexOf("fxios") != -1;
@@ -1230,13 +1259,13 @@ Scoped.define("module:Info", [
 		
 		isSafari: function () {
 			return this.__cached("isSafari", function (nav, ua, ualc) {
-				return !this.isChrome() && !this.isOpera() && !this.isEdge() && !this.isFirefox() && ualc.indexOf("safari") != -1;
+				return !this.isChrome() && !this.isOpera() && !this.isEdge() && !this.isFirefox() && ualc.indexOf("safari") != -1 && !this.isAndroid();
 			});
 		},
 		
 		isWindows: function () {
 			return this.__cached("isWindows", function (nav) {
-				return nav.appVersion.toLowerCase().indexOf("win") != -1;
+				return nav.appVersion.toLowerCase().indexOf("win") != -1 && !this.isWindowsPhone();
 			});
 		},
 		
@@ -1397,6 +1426,9 @@ Scoped.define("module:Info", [
 		    chrome: {
 		    	format: "Chrome",
 		    	check: function () { return this.isChrome(); }
+		    }, chromium: {
+		    	format: "Chromium",
+		    	check: function () { return this.isChromium(); }
 		    }, opera: {
 		    	format: "Opera",
 		    	check: function () { return this.isOpera(); }
@@ -1412,22 +1444,19 @@ Scoped.define("module:Info", [
 		    }, safari: {
 		    	format: "Safari",
 		    	check: function () { return this.isSafari(); }
-		    }, android: {
-		    	format: "Android",
-		    	check: function () { return this.isAndroid() && !this.isChrome() && !this.isFirefox(); }
 		    }, webos: {
 		    	format: "WebOS",
 		    	check: function () { return this.isWebOS(); }
-		    }, windowsphone: {
-		    	format: "Windows Phone",
-		    	check: function () { return this.isWindowsPhone(); }
 		    }, blackberry: {
 		    	format: "Blackberry",
 		    	check: function () { return this.isBlackberry(); }
 		    }, edge: {
 		    	format: "Edge",
 		    	check: function () { return this.isEdge(); }
-		    }
+		    }, iemobile: {
+		    	format: "IE Mobile",
+		    	check: function () { return this.isIEMobile(); }
+		    }		    
 		},
 		
 		getBrowser: function () {

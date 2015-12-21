@@ -65,7 +65,10 @@
                     disable_y: 10,
                     enable_x: 10,
                     enable_y: -1,
-                    interaction: "swipe"
+                    interaction: "swipe",
+                    transition_event: function (element, host) {
+                    	console.log("Swipe Gesture", host.data(), host.state()._current_state);
+                    } 
                 },
                 swipe_actions: {
                     "other": {less: -1/4},

@@ -33,7 +33,7 @@
 			for (var i = 0; i <= high; ++i)
 				element.append("<div class='item' id='it" + i + "'>Item " + i + "</div>");
 
-			var scroll = new BetaJS.UI.Interactions.InfiniteScroll(element, {
+			var scroll = new BetaJS.UI.Interactions.Infinitescroll(element, {
 				enabled: true,
 	    		append: function (count, callback) {
 					for (var i = high+1; i <= high+1 + count; ++i)

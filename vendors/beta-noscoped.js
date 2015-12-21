@@ -1,5 +1,5 @@
 /*!
-betajs - v1.0.22 - 2015-12-12
+betajs - v1.0.24 - 2015-12-20
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 MIT Software License.
 */
@@ -12,7 +12,7 @@ Scoped.binding("module", "global:BetaJS");
 Scoped.define("module:", function () {
 	return {
 		guid: "71366f7a-7da3-4e55-9a0b-ea0e4e2a9e79",
-		version: '444.1449951728394'
+		version: '447.1450643397868'
 	};
 });
 
@@ -515,7 +515,7 @@ Scoped.define("module:Class", ["module:Types", "module:Objs", "module:Functions"
 		if (this.__auto_destroy_list) {
 			for (var i = 0; i < this.__auto_destroy_list.length; ++i) {
 				if ("destroy" in this.__auto_destroy_list[i])
-					this.__auto_destroy_list[i].destroy();
+					this.__auto_destroy_list[i].weakDestroy();
 			}
 		}
 		var cid = this.cid();
@@ -1551,7 +1551,13 @@ Scoped.define("module:Events.EventsMixin", [
 				if (!this.__events_mixin_events[event])
 					this._notify("register_event", event);
 				this.__events_mixin_events[event] = this.__events_mixin_events[event] || new LinkedList();
-				this.__events_mixin_events[event].add(this.__create_event_object(callback, context, options));
+				var event_object = this.__create_event_object(callback, context, options);
+				this.__events_mixin_events[event].add(event_object);
+				if (this.__events_mixin_persistent_events && this.__events_mixin_persistent_events[event]) {
+					var argss = this.__events_mixin_persistent_events[event];
+					for (var i = 0; i < argss.length; ++i)
+						this.__call_event_object(event_object, argss[i]);
+				}
 			}
 			return this;
 		},
@@ -1624,6 +1630,17 @@ Scoped.define("module:Events.EventsMixin", [
 					});
 			}, this);
 			return this;
+		},
+		
+		persistentTrigger: function (events) {
+			this.trigger.apply(this, arguments);
+			events = events.split(this.EVENT_SPLITTER);
+			var rest = Functions.getArguments(arguments, 1);
+			this.__events_mixin_persistent_events = this.__events_mixin_persistent_events || [];
+			Objs.iter(events, function (event) {
+				this.__events_mixin_persistent_events[event] = this.__events_mixin_persistent_events[event] || [];
+				this.__events_mixin_persistent_events[event].push(rest);
+			}, this);
 		},
 
 		once: function (events, callback, context, options) {
@@ -4005,7 +4022,7 @@ Scoped.define("module:Properties.PropertiesMixin", [
 				});
 				self.set(key, func.apply(args.context, values));
 			}
-			BetaJS.Objs.iter(deps, function (dep) {
+			Objs.iter(deps, function (dep) {
 				var value = dep.properties.get(dep.key);
 				// Ugly way of checking whether an EventsMixin is present - please improve in the future on this
 				if (value && typeof value == "object" && "on" in value && "off" in value && "trigger" in value) {
@@ -4663,7 +4680,7 @@ Scoped.define("module:Router.RouteParser", [ "module:Class", "module:Strings",
 
 			constructor : function(routes) {
 				inherited.constructor.call(this);
-				this.routes = [];
+				this.routes = {};
 				Objs.iter(routes, function(route, key) {
 					this.bind(key, route);
 				}, this);
@@ -4865,11 +4882,14 @@ Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "
 
 			constructor : function(router, stateHost, options) {
 				this._stateHost = stateHost;
-				this._options = options || {};
+				options = Objs.extend({
+					capitalizeStates: false
+				}, options);
+				this._options = options;
 				this._routeToState = new RouteMap({
 					map : this._options.routeToState || function (name, args) {
 						return {
-							name: Strings.capitalize(name),
+							name: options.capitalizeStates ? Strings.capitalize(name) : name,
 							args: args
 						};
 					},
@@ -4907,7 +4927,7 @@ Scoped.define("module:Router.StateRouteBinder", [ "module:Router.RouteBinder", "
 
 			register: function (name, route, extension) {
 				this._router.bind(name, route);
-				this._stateHost.register(Strings.capitalize(name), extension);
+				this._stateHost.register(this._options.capitalizeStates ? Strings.capitalize(name) : name, extension);
 				return this;
 			},			
 

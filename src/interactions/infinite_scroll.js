@@ -1,4 +1,4 @@
-Scoped.define("module:Interactions.InfiniteScroll", [
+Scoped.define("module:Interactions.Infinitescroll", [
         "module:Interactions.Scroll",
 	    "base:Objs"
 	], function (Scroll, Objs, scoped) {
@@ -65,7 +65,7 @@ Scoped.define("module:Interactions.InfiniteScroll", [
 		    	if (this._can_prepend) {
 		    		this._extending = true;
 		    		var self = this;
-		    		opts.prepend(opts.context, count || opts.prepend_count, function (added, done) {
+		    		opts.prepend.call(opts.context, count || opts.prepend_count, function (added, done) {
 		    			if (self.__top_white_space)
 		    				self.itemsElement().prepend(self.__top_white_space);
 		    			self._extending = false;
@@ -120,12 +120,12 @@ Scoped.define("module:Interactions.InfiniteScroll", [
 });
 
 
-Scoped.define("module:Interactions.InfiniteScrollStates.Idle", ["module:Interactions.ScrollStates.Idle"], function (State, scoped) {
+Scoped.define("module:Interactions.InfinitescrollStates.Idle", ["module:Interactions.ScrollStates.Idle"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {});
 });
 
 
-Scoped.define("module:Interactions.InfiniteScrollStates.Scrolling", ["module:Interactions.ScrollStates.Scrolling"], function (State, scoped) {
+Scoped.define("module:Interactions.InfinitescrollStates.Scrolling", ["module:Interactions.ScrollStates.Scrolling"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {
 
    		_scroll: function () {
@@ -140,7 +140,7 @@ Scoped.define("module:Interactions.InfiniteScrollStates.Scrolling", ["module:Int
 });
 
 
-Scoped.define("module:Interactions.InfiniteScrollStates.ScrollingTo", ["module:Interactions.ScrollStates.ScrollingTo"], function (State, scoped) {
+Scoped.define("module:Interactions.InfinitescrollStates.ScrollingTo", ["module:Interactions.ScrollStates.ScrollingTo"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {
 
    		_scroll: function () {
