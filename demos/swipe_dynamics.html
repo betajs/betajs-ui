@@ -7,14 +7,12 @@
         <script src="../vendors/betajs-browser-noscoped.js"></script>
         <script src="../dist/betajs-ui-noscoped.js"></script>
         <script src="../vendors/betajs-dynamics-noscoped.js"></script>
-        <link rel="stylesheet" href="styles.css" /> 
+        <link rel="stylesheet" href="styles.css" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     </head>
     <body>
     	<div class="doodads noselect" ba-repeat="{{doodad::[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]}}">
-	        <div class="doodad noselect"   ba-gesture:click="{{{data: doodad, options: click_gesture_options}}}"
-	                                       ba-gesture:drag="{{drag_gesture_options}}"
-	                                       ba-interaction:drag="{{drag_interaction_options}}"
+	        <div class="doodad noselect"
 	                                       ba-gesture:swipe="{{swipe_gesture_options}}"
 	                                       ba-interaction:swipe="{{{data: doodad, options: swipe_interaction_options, sub: 'div:first-child'}}}">
 	           <div class="inner noselect">
@@ -26,43 +24,6 @@
         BetaJS.Dynamics.Dynamic.activate({
         	element: document.body,
         	attrs: {
-        		click_gesture_options: {
-                    mouse_up_activate: true,
-                    wait_time: 250,
-                    wait_activate: false,
-                    disable_x: 10,
-                    disable_y: 10,
-                    enable_x: -1,
-                    enable_y: -1,
-                    activate_event: "click",
-                    transition_event: function (element, host) {
-                        console.log("Click Gesture", BetaJS.Time.now(), host.data(), host.state()._current_state);
-                    }
-                },
-        		drag_gesture_options: {
-                    mouse_up_activate: false,
-                    wait_time: 750,
-                    wait_activate: true,
-                    disable_x: 10,
-                    disable_y: 10,
-                    enable_x: -1,
-                    enable_y: -1,
-                    interaction: "drag",
-                    transition_event: function (element, host) {
-                        console.log("Drag Gesture", BetaJS.Time.now(), host.data(), host.state()._current_state);
-                    }
-                },
-                drag_interaction_options: {
-                	type: "drag",
-                    clone_element: true,
-                    start_event: null,
-                    events: {
-                    	"move": function (doodad, event) {
-                            event.actionable_modifier.csscls("focus", true);
-                            event.modifier.csscls("unfocus", true);
-                    	}
-                    }
-                },
                 swipe_gesture_options: {
                     mouse_up_activate: false,
                     wait_time: 750,
@@ -73,7 +34,7 @@
                     enable_y: -1,
                     interaction: "swipe",
                     transition_event: function (element, host) {
-                    	console.log("Swipe Gesture", BetaJS.Time.now(), host.data(), host.state()._current_state);
+                    	console.log("Swipe Gesture", host.data(), host.state()._current_state);
                     } 
                 },
                 swipe_actions: {

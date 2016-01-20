@@ -1,7 +1,7 @@
 /*!
-betajs-ui - v1.0.4 - 2015-12-21
+betajs-ui - v1.0.5 - 2016-01-20
 Copyright (c) Oliver Friedmann,Victor Lingenthal
-MIT Software License.
+Apache 2.0 Software License.
 */
 /*!
 betajs-scoped - v0.0.4 - 2015-12-12
@@ -670,9 +670,9 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.4 - 2015-12-21
+betajs-ui - v1.0.5 - 2016-01-20
 Copyright (c) Oliver Friedmann,Victor Lingenthal
-MIT Software License.
+Apache 2.0 Software License.
 */
 (function () {
 
@@ -690,7 +690,7 @@ Scoped.binding("jquery", "global:jQuery");
 Scoped.define("module:", function () {
 	return {
 		guid: "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-		version: '46.1450740845552'
+		version: '47.1453328370576'
 	};
 });
 
@@ -2535,10 +2535,9 @@ Scoped.define("module:Gestures.ElementStateHost", ["base:States.CompetingHost"],
 
 Scoped.define("module:Gestures.Gesture", [
 	    "module:Gestures.ElementStateHost",
-	    "module:Hardware.MouseCoords",
 	    "base:States.CompetingComposite",
 	    "base:Objs"
-	], function (ElementStateHost, MouseCoords, CompetingComposite, Objs, scoped) {
+	], function (ElementStateHost, CompetingComposite, Objs, scoped) {
 	return ElementStateHost.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -2549,7 +2548,6 @@ Scoped.define("module:Gestures.Gesture", [
 		            element.data("gestures", composite);
 		        }
 		        inherited.constructor.call(this, element, composite);
-		        MouseCoords.require();
 		        for (var key in machine) {
 		        	machine[key] = Objs.extend({
 		        		priority: 1,
@@ -2561,11 +2559,6 @@ Scoped.define("module:Gestures.Gesture", [
 		            state_descriptor: machine,
 		            current_state: "Initial"
 		        });
-			},
-			
-			destroy: function () {
-		        MouseCoords.unrequire();
-		        inherited.destroy.call(this);
 			}
 	
 		};
@@ -2727,15 +2720,14 @@ Scoped.define("module:Gestures.ElementTimerEvent", ["module:Gestures.ElementEven
 
 Scoped.define("module:Gestures.ElementMouseMoveOutEvent", [
         "module:Gestures.ElementEvent",
-        "module:Hardware.MouseCoords",
         "module:Events.Mouse"
-    ], function (ElementEvent, MouseCoords, MouseEvents, scoped) {
+    ], function (ElementEvent, MouseEvents, scoped) {
 	return ElementEvent.extend({scoped: scoped}, function (inherited) {
 		return {
 		
 		    constructor: function (box, element, callback, context) {
 		    	inherited.constructor.call(this, element, callback, context);
-		        var position = MouseCoords.coords;
+		        var position = {};
 		        var delta = {x: 0, y: 0};
 		        this.on(MouseEvents.moveEvent, function (event) {
 		        	if (!position.x && !position.y)
@@ -2744,6 +2736,7 @@ Scoped.define("module:Gestures.ElementMouseMoveOutEvent", [
 		            delta.x = Math.max(delta.x, Math.abs(position.x - current.x));
 		            delta.y = Math.max(delta.y, Math.abs(position.y - current.y));
 		            if (("x" in box && box.x >= 0 && delta.x >= box.x) || ("y" in box && box.y >= 0 && delta.y >= box.y)) {
+						//console.log(box, delta, position, current);
 		                this.callback();
 		            }
 		        });
@@ -2850,7 +2843,7 @@ Scoped.define("module:Gestures.defaultGesture", [
 	            }
 	        },
 	        "DownState": {
-	            events: [{
+	            events: Objs.filter([options.mouse_up_activate === null ? null : {
 	                event: "BodyTriggerEvent",
 	                args: MouseEvents.upEvent,
 	                target: options.mouse_up_activate ? "ActiveState" : "Initial"
@@ -2862,11 +2855,11 @@ Scoped.define("module:Gestures.defaultGesture", [
 	                event: "ElementMouseMoveOutEvent",
 	                args: {x: options.enable_x, y: options.enable_y},
 	                target: "ActiveState"
-	            }, {
+	            }, options.wait_activate === null ? null : {
 	                event: "ElementTimerEvent",
 	                args: options.wait_time,
 	                target: options.wait_activate ? "ActiveState" : "Initial"
-	            }]
+	            }], function (ev) { return !!ev; })
 	        },
 	        "ActiveState": {
 	            priority: options.active_priority,

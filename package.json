@@ -1,10 +1,10 @@
 {
 	"name": "betajs-ui",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"description": "BetaJS-UI is a library for enabling gestures and interactions such as drag and drop.",
 	"homepage": "http://betajs.com",
 	"contributors": ["Oliver Friedmann", "Victor Lingenthal"],
-	"license": "MIT",
+	"license": "Apache 2.0",
 	"devDependencies": {
 		"grunt": "",
 		"grunt-contrib-jshint": "",
