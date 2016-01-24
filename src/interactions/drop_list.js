@@ -1,4 +1,4 @@
-Scoped.define("module:Interactions.DropList", [
+Scoped.define("module:Interactions.Droplist", [
         "module:Interactions.ElementInteraction",
         "module:Elements.ElementSupport",
 	    "base:Objs",
@@ -93,7 +93,7 @@ Scoped.define("module:Interactions.DropList", [
 
 
 
-Scoped.define("module:Interactions.DropListStates.Disabled", ["module:Interactions.State"], function (State, scoped) {
+Scoped.define("module:Interactions.DroplistStates.Disabled", ["module:Interactions.State"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {
 		
 		_white_list: ["Idle"],
@@ -106,7 +106,7 @@ Scoped.define("module:Interactions.DropListStates.Disabled", ["module:Interactio
 });
 
 
-Scoped.define("module:Interactions.DropListStates.Idle", ["module:Interactions.DropListStates.Disabled"], function (State, scoped) {
+Scoped.define("module:Interactions.DroplistStates.Idle", ["module:Interactions.DroplistStates.Disabled"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {
 		
    		_white_list: ["Hover", "Disabled"],
@@ -123,7 +123,7 @@ Scoped.define("module:Interactions.DropListStates.Idle", ["module:Interactions.D
 });
 
 
-Scoped.define("module:Interactions.DropListStates.Hover", ["module:Interactions.DropListStates.Disabled"], function (State, scoped) {
+Scoped.define("module:Interactions.DroplistStates.Hover", ["module:Interactions.DroplistStates.Disabled"], function (State, scoped) {
    	return State.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -158,7 +158,7 @@ Scoped.define("module:Interactions.DropListStates.Hover", ["module:Interactions.
 });
 
 
-Scoped.define("module:Interactions.DropListStates.Dropping", ["module:Interactions.DropListStates.Disabled"], function (State, scoped) {
+Scoped.define("module:Interactions.DroplistStates.Dropping", ["module:Interactions.DroplistStates.Disabled"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {
 	
 		_white_list: ["Idle", "Disabled"],

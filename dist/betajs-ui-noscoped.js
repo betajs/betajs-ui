@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.5 - 2016-01-20
+betajs-ui - v1.0.5 - 2016-01-22
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache 2.0 Software License.
 */
@@ -19,7 +19,7 @@ Scoped.binding("jquery", "global:jQuery");
 Scoped.define("module:", function () {
 	return {
 		guid: "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-		version: '47.1453328370576'
+		version: '48.1453479367117'
 	};
 });
 
@@ -880,7 +880,7 @@ Scoped.define("module:Interactions.DropStates.Dropping", ["module:Interactions.D
 	});
 });	
 
-Scoped.define("module:Interactions.DropList", [
+Scoped.define("module:Interactions.Droplist", [
         "module:Interactions.ElementInteraction",
         "module:Elements.ElementSupport",
 	    "base:Objs",
@@ -975,7 +975,7 @@ Scoped.define("module:Interactions.DropList", [
 
 
 
-Scoped.define("module:Interactions.DropListStates.Disabled", ["module:Interactions.State"], function (State, scoped) {
+Scoped.define("module:Interactions.DroplistStates.Disabled", ["module:Interactions.State"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {
 		
 		_white_list: ["Idle"],
@@ -988,7 +988,7 @@ Scoped.define("module:Interactions.DropListStates.Disabled", ["module:Interactio
 });
 
 
-Scoped.define("module:Interactions.DropListStates.Idle", ["module:Interactions.DropListStates.Disabled"], function (State, scoped) {
+Scoped.define("module:Interactions.DroplistStates.Idle", ["module:Interactions.DroplistStates.Disabled"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {
 		
    		_white_list: ["Hover", "Disabled"],
@@ -1005,7 +1005,7 @@ Scoped.define("module:Interactions.DropListStates.Idle", ["module:Interactions.D
 });
 
 
-Scoped.define("module:Interactions.DropListStates.Hover", ["module:Interactions.DropListStates.Disabled"], function (State, scoped) {
+Scoped.define("module:Interactions.DroplistStates.Hover", ["module:Interactions.DroplistStates.Disabled"], function (State, scoped) {
    	return State.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -1040,7 +1040,7 @@ Scoped.define("module:Interactions.DropListStates.Hover", ["module:Interactions.
 });
 
 
-Scoped.define("module:Interactions.DropListStates.Dropping", ["module:Interactions.DropListStates.Disabled"], function (State, scoped) {
+Scoped.define("module:Interactions.DroplistStates.Dropping", ["module:Interactions.DroplistStates.Disabled"], function (State, scoped) {
    	return State.extend({scoped: scoped}, {
 	
 		_white_list: ["Idle", "Disabled"],
@@ -2267,7 +2267,7 @@ Scoped.define("module:Dynamics.InteractionPartial", [
 			var InteractionClass = Interactions[Strings.capitalize(value.type)];
 			var interaction = new InteractionClass(value.sub ? this._node._$element.find(value.sub) : this._node._$element, Objs.extend({
 				enabled: true
-			}, value));
+			}, value), value.data);
 			node.interactions[this._postfix] = interaction;
 			Objs.iter(value.events, function (callee, event) {
 				interaction.on(event, function (arg1, arg2, arg3, arg4) {

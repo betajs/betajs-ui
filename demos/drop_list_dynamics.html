@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+    <head>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script src="../vendors/scoped.js"></script>
+        <script src="../vendors/beta-noscoped.js"></script>
+        <script src="../vendors/betajs-browser-noscoped.js"></script>
+        <script src="../dist/betajs-ui-noscoped.js"></script>
+		<script src="../vendors/betajs-dynamics-noscoped.js"></script>
+        <link rel="stylesheet" href="styles.css" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    </head>
+    <body>
+    	<div class="doodads" ba-repeat="{{doodad::source}}">
+	        <div class="doodad" ba-interaction:drag="{{{data: doodad, options: drag_interaction_options}}}">
+				<div class="inner">Doodad {{doodad.v}}</div>
+			</div>
+	    </div>
+	    <hr />
+		<div class="doodad" id="floater" style="display:none">
+			<div class="inner" style="height: 35px; background-color: #EEEEEE">
+				Drop Here
+			</div>
+		</div>
+	    <div class="doodads" ba-repeat="{{doodad::target}}" ba-interaction:droplist="{{droplist_interaction_options}}">
+			<div class="doodad"><div class="inner">Doodad {{doodad.v}}</div></div>
+    	</div>
+        <script>
+			BetaJS.Dynamics.Dynamic.activate({
+				element: document.body,
+				attrs: {
+					source: new BetaJS.Collections.Collection({
+						objects: [{v: 1, i: 1}, {v: 2, i: 2}, {v: 3, i: 3}, {v: 4, i: 4}, {v: 5, i: 5}],
+						compare: function (x, y) { return x.get("i")-y.get("i"); }
+					}),
+					target: new BetaJS.Collections.Collection({
+						objects: [{v:6, i:6},{v:7, i:7},{v:8, i:8},{v:9, i:9},{v:10, i:10}],
+						compare: function (x, y) { return x.get("i")-y.get("i"); }
+					}),
+					drag_interaction_options: {
+						droppable: true,
+						enabled : true,
+						type: "drag",
+						clone_element: true,
+						events: {
+							"move": function (doodad, event) {
+								event.actionable_modifier.csscls("focus", true);
+								event.modifier.csscls("unfocus", true);
+							}
+						}
+					},
+					droplist_interaction_options: {
+						enabled: true,
+						type: "droplist",
+						floater: $("#floater"),
+						bounding_box : function(bb) {
+							var height = bb.bottom - bb.top + 1;
+							var margin = Math.floor(height * 0.2);
+							bb.top += margin;
+							bb.bottom -= margin;
+							return bb;
+						},
+						events: {
+							"dropped": function (dummy, event) {
+								var doodad = event.source.data;
+								this.get("source").remove(doodad);
+								var before = this.get("target").getByIndex(event.index - 1);
+								var after = this.get("target").getByIndex(event.index);
+								doodad.set("i", before ? (after ? (before.get("i") + after.get("i"))/2 : before.get("i")+1) : (after ? after.get("i") - 1 : 0));
+								this.get("target").add(doodad);
+							}
+						}
+					}
+				}
+			});
+        </script>
+    </body>
+</html>

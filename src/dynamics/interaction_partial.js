@@ -17,7 +17,7 @@ Scoped.define("module:Dynamics.InteractionPartial", [
 			var InteractionClass = Interactions[Strings.capitalize(value.type)];
 			var interaction = new InteractionClass(value.sub ? this._node._$element.find(value.sub) : this._node._$element, Objs.extend({
 				enabled: true
-			}, value));
+			}, value), value.data);
 			node.interactions[this._postfix] = interaction;
 			Objs.iter(value.events, function (callee, event) {
 				interaction.on(event, function (arg1, arg2, arg3, arg4) {
