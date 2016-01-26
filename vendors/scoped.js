@@ -1,5 +1,5 @@
 /*!
-betajs-scoped - v0.0.6 - 2016-01-20
+betajs-scoped - v0.0.6 - 2016-01-25
 Copyright (c) Oliver Friedmann
 Apache 2.0 Software License.
 */
@@ -42,6 +42,7 @@ var Scoped = function () {
 		}
 
 	};
+
 	var Helper = {
 
 		method: function (obj, func) {
@@ -573,7 +574,7 @@ var Scoped = function () {
 	var Public = Helper.extend(rootScope, {
 
 		guid: "4b6878ee-cb6a-46b3-94ac-27d91f58d666",
-		version: '31.1453334885429',
+		version: '32.1453754118896',
 
 		upgrade: Attach.upgrade,
 		attach: Attach.attach,
