@@ -115,6 +115,8 @@ Scoped.define("module:Interactions.DropStates.Hover", ["module:Interactions.Drop
 		
 			_start: function () {
 				this.trigger("hover");
+				if (this.options().classes && this.options().classes["hover.modifier"])
+					this.parent().modifier().csscls(this.options().classes["hover.modifier"], true);
 				this.on(this.element(), "drag-hover", function (event) {
 					this._drag_source = event.originalEvent.detail;
 					if (!this.parent()._is_hovering(this._drag_source))

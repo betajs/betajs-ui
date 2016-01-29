@@ -11,7 +11,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     </head>
     <body>
-    	<div class="doodads noselect" ba-repeat="{{doodad::[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]}}">
+    	<div class="doodads noselect" ba-repeat="{{doodad::[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]}}" style="height:300px; overflow:scroll">
 	        <div class="doodad noselect"
 	                                       ba-gesture:swipe="{{swipe_gesture_options}}"
 	                                       ba-interaction:swipe="{{{data: doodad, options: swipe_interaction_options, sub: 'div:first-child'}}}">
@@ -33,6 +33,7 @@
                     enable_x: 10,
                     enable_y: -1,
                     interaction: "swipe",
+                    disable_scroll_element: $(".doodads"),
                     transition_event: function (element, host) {
                     	console.log("Swipe Gesture", host.data(), host.state()._current_state);
                     } 

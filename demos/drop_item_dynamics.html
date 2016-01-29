@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+    <head>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script src="../vendors/scoped.js"></script>
+        <script src="../vendors/beta-noscoped.js"></script>
+        <script src="../vendors/betajs-browser-noscoped.js"></script>
+        <script src="../dist/betajs-ui-noscoped.js"></script>
+		<script src="../vendors/betajs-dynamics-noscoped.js"></script>
+        <link rel="stylesheet" href="styles.css" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    </head>
+    <body>
+    	<div class="doodads" ba-repeat="{{doodad::source}}">
+	        <div class="doodad" ba-interaction:drag="{{{data: doodad, options: drag_interaction_options}}}">
+				<div class="inner">Doodad {{doodad.v}}</div>
+			</div>
+	    </div>
+	    <hr />
+	    <div class="doodads" ba-repeat="{{doodad::target}}">
+			<div class="doodad"  ba-interaction:drop="{{{data: doodad, options: drop_interaction_options}}}"><div class="inner">Doodad {{doodad.v}}</div></div>
+    	</div>
+        <script>
+			BetaJS.Dynamics.Dynamic.activate({
+				element: document.body,
+				collections: {
+					source: [{v:1},{v:2},{v:3},{v:4},{v:5}],
+					target: [{v:6},{v:7},{v:8},{v:9},{v:10}]
+				},
+				attrs: {
+					drag_interaction_options: {
+						droppable: true,
+						enabled : true,
+						type: "drag",
+						clone_element: true,
+						classes: {
+							"move.actionable_modifier": "focus",
+							"move.modifier": "unfocus"
+						}
+					},
+					drop_interaction_options: {
+						enabled: true,
+						type: "drop",
+						classes: {
+							"hover.modifier": "green-style"
+						},
+						events: {
+							"dropped": function (data, event) {
+								var source_doodad = event.source.data;
+								var target_doodad = data;
+								alert(source_doodad.get("v") + " --> " + target_doodad.get("v"));
+							}
+						}
+					}
+				}
+			});
+        </script>
+    </body>
+</html>

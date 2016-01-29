@@ -1,4 +1,4 @@
-# betajs-ui 1.0.5
+# betajs-ui 1.0.6
 
 BetaJS-UI is a library for enabling gestures and interactions such as drag and drop.
 

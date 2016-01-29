@@ -235,6 +235,10 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
 			if (this.options().draggable_y)
 				base.css("top", (parseInt(base.css("top"), 10) + delta_coords.y) + "px");
 			this.trigger("move");
+			if (this.options().classes && this.options().classes["move.actionable_modifier"])
+				this.parent().actionable_modifier().csscls(this.options().classes["move.actionable_modifier"], true);
+			if (this.options().classes && this.options().classes["move.modifier"])
+				this.parent().modifier().csscls(this.options().classes["move.modifier"], true);
 			this.triggerDomMove();
 		}
 		

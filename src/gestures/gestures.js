@@ -200,6 +200,64 @@ Scoped.define("module:Gestures.ElementTimerEvent", ["module:Gestures.ElementEven
 });
 
 
+Scoped.define("module:Gestures.ElementScrollEvent", ["module:Gestures.ElementEvent", "base:Time"], function (ElementEvent, Time, scoped) {
+	return ElementEvent.extend({scoped: scoped}, function (inherited) {
+		return {
+
+		    constructor: function (options, element, callback, context) {
+		        inherited.constructor.call(this, element, callback, context);
+		        this.last_scroll_event = null;
+		        this.scroll_start_event = null;
+		        this.scroll_threshold = options.threshold;
+		        this.on("scroll", this.__scroll, this, options.element);
+		    },
+		    
+		    __scroll: function () {
+		    	if (this.destroyed())
+		    		return;
+		    	var now = Time.now();
+		    	if (this.scroll_start_event === null || (this.last_scroll_event && now - this.last_scroll_event > 50)) {
+		    		this.scroll_start_event = now;
+		    		this.last_scroll_event = now;
+		    		return;
+		    	}
+	    		this.last_scroll_event = now;
+	    		var delta = now - this.scroll_start_event;
+	    		if (delta > this.scroll_threshold)
+	    			this.callback();
+		    }
+		
+		};
+	});	
+});
+
+
+Scoped.define("module:Gestures.ElementScrollEndEvent", ["module:Gestures.ElementEvent", "base:Time"], function (ElementEvent, Time, scoped) {
+	return ElementEvent.extend({scoped: scoped}, function (inherited) {
+		return {
+
+		    constructor: function (options, element, callback, context) {
+		        inherited.constructor.call(this, element, callback, context);
+		        this.__fire();
+		        this.on("scroll", this.__fire, this, options.element);
+		    },
+		    
+		    __fire: function () {
+		    	if (this.destroyed())
+		    		return;
+		    	if (this.timer)
+		    		clearTimeout(this.timer);
+		    	var self = this;
+		    	this.timer = setTimeout(function () {
+		    		self.callback();
+		    	}, 50);
+		    }
+		
+		};
+	});	
+});
+
+
 
 Scoped.define("module:Gestures.ElementMouseMoveOutEvent", [
         "module:Gestures.ElementEvent",
@@ -309,14 +367,27 @@ Scoped.define("module:Gestures.defaultGesture", [
 	        disable_y: 10,
 	        enable_x: -1,
 	        enable_y: -1,
-	        active_priority: 2
+	        active_priority: 2,
+	        disable_scroll_element: null,
+	        disable_scroll_time: 500
 	    }, options);
 	    return {
 	        "Initial": {
-	            events: [{
+	            events: Objs.filter([{
 	                event: "ElementTriggerEvent",
 	                args: MouseEvents.downEvent,
 	                target: "DownState"
+	            }, options.disable_scroll_element === null ? null : {
+	            	event: "ElementScrollEvent",
+	            	args: {element: options.disable_scroll_element, threshold: options.disable_scroll_time},
+	            	target: "DisableScroll"
+	            }], function (ev) { return !!ev; })
+	        },
+	        "DisableScroll": {
+	            events: [{
+	                event: "ElementScrollEndEvent",
+	                args: {element: options.disable_scroll_element},
+	                target: "Initial"
 	            }]
 	        },
 	        "Retreat": {
@@ -342,6 +413,10 @@ Scoped.define("module:Gestures.defaultGesture", [
 	                event: "ElementTimerEvent",
 	                args: options.wait_time,
 	                target: options.wait_activate ? "ActiveState" : "Initial"
+	            }, options.disable_scroll_element === null ? null : {
+	            	event: "ElementScrollEvent",
+	            	args: {element: options.disable_scroll_element, threshold: options.disable_scroll_time},
+	            	target: "DisableScroll"
 	            }], function (ev) { return !!ev; })
 	        },
 	        "ActiveState": {
