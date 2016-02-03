@@ -1,10 +1,21 @@
 Scoped.define("module:Events.Mouse", ["browser:Info"], function (Info) {
 	return {		
 			
-		downEvent: Info.isMobile() ? "touchstart" : "mousedown",	
-		moveEvent: Info.isMobile() ? "touchmove" : "mousemove",	
-		upEvent: Info.isMobile() ? "touchend" : "mouseup",
-		clickEvent: Info.isMobile() ? "touchstart" : "click",
+		downEvent: function () {
+			return Info.isMobile() ? "touchstart" : "mousedown";	
+		},
+		
+		moveEvent: function () {
+			return Info.isMobile() ? "touchmove" : "mousemove";	
+		},	
+		
+		upEvent: function () {
+			return Info.isMobile() ? "touchend" : "mouseup";	
+		},
+		
+		clickEvent: function () {
+			return Info.isMobile() ? "touchstart" : "click";	
+		},
 				
 		customCoords: function (event, type, multi) {
 			if (event.originalEvent.touches && event.originalEvent.touches.length) {

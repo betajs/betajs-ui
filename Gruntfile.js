@@ -121,6 +121,16 @@ module.exports = function(grunt) {
 						}
 					}
 				},
+				'node-qunit' : {
+					dist : {
+						deps: ['./tests/fragments/init-jsdom.js', './vendors/scoped.js', './vendors/beta-noscoped.js', './vendors/betajs-browser-noscoped.js'],
+						code : './dist/betajs-ui-noscoped.js',
+						tests : grunt.file.expand(["./tests/fragments/test-jsdom.js", "./tests/tests/*.js"]),
+						done : function(err, res) {
+							publishResults("node", res, this.async());
+						}
+					}
+				},
 				template : {
 					"jsdoc": {
 						options: {
@@ -253,7 +263,8 @@ module.exports = function(grunt) {
 	grunt.registerTask('docs', ['template:jsdoc', 'jsdoc', 'clean:jsdoc']);
 	grunt.registerTask('lint', [ 'jshint:source', 'jshint:dist',
 	                 			 'jshint:gruntfile', 'jshint:tests' ]);
-	grunt.registerTask('check', [ 'lint', "qunit" ]);
+	grunt.registerTask('check', [ 'lint', 'node-qunit', 'qunit' ]);
+	grunt.registerTask('check-node', [ 'lint', 'node-qunit' ]);
 	grunt.registerTask('dependencies', [ 'wget:dependencies' ]);
 	grunt.registerTask('closure', [ 'closureCompiler', 'clean:closure' ]);
 	grunt.registerTask('browserstack-desktop', [ 'template:browserstack-desktop', 'shell:browserstack', 'clean:browserstack' ]);

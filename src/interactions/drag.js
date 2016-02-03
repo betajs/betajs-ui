@@ -14,8 +14,8 @@ Scoped.define("module:Interactions.Drag", [
 
 		    constructor: function (element, options, data) {
 				options = Objs.extend({
-					start_event: MouseEvents.downEvent,
-					stop_event: MouseEvents.upEvent,
+					start_event: MouseEvents.downEvent(),
+					stop_event: MouseEvents.upEvent(),
 					draggable_x: true,
 					draggable_y: true,
 					clone_element: false,
@@ -210,7 +210,7 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
 				}
 			}
 			this.trigger("start");
-			this.on("body", MouseEvents.moveEvent, this.__dragging);
+			this.on("body", MouseEvents.moveEvent(), this.__dragging);
 			if (opts.stop_event) {
 				this.on("body", opts.stop_event, function () {
 					if (opts.droppable)

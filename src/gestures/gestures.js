@@ -270,7 +270,7 @@ Scoped.define("module:Gestures.ElementMouseMoveOutEvent", [
 		    	inherited.constructor.call(this, element, callback, context);
 		        var position = {};
 		        var delta = {x: 0, y: 0};
-		        this.on(MouseEvents.moveEvent, function (event) {
+		        this.on(MouseEvents.moveEvent(), function (event) {
 		        	if (!position.x && !position.y)
 		        		position = MouseEvents.pageCoords(event);
 		            var current = MouseEvents.pageCoords(event);
@@ -375,7 +375,7 @@ Scoped.define("module:Gestures.defaultGesture", [
 	        "Initial": {
 	            events: Objs.filter([{
 	                event: "ElementTriggerEvent",
-	                args: MouseEvents.downEvent,
+	                args: MouseEvents.downEvent(),
 	                target: "DownState"
 	            }, options.disable_scroll_element === null ? null : {
 	            	event: "ElementScrollEvent",
@@ -399,7 +399,7 @@ Scoped.define("module:Gestures.defaultGesture", [
 	        "DownState": {
 	            events: Objs.filter([options.mouse_up_activate === null ? null : {
 	                event: "BodyTriggerEvent",
-	                args: MouseEvents.upEvent,
+	                args: MouseEvents.upEvent(),
 	                target: options.mouse_up_activate ? "ActiveState" : "Initial"
 	            }, {
 	                event: "ElementMouseMoveOutEvent",

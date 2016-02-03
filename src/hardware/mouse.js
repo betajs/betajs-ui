@@ -13,7 +13,7 @@ Scoped.define("module:Hardware.MouseCoords", [
 		require: function () {
 			if (this.__required === 0) {
 				var self = this;
-				var events = [MouseEvents.moveEvent, MouseEvents.upEvent, MouseEvents.downEvent];
+				var events = [MouseEvents.moveEvent(), MouseEvents.upEvent(), MouseEvents.downEvent()];
 				Objs.iter(events, function (eventName) {
 					$("body").on(eventName + "." + Ids.objectId(this), function (event) {
 						var result = MouseEvents.pageCoords(event);

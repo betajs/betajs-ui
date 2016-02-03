@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.6 - 2016-01-28
+betajs-ui - v1.0.7 - 2016-02-02
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache 2.0 Software License.
 */
@@ -19,7 +19,7 @@ Scoped.binding("jquery", "global:jQuery");
 Scoped.define("module:", function () {
 	return {
 		guid: "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-		version: '50.1454040873800'
+		version: '51.1454466888664'
 	};
 });
 
@@ -256,10 +256,21 @@ Scoped.define("module:Elements.ElementSupport", ["base:Types", "jquery:"], funct
 Scoped.define("module:Events.Mouse", ["browser:Info"], function (Info) {
 	return {		
 			
-		downEvent: Info.isMobile() ? "touchstart" : "mousedown",	
-		moveEvent: Info.isMobile() ? "touchmove" : "mousemove",	
-		upEvent: Info.isMobile() ? "touchend" : "mouseup",
-		clickEvent: Info.isMobile() ? "touchstart" : "click",
+		downEvent: function () {
+			return Info.isMobile() ? "touchstart" : "mousedown";	
+		},
+		
+		moveEvent: function () {
+			return Info.isMobile() ? "touchmove" : "mousemove";	
+		},	
+		
+		upEvent: function () {
+			return Info.isMobile() ? "touchend" : "mouseup";	
+		},
+		
+		clickEvent: function () {
+			return Info.isMobile() ? "touchstart" : "click";	
+		},
 				
 		customCoords: function (event, type, multi) {
 			if (event.originalEvent.touches && event.originalEvent.touches.length) {
@@ -364,7 +375,7 @@ Scoped.define("module:Hardware.MouseCoords", [
 		require: function () {
 			if (this.__required === 0) {
 				var self = this;
-				var events = [MouseEvents.moveEvent, MouseEvents.upEvent, MouseEvents.downEvent];
+				var events = [MouseEvents.moveEvent(), MouseEvents.upEvent(), MouseEvents.downEvent()];
 				Objs.iter(events, function (eventName) {
 					$("body").on(eventName + "." + Ids.objectId(this), function (event) {
 						var result = MouseEvents.pageCoords(event);
@@ -401,8 +412,8 @@ Scoped.define("module:Interactions.Drag", [
 
 		    constructor: function (element, options, data) {
 				options = Objs.extend({
-					start_event: MouseEvents.downEvent,
-					stop_event: MouseEvents.upEvent,
+					start_event: MouseEvents.downEvent(),
+					stop_event: MouseEvents.upEvent(),
 					draggable_x: true,
 					draggable_y: true,
 					clone_element: false,
@@ -597,7 +608,7 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
 				}
 			}
 			this.trigger("start");
-			this.on("body", MouseEvents.moveEvent, this.__dragging);
+			this.on("body", MouseEvents.moveEvent(), this.__dragging);
 			if (opts.stop_event) {
 				this.on("body", opts.stop_event, function () {
 					if (opts.droppable)
@@ -2122,7 +2133,7 @@ Scoped.define("module:Gestures.ElementMouseMoveOutEvent", [
 		    	inherited.constructor.call(this, element, callback, context);
 		        var position = {};
 		        var delta = {x: 0, y: 0};
-		        this.on(MouseEvents.moveEvent, function (event) {
+		        this.on(MouseEvents.moveEvent(), function (event) {
 		        	if (!position.x && !position.y)
 		        		position = MouseEvents.pageCoords(event);
 		            var current = MouseEvents.pageCoords(event);
@@ -2227,7 +2238,7 @@ Scoped.define("module:Gestures.defaultGesture", [
 	        "Initial": {
 	            events: Objs.filter([{
 	                event: "ElementTriggerEvent",
-	                args: MouseEvents.downEvent,
+	                args: MouseEvents.downEvent(),
 	                target: "DownState"
 	            }, options.disable_scroll_element === null ? null : {
 	            	event: "ElementScrollEvent",
@@ -2251,7 +2262,7 @@ Scoped.define("module:Gestures.defaultGesture", [
 	        "DownState": {
 	            events: Objs.filter([options.mouse_up_activate === null ? null : {
 	                event: "BodyTriggerEvent",
-	                args: MouseEvents.upEvent,
+	                args: MouseEvents.upEvent(),
 	                target: options.mouse_up_activate ? "ActiveState" : "Initial"
 	            }, {
 	                event: "ElementMouseMoveOutEvent",
