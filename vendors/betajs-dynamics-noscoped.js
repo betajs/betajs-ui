@@ -1,5 +1,5 @@
 /*!
-betajs-dynamics - v0.0.32 - 2016-02-02
+betajs-dynamics - v0.0.35 - 2016-02-07
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache 2.0 Software License.
 */
@@ -16,7 +16,7 @@ Scoped.binding("jquery", "global:jQuery");
 Scoped.define("module:", function () {
 	return {
 		guid: "d71ebf84-e555-4e9b-b18a-11d74fdcefe2",
-		version: '217.1454454938844'
+		version: '219.1454870118315'
 	};
 });
 
@@ -453,7 +453,8 @@ Scoped.define("module:Data.Scope", [
 					attrs: {},
 					extendables: [],
 					collections: {},
-					computed: {}
+					computed: {},
+					events: {}
 				}, options);
 				if (options.bindings)
 					options.bind = Objs.extend(options.bind, options.bindings);
@@ -489,6 +490,9 @@ Scoped.define("module:Data.Scope", [
 				Objs.iter(options.computed, function (value, key) {
 					var splt = Strings.splitFirst(key, ":");
 					this.__properties.compute(splt.head, value, splt.tail.split(","));
+				}, this);
+				Objs.iter(options.events, function (value, key) {
+					this.on(key, value, this);
 				}, this);
 			},
 			
@@ -765,6 +769,243 @@ Scoped.define("module:Data.MultiScope", [
 	
 		};
 	}]);
+});
+Scoped.define("module:DomObserver", [
+    "base:Class",
+    "base:Objs",
+    "browser:DomMutation.NodeInsertObserver",
+    "module:Registries",
+    "module:Dynamic",
+    "jquery:"
+], function (Class, Objs, NodeInsertObserver, Registries, Dynamic, $, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (options) {
+				inherited.constructor.call(this);
+				options = options || {};
+				this.__root = options.root || document.body;
+				this.__persistent_dynamics = !!options.persistent_dynamics;
+				this.__allowed_dynamics = options.allowed_dynamics ? Objs.objectify(options.allowed_dynamics) : null;
+				this.__forbidden_dynamics = options.forbidden_dynamics ? Objs.objectify(options.forbidden_dynamics) : null;
+				this.__dynamics = {};
+				if (!options.ignore_existing) {
+					Objs.iter(Registries.handler.classes(), function (cls, key) {
+						if (this.__forbidden_dynamics && this.__forbidden_dynamics[key])
+							return;
+						if (this.__allowed_dynamics && !this.__allowed_dynamics[key])
+							return;
+						var self = this;
+						$(this.__root).find(key).each(function () {
+							if (this.dynamicshandler)
+								return;
+							self.__nodeInserted(this);
+						});
+					}, this);
+				}
+				this.__observer = NodeInsertObserver.create({
+					root: this.__root,
+					filter: this.__observerFilter,
+					context: this
+				});
+				this.__observer.on("node-inserted", this.__nodeInserted, this);
+			},
+			
+			destroy: function () {
+				this.__observer.destroy();
+				Objs.iter(this.__dynamics, function (dynamic) {
+					dynamic.off(null, null, this);
+					if (!this.__persistent_dynamics)
+						dynamic.weakDestroy();
+				}, this);
+				inherited.destroy.call(this);
+			},
+			
+			__observerFilter: function (node) {
+				if (node.dynamicshandler || !node.tagName)
+					return false;
+				var tag = node.tagName.toLowerCase();
+				if (!Registries.handler.get(tag))
+					return false;
+				if (this.__forbidden_dynamics && this.__forbidden_dynamics[tag])
+					return false;
+				if (this.__allowed_dynamics && !this.__allowed_dynamics[tag])
+					return false;
+				return true;
+			},
+			
+			__nodeInserted: function (node) {
+				var dynamic = new Dynamic({
+					element: node,
+					remove_observe: true
+				});
+				this.__dynamics[dynamic.cid()] = dynamic;
+				dynamic.on("destroy", function () {
+					delete this.__dynamics[dynamic.cid()];
+				}, this);
+				dynamic.activate();
+			}
+			
+		};
+	}, {
+		
+		__singleton: null,
+		
+		activate: function (options) {
+			if (!this.__singleton)
+				this.__singleton = new this(options);
+		}		
+		
+	});
+});
+Scoped.define("module:Dynamic", [
+   	    "module:Data.Scope",
+   	    "module:Handlers.HandlerMixin",
+   	    "base:Objs",
+   	    "base:Strings",
+   	    "base:Types",
+   	    "base:Functions",
+   	    "module:Registries",
+   	    "jquery:"
+   	], function (Scope, HandlerMixin, Objs, Strings, Types, Functions, Registries, $, scoped) {
+	var Cls;
+	Cls = Scope.extend({scoped: scoped}, [HandlerMixin, function (inherited) {
+   		return {
+
+		   	_notifications: {
+				_activate: "__createActivate"
+			},
+				
+			constructor: function (options) {
+				this.initial = this.initial || {};
+				options = Objs.extend(Objs.clone(this.initial, 1), options);
+				this.domevents = Objs.extend(this.domevents, options.domevents);
+				this.windowevents = Objs.extend(this.windowevents, options.windowevents);
+				Objs.iter(this.cls.__initialForward, function (key) {
+					if (!(key in this))
+						return;
+					if (key in options) {
+						if (Types.is_object(this[key]) && Types.is_object(options[key]))
+							options[key] = Objs.extend(Objs.clone(this[key], 1), options[key]);
+					} else
+						options[key] = this[key];
+				}, this);
+				Objs.iter(this.object_functions, function (key) {
+					this[key] = function () {
+						var args = Functions.getArguments(arguments);
+						args.unshift(key);
+						return this.execute.apply(this, args);
+					};
+				}, this);
+				if (!options.parent && options.parentHandler) {
+					var ph = options.parentHandler;
+					while (ph && !options.parent) {
+						options.parent = ph.instance_of(Cls) ? ph : null;
+						ph = ph._parentHandler;
+					}
+				}
+				inherited.constructor.call(this, options);
+				if (options.tagName) {
+					this._tagName = options.tagName;
+					this.data("tagname", this._tagName);
+				}
+				this.functions = this.__functions;
+				this._handlerInitialize(options);
+				this.__createActivate = options.create || function () {};
+				this.__registered_dom_events = [];
+				this.dom_events = {};
+				this.window_events = {};
+			},
+			
+			handle_call_exception: function (name, args, e) {
+				Registries.warning("Dynamics Exception in '" + this.cls.classname + "' calling method '" + name + "' : " + e);
+				return null;
+			},
+			
+			_afterActivate: function (activeElement) {
+				this.activeElement().off("." + this.cid() + "-domevents");
+				$(window).off("." + this.cid() + "-windowevents");
+				var self = this;
+				Objs.iter(this.domevents, function (target, event) {
+					var ev = event.split(" ");
+					var source = ev.length === 1 ? this.activeElement() : this.activeElement().find(ev[1]);
+					this.__registered_dom_events.push(source);
+					source.on(ev[0] + "." + this.cid() + "-domevents", function (eventData) {
+						self.call(target, eventData);
+					});
+				}, this);
+				Objs.iter(this.windowevents, function (target, event) {
+					$(window).on(event + "." + this.cid() + "-windowevents", function (eventData) {
+						self.call(target, eventData);
+					});
+				}, this);
+			},
+			
+			destroy: function () {
+				Objs.iter(this.__registered_dom_events, function (source) {
+					source.off("." + this.cid() + "-domevents");
+				}, this);
+				$(window).off("." + this.cid() + "-windowevents");
+				inherited.destroy.call(this);
+			}
+				
+		};
+	}], {
+		
+		__initialForward: [
+		    "functions", "attrs", "extendables", "collections", "template", "create", "scopes", "bindings", "computed", "types", "events"
+        ],
+		
+		canonicName: function () {
+			return Strings.last_after(this.classname, ".").toLowerCase();
+		},
+		
+		registeredName: function () {
+			return this.__registeredName || ("ba-" + this.canonicName());
+		},
+		
+		findByElement: function (element) {
+			return $(element).get(0).dynamicshandler;
+		},
+		
+		register: function (key, registry) {
+			registry = registry || Registries.handler;
+			this.__registeredName = key || this.registeredName();
+			registry.register(this.__registeredName, this);
+			return this;
+		},
+		
+		activate: function (options) {
+			var dyn = new this(options || {element: document.body, name_registry: true});
+			dyn.activate();
+			return dyn;
+		},
+		
+		attachStringTable: function (stringTable) {
+			this.__stringTable = stringTable;
+			return this;
+		},
+		
+		addStrings: function (strings) {
+			this.__stringTable.register(strings, this.registeredName());
+			return this;
+		},
+		
+		string: function (key) {
+			var result = this.__stringTable.get(key, this.registeredName());
+			if (!result && this.parent.string)
+				result = this.parent.string(key);
+			return result;
+		},
+		
+		_extender: {
+			attrs: function (base, overwrite) {
+				return Objs.extend(Objs.clone(base, 1), overwrite);
+			}
+		}
+	
+	});
+	return Cls;
 });
 Scoped.define("module:Handlers.Attr", [
 	    "base:Class",
@@ -2347,241 +2588,4 @@ Scoped.define("module:Partials.TemplateUrlPartial",
 
 });
 
-Scoped.define("module:DomObserver", [
-    "base:Class",
-    "base:Objs",
-    "browser:DomMutation.NodeInsertObserver",
-    "module:Registries",
-    "module:Dynamic",
-    "jquery:"
-], function (Class, Objs, NodeInsertObserver, Registries, Dynamic, $, scoped) {
-	return Class.extend({scoped: scoped}, function (inherited) {
-		return {
-			
-			constructor: function (options) {
-				inherited.constructor.call(this);
-				options = options || {};
-				this.__root = options.root || document.body;
-				this.__persistent_dynamics = !!options.persistent_dynamics;
-				this.__allowed_dynamics = options.allowed_dynamics ? Objs.objectify(options.allowed_dynamics) : null;
-				this.__forbidden_dynamics = options.forbidden_dynamics ? Objs.objectify(options.forbidden_dynamics) : null;
-				this.__dynamics = {};
-				if (!options.ignore_existing) {
-					Objs.iter(Registries.handler.classes(), function (cls, key) {
-						if (this.__forbidden_dynamics && this.__forbidden_dynamics[key])
-							return;
-						if (this.__allowed_dynamics && !this.__allowed_dynamics[key])
-							return;
-						var self = this;
-						$(this.__root).find(key).each(function () {
-							if (this.dynamicshandler)
-								return;
-							self.__nodeInserted(this);
-						});
-					}, this);
-				}
-				this.__observer = NodeInsertObserver.create({
-					root: this.__root,
-					filter: this.__observerFilter,
-					context: this
-				});
-				this.__observer.on("node-inserted", this.__nodeInserted, this);
-			},
-			
-			destroy: function () {
-				this.__observer.destroy();
-				Objs.iter(this.__dynamics, function (dynamic) {
-					dynamic.off(null, null, this);
-					if (!this.__persistent_dynamics)
-						dynamic.weakDestroy();
-				}, this);
-				inherited.destroy.call(this);
-			},
-			
-			__observerFilter: function (node) {
-				if (node.dynamicshandler || !node.tagName)
-					return false;
-				var tag = node.tagName.toLowerCase();
-				if (!Registries.handler.get(tag))
-					return false;
-				if (this.__forbidden_dynamics && this.__forbidden_dynamics[tag])
-					return false;
-				if (this.__allowed_dynamics && !this.__allowed_dynamics[tag])
-					return false;
-				return true;
-			},
-			
-			__nodeInserted: function (node) {
-				var dynamic = new Dynamic({
-					element: node,
-					remove_observe: true
-				});
-				this.__dynamics[dynamic.cid()] = dynamic;
-				dynamic.on("destroy", function () {
-					delete this.__dynamics[dynamic.cid()];
-				}, this);
-				dynamic.activate();
-			}
-			
-		};
-	}, {
-		
-		__singleton: null,
-		
-		activate: function (options) {
-			if (!this.__singleton)
-				this.__singleton = new this(options);
-		}		
-		
-	});
-});
-Scoped.define("module:Dynamic", [
-   	    "module:Data.Scope",
-   	    "module:Handlers.HandlerMixin",
-   	    "base:Objs",
-   	    "base:Strings",
-   	    "base:Types",
-   	    "base:Functions",
-   	    "module:Registries",
-   	    "jquery:"
-   	], function (Scope, HandlerMixin, Objs, Strings, Types, Functions, Registries, $, scoped) {
-	var Cls;
-	Cls = Scope.extend({scoped: scoped}, [HandlerMixin, function (inherited) {
-   		return {
-
-		   	_notifications: {
-				_activate: "__createActivate"
-			},
-				
-			constructor: function (options) {
-				this.initial = this.initial || {};
-				options = Objs.extend(Objs.clone(this.initial, 1), options);
-				this.domevents = Objs.extend(this.domevents, options.domevents);
-				this.windowevents = Objs.extend(this.windowevents, options.windowevents);
-				Objs.iter(this.cls.__initialForward, function (key) {
-					if (!(key in this))
-						return;
-					if (key in options) {
-						if (Types.is_object(this[key]) && Types.is_object(options[key]))
-							options[key] = Objs.extend(Objs.clone(this[key], 1), options[key]);
-					} else
-						options[key] = this[key];
-				}, this);
-				Objs.iter(this.object_functions, function (key) {
-					this[key] = function () {
-						var args = Functions.getArguments(arguments);
-						args.unshift(key);
-						return this.execute.apply(this, args);
-					};
-				}, this);
-				if (!options.parent && options.parentHandler) {
-					var ph = options.parentHandler;
-					while (ph && !options.parent) {
-						options.parent = ph.instance_of(Cls) ? ph : null;
-						ph = ph._parentHandler;
-					}
-				}
-				inherited.constructor.call(this, options);
-				if (options.tagName) {
-					this._tagName = options.tagName;
-					this.data("tagname", this._tagName);
-				}
-				this.functions = this.__functions;
-				this._handlerInitialize(options);
-				this.__createActivate = options.create || function () {};
-				this.__registered_dom_events = [];
-				this.dom_events = {};
-				this.window_events = {};
-			},
-			
-			handle_call_exception: function (name, args, e) {
-				Registries.warning("Dynamics Exception in '" + this.cls.classname + "' calling method '" + name + "' : " + e);
-				return null;
-			},
-			
-			_afterActivate: function (activeElement) {
-				this.activeElement().off("." + this.cid() + "-domevents");
-				$(window).off("." + this.cid() + "-windowevents");
-				var self = this;
-				Objs.iter(this.domevents, function (target, event) {
-					var ev = event.split(" ");
-					var source = ev.length === 1 ? this.activeElement() : this.activeElement().find(ev[1]);
-					this.__registered_dom_events.push(source);
-					source.on(ev[0] + "." + this.cid() + "-domevents", function (eventData) {
-						self.call(target, eventData);
-					});
-				}, this);
-				Objs.iter(this.windowevents, function (target, event) {
-					$(window).on(event + "." + this.cid() + "-windowevents", function (eventData) {
-						self.call(target, eventData);
-					});
-				}, this);
-			},
-			
-			destroy: function () {
-				Objs.iter(this.__registered_dom_events, function (source) {
-					source.off("." + this.cid() + "-domevents");
-				}, this);
-				$(window).off("." + this.cid() + "-windowevents");
-				inherited.destroy.call(this);
-			}
-				
-		};
-	}], {
-		
-		__initialForward: [
-		    "functions", "attrs", "extendables", "collections", "template", "create", "scopes", "bindings", "computed", "types"
-        ],
-		
-		canonicName: function () {
-			return Strings.last_after(this.classname, ".").toLowerCase();
-		},
-		
-		registeredName: function () {
-			return this.__registeredName || ("ba-" + this.canonicName());
-		},
-		
-		findByElement: function (element) {
-			return $(element).get(0).dynamicshandler;
-		},
-		
-		register: function (key, registry) {
-			registry = registry || Registries.handler;
-			this.__registeredName = key || this.registeredName();
-			registry.register(this.__registeredName, this);
-			return this;
-		},
-		
-		activate: function (options) {
-			var dyn = new this(options || {element: document.body, name_registry: true});
-			dyn.activate();
-			return dyn;
-		},
-		
-		attachStringTable: function (stringTable) {
-			this.__stringTable = stringTable;
-			return this;
-		},
-		
-		addStrings: function (strings) {
-			this.__stringTable.register(strings, this.registeredName());
-			return this;
-		},
-		
-		string: function (key) {
-			var result = this.__stringTable.get(key, this.registeredName());
-			if (!result && this.parent.string)
-				result = this.parent.string(key);
-			return result;
-		},
-		
-		_extender: {
-			attrs: function (base, overwrite) {
-				return Objs.extend(Objs.clone(base, 1), overwrite);
-			}
-		}
-	
-	});
-	return Cls;
-});
 }).call(Scoped);

@@ -1,6 +1,7 @@
-# betajs-ui 1.0.7
+# betajs-ui 1.0.8
 [![Build Status](https://api.travis-ci.org/betajs/betajs-ui.svg?branch=master)](https://travis-ci.org/betajs/betajs-ui)
 [![Code Climate](https://codeclimate.com/github/betajs/betajs-ui/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs-ui)
+
 
 BetaJS-UI is a library for enabling gestures and interactions such as drag and drop.
 
@@ -15,6 +16,9 @@ Active, In Development
 | Homepage   | [http://betajs.com](http://betajs.com) |
 | Git        | [git://github.com/betajs/betajs-ui.git](git://github.com/betajs/betajs-ui.git) |
 | Repository | [http://github.com/betajs/betajs-ui](http://github.com/betajs/betajs-ui) |
+| Blog       | [http://blog.betajs.com](http://blog.betajs.com) | 
+| Twitter    | [http://twitter.com/thebetajs](http://twitter.com/thebetajs) | 
+
 
 
 ## Compatability (Tested)

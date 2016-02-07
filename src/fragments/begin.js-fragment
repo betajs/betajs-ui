@@ -13,7 +13,7 @@ Scoped.binding("jquery", "global:jQuery");
 
 Scoped.define("module:", function () {
 	return {
-		guid: "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
+		guid: "/* @echo GUID */",
 		version: '/* @echo MAJOR_VERSION */./* @echo MINOR_VERSION */'
 	};
 });
