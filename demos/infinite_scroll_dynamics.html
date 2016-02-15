@@ -27,18 +27,18 @@
 			<div class="item">Item {{item.number}}</div>
 		</div>
 		<script>
-			var items = new BetaJS.Collections.Collection();
+			var itemss = new BetaJS.Collections.Collection();
 			for (var i = 0; i < 20; ++i)
-				items.add({number: i});
+				itemss.add({number: i});
 			BetaJS.Dynamics.Dynamic.activate({
 	        	element: document.body,
 	        	attrs: {
-	        		items: items,
+	        		items: itemss,
 	        		infinite_scroll_options: {
 	        			type: "infinitescroll",
 	        			append: function (count, callback) {
 	        				while (count > 0) {
-	        					items.add({number: items.count()});
+	        					this.get("items").add({number: this.get("items").count()});
 	        					count--;
 	        				}	        					
 	        				callback(count, true);

@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.8 - 2016-02-07
+betajs-ui - v1.0.9 - 2016-02-15
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache 2.0 Software License.
 */
@@ -693,7 +693,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.8 - 2016-02-07
+betajs-ui - v1.0.9 - 2016-02-15
 Copyright (c) Oliver Friedmann,Victor Lingenthal
 Apache 2.0 Software License.
 */
@@ -713,7 +713,7 @@ Scoped.binding("jquery", "global:jQuery");
 Scoped.define("module:", function () {
 	return {
 		guid: "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-		version: '52.1454870567295'
+		version: '53.1455541138523'
 	};
 });
 
@@ -784,7 +784,8 @@ Scoped.define("module:Dynamics.InteractionPartial", [
 			value = Objs.extend(value, value.options);
 			var InteractionClass = Interactions[Strings.capitalize(value.type)];
 			var interaction = new InteractionClass(value.sub ? this._node._$element.find(value.sub) : this._node._$element, Objs.extend({
-				enabled: true
+				enabled: true,
+				context: handler
 			}, value), value.data);
 			node.interactions[this._postfix] = interaction;
 			Objs.iter(value.events, function (callee, event) {
