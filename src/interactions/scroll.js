@@ -15,7 +15,8 @@ Scoped.define("module:Interactions.Scroll", [
 		    		scrollEndTimeout: 50,
 		    		whitespace: 10000,
 		    		display_type: "",
-					elementMargin: 20
+					elementMargin: 20,
+					enable_scroll_modifier: "scroll"
 				}, options);
 				inherited.constructor.call(this, element, options);
 				this._itemsElement = options.itemsElement || element;
@@ -120,7 +121,7 @@ Scoped.define("module:Interactions.Scroll", [
 		    enableScroll: function () {
 		    	this._disableScrollCounter--;
 		    	if (this._disableScrollCounter === 0)
-		    		this.element().css("overflow", "scroll");
+		    		this.element().css("overflow", this._options.enable_scroll_modifier);
 		    },
 		    
 		    scrolling: function () {

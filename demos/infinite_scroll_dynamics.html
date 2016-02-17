@@ -36,6 +36,7 @@
 	        		items: itemss,
 	        		infinite_scroll_options: {
 	        			type: "infinitescroll",
+	        			enable_scroll_modifier: "",
 	        			append: function (count, callback) {
 	        				while (count > 0) {
 	        					this.get("items").add({number: this.get("items").count()});

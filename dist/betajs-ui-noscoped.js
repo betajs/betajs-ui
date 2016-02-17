@@ -1,30 +1,18 @@
-/*!
-betajs-ui - v1.0.9 - 2016-02-15
-Copyright (c) Oliver Friedmann,Victor Lingenthal
-Apache 2.0 Software License.
-*/
 (function () {
-
 var Scoped = this.subScope();
-
-Scoped.binding("module", "global:BetaJS.UI");
-Scoped.binding("base", "global:BetaJS");
-Scoped.binding("browser", "global:BetaJS.Browser");
-
-// Optional
-Scoped.binding("dynamics", "global:BetaJS.Dynamics");
-
-Scoped.binding("jquery", "global:jQuery");
-
+Scoped.binding('module', 'global:BetaJS.UI');
+Scoped.binding('base', 'global:BetaJS');
+Scoped.binding('browser', 'global:BetaJS.Browser');
+Scoped.binding('jquery', 'global:jQuery');
+Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
-		guid: "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-		version: '53.1455541138523'
-	};
+    "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
+    "version": "54.1455672693465"
+};
 });
-
-Scoped.assumeVersion("base:version", 444);
-Scoped.assumeVersion("browser:version", 58);
+Scoped.assumeVersion('base:version', 474);
+Scoped.assumeVersion('browser:version', 70);
 Scoped.define("module:Dynamics.GesturePartial", [
     "dynamics:Handlers.Partial",
     "module:Gestures.Gesture",
@@ -2122,7 +2110,8 @@ Scoped.define("module:Interactions.Scroll", [
 		    		scrollEndTimeout: 50,
 		    		whitespace: 10000,
 		    		display_type: "",
-					elementMargin: 20
+					elementMargin: 20,
+					enable_scroll_modifier: "scroll"
 				}, options);
 				inherited.constructor.call(this, element, options);
 				this._itemsElement = options.itemsElement || element;
@@ -2227,7 +2216,7 @@ Scoped.define("module:Interactions.Scroll", [
 		    enableScroll: function () {
 		    	this._disableScrollCounter--;
 		    	if (this._disableScrollCounter === 0)
-		    		this.element().css("overflow", "scroll");
+		    		this.element().css("overflow", this._options.enable_scroll_modifier);
 		    },
 		    
 		    scrolling: function () {
