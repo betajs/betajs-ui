@@ -1,16 +1,62 @@
-# betajs-ui 1.0.10
+# betajs-ui 1.0.11
 [![Build Status](https://api.travis-ci.org/betajs/betajs-ui.svg?branch=master)](https://travis-ci.org/betajs/betajs-ui)
 [![Code Climate](https://codeclimate.com/github/betajs/betajs-ui/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs-ui)
 
 
 BetaJS-UI is a library for enabling gestures and interactions such as drag and drop.
 
-## Status
-Active, In Development
+
+
+## Getting Started
+
+
+You can use the library in the browser and compile it as well.
+
+#### Browser
+
+```javascript
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="betajs/dist/betajs.min.js"></script>
+	<script src="betajs-browser/dist/betajs-browser.min.js"></script>
+	<script src="betajs-dynamics/dist/betajs-ui.min.js"></script>
+``` 
+
+#### Compile
+
+```javascript
+	git clone https://github.com/betajs/betajs-ui.git
+	npm install
+	grunt
+```
 
 
 
+## Basic Usage
 
+
+```js
+
+    	BetaJS.UI.Interactions.Drag.multiple($(".doodad"), {
+            enabled : true,
+            clone_element: true
+        }, function (drag) {
+            drag.on("move", function (event) {
+            	event.actionable_modifier.csscls("focus", true);
+            	event.modifier.csscls("unfocus", true);
+            });
+        });
+        
+```
+
+```html
+    	<div class="doodads">
+	        <div class="doodad"><div class="inner">Doodad 1</div></div>
+	        <div class="doodad"><div class="inner">Doodad 2</div></div>
+	        <div class="doodad"><div class="inner">Doodad 3</div></div>
+	        <div class="doodad"><div class="inner">Doodad 4</div></div>
+	        <div class="doodad"><div class="inner">Doodad 5</div></div>
+    	</div>
+```
 
 
 
@@ -25,7 +71,7 @@ Active, In Development
 
 
 
-## Compatability (Tested)
+## Compatability
 | Target | Versions |
 | :----- | -------: |
 | Firefox | 4 - Latest |
@@ -68,12 +114,12 @@ Active, In Development
 
 ## Contributors
 
-- Oliver Friedmann
 - Victor Lingenthal
+- Oliver Friedmann
 
 
 ## License
 
-Apache 2.0
+Apache-2.0
 
 

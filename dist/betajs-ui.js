@@ -1,7 +1,7 @@
 /*!
-betajs-ui - v1.0.10 - 2016-02-16
-Copyright (c) Oliver Friedmann,Victor Lingenthal
-Apache 2.0 Software License.
+betajs-ui - v1.0.11 - 2016-02-26
+Copyright (c) Victor Lingenthal,Oliver Friedmann
+Apache-2.0 Software License.
 */
 /** @flow **//*!
 betajs-scoped - v0.0.7 - 2016-02-06
@@ -692,6 +692,12 @@ Public = Public.upgrade();
 Public.exports();
 	return Public;
 }).call(this);
+/*!
+betajs-ui - v1.0.11 - 2016-02-26
+Copyright (c) Victor Lingenthal,Oliver Friedmann
+Apache-2.0 Software License.
+*/
+
 (function () {
 var Scoped = this.subScope();
 Scoped.binding('module', 'global:BetaJS.UI');
@@ -702,7 +708,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "54.1455672693465"
+    "version": "55.1456510542879"
 };
 });
 Scoped.assumeVersion('base:version', 474);
@@ -767,8 +773,10 @@ Scoped.define("module:Dynamics.InteractionPartial", [
 			var node = this._node;
 			var handler = node._handler;
 			node.interactions = node.interactions || {};
-			if (this._postfix in node.interactions && !node.interactions[this._postfix].destroyed())
+			if (this._postfix in node.interactions && !node.interactions[this._postfix].destroyed()) {
+				node.interactions[this._postfix].data = value.data;
 				return;
+			} 
 			value = Objs.extend(value, value.options);
 			var InteractionClass = Interactions[Strings.capitalize(value.type)];
 			var interaction = new InteractionClass(value.sub ? this._node._$element.find(value.sub) : this._node._$element, Objs.extend({
