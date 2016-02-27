@@ -25,9 +25,9 @@ Scoped.define("module:Dynamics.InteractionPartial", [
 			Objs.iter(value.events, function (callee, event) {
 				interaction.on(event, function (arg1, arg2, arg3, arg4) {
 					if (Types.is_string(callee))
-						handler.call(callee, value.data, arg1, arg2, arg3, arg4);
+						handler.call(callee, this._value.data, arg1, arg2, arg3, arg4);
 					else
-						callee.call(handler, value.data, arg1, arg2, arg3, arg4);
+						callee.call(handler, this._value.data, arg1, arg2, arg3, arg4);
 				}, this);
 			}, this);
 		},

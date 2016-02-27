@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.11 - 2016-02-26
+betajs-ui - v1.0.12 - 2016-02-27
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -693,7 +693,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.11 - 2016-02-26
+betajs-ui - v1.0.12 - 2016-02-27
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -708,7 +708,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "55.1456510542879"
+    "version": "56.1456576915458"
 };
 });
 Scoped.assumeVersion('base:version', 474);
@@ -787,9 +787,9 @@ Scoped.define("module:Dynamics.InteractionPartial", [
 			Objs.iter(value.events, function (callee, event) {
 				interaction.on(event, function (arg1, arg2, arg3, arg4) {
 					if (Types.is_string(callee))
-						handler.call(callee, value.data, arg1, arg2, arg3, arg4);
+						handler.call(callee, this._value.data, arg1, arg2, arg3, arg4);
 					else
-						callee.call(handler, value.data, arg1, arg2, arg3, arg4);
+						callee.call(handler, this._value.data, arg1, arg2, arg3, arg4);
 				}, this);
 			}, this);
 		},
