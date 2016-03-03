@@ -114,13 +114,15 @@ Scoped.define("module:Interactions.State", [
 			var events = event.split(" ");
 	        Objs.iter(events, function (eventName) {
 				$(element).on(eventName + "." + Ids.objectId(this), function () {
+					if (self.destroyed())
+						return;
 					callback.apply(context || self, arguments);
 				});
 	        }, this);
 		},
 		
 		_end: function () {
-			this.element().off("." + Ids.objectId(this));
+			this.element().off("." + Ids.objectId(this));			
 			$("body").off("." + Ids.objectId(this));
 		}	
 	

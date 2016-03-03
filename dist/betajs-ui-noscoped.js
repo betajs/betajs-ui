@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.12 - 2016-02-27
+betajs-ui - v1.0.13 - 2016-03-02
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -14,7 +14,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "56.1456576915458"
+    "version": "57.1456966387074"
 };
 });
 Scoped.assumeVersion('base:version', 474);
@@ -25,43 +25,55 @@ Scoped.define("module:Dynamics.GesturePartial", [
     "module:Gestures",
     "base:Objs"
 ], function (Partial, Gesture, Gestures, Objs, scoped) {
- 	var Cls = Partial.extend({scoped: scoped}, {
-		
-		_apply: function (value) {
-			var node = this._node;
-			var handler = node._handler;
-			node.gestures = handler.node || {};
-			if (this._postfix in node.gestures && !node.gestures[this._postfix].destroyed())
-				return;
-			value = Objs.extend(value, value.options);
-			var gesture = new Gesture(this._node._$element, Gestures.defaultGesture(value));
-			node.gestures[this._postfix] = gesture;
-			gesture.on("activate", function () {
-				if (value.activate_event)
-					handler.call(value.activate_event, value.data, this._node, gesture);
-				if (value.interaction && node.interactions && node.interactions[value.interaction] && node.interactions[value.interaction].start)
-					node.interactions[value.interaction].start();
-			}, this);
-			gesture.on("deactivate", function () {
-				if (value.deactivate_event)
-					handler.call(value.deactivate_event, value.data, this._node, gesture);
-				if (value.interaction && node.interactions && node.interactions[value.interaction] && node.interactions[value.interaction].stop)
-					node.interactions[value.interaction].stop();
-			}, this);		
-			if (value.transition_event) {
-				gesture.on("start", function () {
-					handler.call(value.transition_event, this._node._$element, gesture);
+ 	var Cls = Partial.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			_apply: function (value) {
+				var node = this._node;
+				var handler = node._handler;
+				node.gestures = node.gestures || {};
+				if (this._postfix in node.gestures && !node.gestures[this._postfix].destroyed())
+					return;
+				value = Objs.extend(value, value.options);
+				var gesture = new Gesture(this._node._$element, Gestures.defaultGesture(value));
+				node.gestures[this._postfix] = gesture;
+				gesture.on("activate", function () {
+					if (value.activate_event)
+						handler.call(value.activate_event, value.data, this._node, gesture);
+					if (value.interaction && node.interactions && node.interactions[value.interaction] && node.interactions[value.interaction].start)
+						node.interactions[value.interaction].start();
 				}, this);
+				gesture.on("deactivate", function () {
+					if (value.deactivate_event)
+						handler.call(value.deactivate_event, value.data, this._node, gesture);
+					if (value.interaction && node.interactions && node.interactions[value.interaction] && node.interactions[value.interaction].stop)
+						node.interactions[value.interaction].stop();
+				}, this);		
+				if (value.transition_event) {
+					gesture.on("start", function () {
+						handler.call(value.transition_event, this._node._$element, gesture);
+					}, this);
+				}
+			},
+			
+			_deactivate: function () {
+				this.__release();
+			},
+			
+			__release: function () {
+				var node = this._node;
+				node.gestures = node.gestures || {};
+				if (this._postfix in node.gestures)
+					node.gestures[this._postfix].weakDestroy();
+				delete node.gestures[this._postfix];
+			},
+			
+			destroy: function () {
+				this.__release();
+				inherited.destroy.call(this);
 			}
-		},
-		
-		_deactivate: function () {
-			var node = this._node;
-			node.gestures = node.gestures || {};
-			if (this._postfix in node.gestures)
-				node.gestures[this._postfix].weakDestroy();
-		}		
 
+		};
  	});
  	Cls.register("ba-gesture");
 	return Cls;
@@ -73,40 +85,51 @@ Scoped.define("module:Dynamics.InteractionPartial", [
     "base:Objs",
     "base:Types"
 ], function (Partial, Interactions, Strings, Objs, Types, scoped) {
- 	var Cls = Partial.extend({scoped: scoped}, {
-		
-		_apply: function (value) {
-			var node = this._node;
-			var handler = node._handler;
-			node.interactions = node.interactions || {};
-			if (this._postfix in node.interactions && !node.interactions[this._postfix].destroyed()) {
-				node.interactions[this._postfix].data = value.data;
-				return;
-			} 
-			value = Objs.extend(value, value.options);
-			var InteractionClass = Interactions[Strings.capitalize(value.type)];
-			var interaction = new InteractionClass(value.sub ? this._node._$element.find(value.sub) : this._node._$element, Objs.extend({
-				enabled: true,
-				context: handler
-			}, value), value.data);
-			node.interactions[this._postfix] = interaction;
-			Objs.iter(value.events, function (callee, event) {
-				interaction.on(event, function (arg1, arg2, arg3, arg4) {
-					if (Types.is_string(callee))
-						handler.call(callee, this._value.data, arg1, arg2, arg3, arg4);
-					else
-						callee.call(handler, this._value.data, arg1, arg2, arg3, arg4);
+ 	var Cls = Partial.extend({scoped: scoped}, function (inherited) {
+ 		return {
+			
+			_apply: function (value) {
+				var node = this._node;
+				var handler = node._handler;
+				node.interactions = node.interactions || {};
+				if (this._postfix in node.interactions && !node.interactions[this._postfix].destroyed()) {
+					node.interactions[this._postfix].data = value.data;
+					return;
+				} 
+				value = Objs.extend(value, value.options);
+				var InteractionClass = Interactions[Strings.capitalize(value.type)];
+				var interaction = new InteractionClass(value.sub ? this._node._$element.find(value.sub) : this._node._$element, Objs.extend({
+					enabled: true,
+					context: handler
+				}, value), value.data);
+				node.interactions[this._postfix] = interaction;
+				Objs.iter(value.events, function (callee, event) {
+					interaction.on(event, function (arg1, arg2, arg3, arg4) {
+						if (Types.is_string(callee))
+							handler.call(callee, this._value.data, arg1, arg2, arg3, arg4);
+						else
+							callee.call(handler, this._value.data, arg1, arg2, arg3, arg4);
+					}, this);
 				}, this);
-			}, this);
-		},
-		
-		_deactivate: function () {
-			var node = this._node;
-			node.interactions = node.interactions || {};
-			if (this._postfix in node.interactions)
-				node.interactions[this._postfix].weakDestroy();
-		}		
+			},
+			
+			_deactivate: function () {
+				this.__release();
+			},
+			
+			__release: function () {
+				var node = this._node;
+				node.interactions = node.interactions || {};
+				if (this._postfix in node.interactions)
+					node.interactions[this._postfix].weakDestroy();
+			},
+			
+			destroy: function () {
+				this.__release();
+				inherited.destroy.call(this);
+			}
 
+ 		};
  	});
  	Cls.register("ba-interaction");
 	return Cls;
@@ -156,6 +179,8 @@ Scoped.define("module:Elements.Animators", [
 			},
 			
 			__callback: function () {
+				if (this.destroyed())
+					return;
 				this._callback.apply(this._context || this);
 				if (this._options && this._options.auto_destroy)
 					this.destroy();
@@ -1253,7 +1278,6 @@ Scoped.define("module:Interactions.Drop", [
 			destroy: function () {
 				this._modifier.revert();
 				this._modifier.destroy();
-				this._host.destroy();
 				inherited.destroy.call(this);
 			},
 			
@@ -1862,13 +1886,15 @@ Scoped.define("module:Interactions.State", [
 			var events = event.split(" ");
 	        Objs.iter(events, function (eventName) {
 				$(element).on(eventName + "." + Ids.objectId(this), function () {
+					if (self.destroyed())
+						return;
 					callback.apply(context || self, arguments);
 				});
 	        }, this);
 		},
 		
 		_end: function () {
-			this.element().off("." + Ids.objectId(this));
+			this.element().off("." + Ids.objectId(this));			
 			$("body").off("." + Ids.objectId(this));
 		}	
 	
@@ -2353,6 +2379,8 @@ Scoped.define("module:Interactions.ScrollStates.ScrollingTo", ["module:Interacti
 			
 			_finished: function () {
 				this.parent().trigger("scrolltoend");
+				if (this.destroyed())
+					return;
 				this._scrollend();
 				if (this._transitioning)
 					this.eventualResume();
@@ -2375,6 +2403,8 @@ Scoped.define("module:Interactions.ScrollStates.ScrollingTo", ["module:Interacti
 		    _end: function () {
 		    	if (!this._abortable)
 		    		this.parent().enableScroll();
+		    	if (this._animation)
+		    		this._animation.weakDestroy();
 				inherited._end.call(this);
 			}
 			

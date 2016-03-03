@@ -26,7 +26,6 @@ Scoped.define("module:Interactions.Drop", [
 			destroy: function () {
 				this._modifier.revert();
 				this._modifier.destroy();
-				this._host.destroy();
 				inherited.destroy.call(this);
 			},
 			

@@ -42,6 +42,8 @@ Scoped.define("module:Elements.Animators", [
 			},
 			
 			__callback: function () {
+				if (this.destroyed())
+					return;
 				this._callback.apply(this._context || this);
 				if (this._options && this._options.auto_destroy)
 					this.destroy();

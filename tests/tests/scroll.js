@@ -26,6 +26,11 @@ test("test loop scroll", function() {
        if (first)
     	   return;
        first = true;
+       try {
+    	   scroll.destroy();
+       } catch (e) {
+    	   ok(false);
+       }
        ok(true);
        start();
     });

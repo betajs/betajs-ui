@@ -250,6 +250,8 @@ Scoped.define("module:Interactions.ScrollStates.ScrollingTo", ["module:Interacti
 			
 			_finished: function () {
 				this.parent().trigger("scrolltoend");
+				if (this.destroyed())
+					return;
 				this._scrollend();
 				if (this._transitioning)
 					this.eventualResume();
@@ -272,6 +274,8 @@ Scoped.define("module:Interactions.ScrollStates.ScrollingTo", ["module:Interacti
 		    _end: function () {
 		    	if (!this._abortable)
 		    		this.parent().enableScroll();
+		    	if (this._animation)
+		    		this._animation.weakDestroy();
 				inherited._end.call(this);
 			}
 			
