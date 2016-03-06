@@ -4,6 +4,7 @@
 	"description": "BetaJS-UI is a library for enabling gestures and interactions such as drag and drop.",
 	"contributors": ["Victor Lingenthal", "Oliver Friedmann"],
 	"devDependencies": {
+    	"lodash": "",
 		"grunt": "",
 		"grunt-contrib-jshint": "",
 		"grunt-contrib-concat": "",
