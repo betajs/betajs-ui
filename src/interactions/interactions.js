@@ -46,7 +46,7 @@ Scoped.define("module:Interactions.ElementInteraction", [
 			},
 			
 			enable: function () {
-				if (this._enabled)
+				if (this._enabled || this.destroyed())
 					return;
 				this._enabled = true;
 				this._enable();
