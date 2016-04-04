@@ -1,0 +1,22 @@
+{
+	"ui-interactions": {
+		"title": "Interactions",
+		"children": {
+			"ui-drag": {
+				"title": "Drag"
+			},
+			"ui-drop": {
+				"title": "Drop"
+			},
+			"ui-pinch": {
+				"title": "Pinch"
+			}
+		}
+	},
+	"ui-gestures": {
+		"title": "Gestures"
+	},
+	"ui-dynamics": {
+		"title": "Dynamics"
+	}
+}
