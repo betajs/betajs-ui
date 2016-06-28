@@ -1,3 +1,4 @@
+
 Scoped.define("module:Interactions.Scroll", [
         "module:Interactions.ElementInteraction",
 	    "base:Objs",
@@ -109,7 +110,7 @@ Scoped.define("module:Interactions.Scroll", [
 		    
 		    scrollToElement: function (element, options) {
 		    	var top = element.offset().top - this.element().offset().top + this.element().scrollTop();
-		    	this.scrollTo(top + (this._options.currentTop ? 0 : (element.outerHeight() - 1)), options);
+				this.scrollTo(top + (this._options.currentTop ? 0 : (element.outerHeight() - 1)), options);
 		    },
 		    
 		    disableScroll: function () {
@@ -232,6 +233,7 @@ Scoped.define("module:Interactions.ScrollStates.ScrollingTo", ["module:Interacti
 					this._animation.start();
 				} else {
 					this.element().scrollTop(this._scroll_top);
+					this._scroll();
 					this._finished();
 				}
 			},

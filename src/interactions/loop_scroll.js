@@ -1,3 +1,4 @@
+
 Scoped.define("module:Interactions.Loopscroll", ["module:Interactions.Scroll"], function (Scroll, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
@@ -54,6 +55,10 @@ Scoped.define("module:Interactions.Loopscroll", ["module:Interactions.Scroll"], 
 		        this._whitespaceSetHeight(this.__top_white_space, this.options().whitespace);
 				this.element().scrollTop(this.element().scrollTop() + this.options().whitespace - h);
 		    },
+
+			scrollToElement: function (element, options) {
+				inherited.scrollToElement.call(this, element, options);
+			},
 		
 		    reset: function (increment) {
 		        this._whitespaceSetHeight(this.__bottom_white_space, this.options().whitespace);

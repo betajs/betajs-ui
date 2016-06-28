@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+		<!--<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>-->
+		<script src="../vendors/jquery.min.js"></script>
         <script src="../vendors/scoped.js"></script>
         <script src="../vendors/beta-noscoped.js"></script>
         <script src="../vendors/betajs-browser-noscoped.js"></script>
@@ -35,12 +36,13 @@
 	<body style="-webkit-overflow-scrolling: disable">
 		<div id="scrollbox">
 		</div>
+		<input>
 		<button>ScrollTo</button>
 		<script>
 			var element = $("#scrollbox");
 
 			for (var i = 0; i < 20; ++i)
-				element.append("<div class='item'>Item " + i + "</div>");
+				element.append("<div id='" +i + "' class='item'>Item " + i + "</div>");
 
 			var scroll = new BetaJS.UI.Interactions.Loopscroll(element, {
 				enabled: true,
@@ -49,18 +51,19 @@
 				scrollEndTimeout: 200,
 				currentCenter: true
 			});
-			scroll._host.on("start", function (s) {
-				console.log(s);
-			});
+//			scroll._host.on("start", function (s) {
+//				console.log(s);
+//			});
 			$("button").on("click", function () {
-				var ele = $($("#scrollbox").children().get(1));
-				scroll.scrollToElement(ele, {
-					animate: true
+				var value =$('input').val() || 1;
+				value = isNaN(value) ? 1 : value;
+				scroll.scrollToElement($('#' + value%19), {
+					animate: false
 				});
 			});
-            scroll.on("scrollend scrolltoend", function () {
-               console.log(scroll.currentElement().html());
-            });
+//            scroll.on("scrollend scrolltoend", function () {
+//               console.log(scroll.currentElement().html());
+//            });
 			
 		</script>
     </body>

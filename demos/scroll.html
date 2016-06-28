@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+		<!--<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>-->
+		<script src="../vendors/jquery.min.js"></script>
         <script src="../vendors/scoped.js"></script>
         <script src="../vendors/beta-noscoped.js"></script>
         <script src="../vendors/betajs-browser-noscoped.js"></script>
@@ -24,12 +25,13 @@
 	<body style="-webkit-overflow-scrolling: disable">
 		<div id="scrollbox">
 		</div>
+		<input>
 		<button>Scroll To</button>
 		<script>
 			var element = $("#scrollbox");
 
 			for (var i = 0; i < 100; ++i)
-				element.append("<div class='item'>Item " + i + "</div>");
+				element.append("<div id='" + i + "' class='item'>Item " + i + "</div>");
 
 			var scroll = new BetaJS.UI.Interactions.Scroll(element, {
 				enabled: true,
@@ -37,12 +39,20 @@
 				//discrete: true,
 				//scrollEndTimeout: 200
 			});
+
 			$("button").on("click", function () {
-				var ele = $($("#scrollbox").children().get(20));
-				scroll.scrollToElement(ele, {
-					animate: true
+				var value =$('input').val() || 1;
+				value = isNaN(value) ? 1 : value;
+				scroll.scrollToElement($('#' + value%100), {
+					animate: false
 				});
 			});
+//			$("button").on("click", function () {
+//				var ele = $($("#scrollbox").children().get(20));
+//				scroll.scrollToElement(ele, {
+//					animate: true
+//				});
+//			});
 		</script>
     </body>
 </html>

@@ -1,3 +1,9 @@
+/*!
+betajs-browser - v1.0.29 - 2016-06-14
+Copyright (c) Oliver Friedmann
+Apache-2.0 Software License.
+*/
+
 (function () {
 var Scoped = this.subScope();
 Scoped.binding('module', 'global:BetaJS.Browser');
@@ -7,7 +13,7 @@ Scoped.binding('resumablejs', 'global:Resumable');
 Scoped.define("module:", function () {
 	return {
     "guid": "02450b15-9bbf-4be2-b8f6-b483bc015d06",
-    "version": "70.1455672026473"
+    "version": "78.1465945162742"
 };
 });
 Scoped.assumeVersion('base:version', 474);
@@ -27,6 +33,7 @@ Scoped.define("module:JQueryAjax", [
 					$.support.cors = true;
 				$.ajax({
 					type: options.method,
+					cache: false,
 					async: true,
 					url: options.uri,
 					dataType: options.decodeType ? options.decodeType : null, 
@@ -1152,7 +1159,7 @@ Scoped.define("module:Loader", ["jquery:"], function ($) {
 		},
 	
 		inlineStyles: function (styles) {
-			$('<style>' + styles + "</style>").appendTo("head");
+			return $('<style>' + styles + "</style>").appendTo("head");
 		},
 		
 		loadHtml: function (url, callback, context) {
@@ -1283,35 +1290,79 @@ Scoped.define("module:Upload.FileUploader", [
 			
 			constructor: function (options) {
 				inherited.constructor.call(this, options);
-				this._uploading = false;
+				// idle, uploading, success, error
+				this._state = "idle";
+			},
+			
+			_setState: function (state, triggerdata) {
+				this._state = state;
+				this.trigger(state, triggerdata);
+				this.trigger("state", state, triggerdata);
+			},
+			
+			state: function () {
+				return this._state;
+			},
+			
+			data: function () {
+				return this._data;
+			},
+			
+			progress: function () {
+				return {
+					uploaded: this._uploaded,
+					total: this._total
+				};
+			},
+			
+			reset: function () {
+				if (this.state() === "error") {
+					this._setState("idle");
+					delete this._data;
+					delete this._uploaded;
+					delete this._total;
+				}
 			},
 
 			upload: function () {
-				this._uploading = true;
+				if (this.state() !== "idle")
+					return this;
+				this._setState("uploading");
+				this.__upload();
+				return this;
+			},
+			
+			__upload: function () {
 				this._options.resilience--;
 				this._upload();
-				this.trigger("uploading");
-				return this;
 			},
 			
 			_upload: function () {},
 			
 			_progressCallback: function (uploaded, total) {
+				if (this.state() !== "uploading")
+					return;
+				this._uploaded = uploaded;
+				this._total = total;
 				this.trigger("progress", uploaded, total);
 			},
 			
 			_successCallback: function (data) {
-				this._uploading = false;
-				this.trigger("success", data);
+				if (this.state() !== "uploading")
+					return;
+				this._data = data;
+				this._setState("success", data);
 			},
 			
 			_errorCallback: function (data) {
-				this._uploading = false;
+				if (this.state() !== "uploading")
+					return;
 				if (this._options.resilience > 0) {
-					this.upload();
+					this.__upload();
 					return;
 				}
-				this.trigger("error", data);
+				this._data = data;
+				this._setState("error", data);
 			}
 			
 		};
@@ -1334,6 +1385,31 @@ Scoped.define("module:Upload.FileUploader", [
 });
 
 
+Scoped.define("module:Upload.CustomUploader", [
+	"module:Upload.FileUploader"
+], function (FileUploader, scoped) {
+	return FileUploader.extend({scoped: scoped}, {
+	
+		_upload: function () {
+			this.trigger("upload", this._options);
+		},
+		
+		progressCallback: function (uploaded, total) {
+			this._progressCallback(uploaded, total);
+		},
+		
+		successCallback: function (data) {
+			this._successCallback(data);
+		},
+		
+		errorCallback: function (data) {
+			this._errorCallback(data);
+		}
+	
+	});	
+});
+
+
 Scoped.define("module:Upload.MultiUploader", [
     "module:Upload.FileUploader",
     "base:Objs"
@@ -1344,69 +1420,76 @@ Scoped.define("module:Upload.MultiUploader", [
 			constructor: function (options) {
 				inherited.constructor.call(this, options);
 				this._uploaders = {};
-				this._count = 0;
-				this._success = 0;
-				this._total = 0;
-				this._uploaded = 0;
 			},
 			
 			addUploader: function (uploader) {
-				var entry = {
-					uploader: uploader,
-					success: false,
-					data: null,
-					uploaded: null,
-					total: null
-				};
-				this._uploaders[uploader.cid()] = entry;
-				this._count++;
-				uploader.on("success", function (data) {
-					this._success++;
-					entry.success = true;
-					entry.data = data;
-					this._checkDone();
-				}, this).on("error", function (data) {
-					this._error++;
-					entry.success = false;
-					entry.data = data;
-					this._checkDone();
-				}, this).on("progress", function (uploaded, total) {
-					if (entry.uploaded === null) {
-						entry.uploaded = 0;
-						entry.total = total;
-						this._total += total;
-					}
-					this._uploaded += uploaded - entry.uploaded;
-					entry.uploaded = uploaded;
-					this._progressCallback(this._uploaded, this._total);
-				}, this);
+				this._uploaders[uploader.cid()] = uploader;
+				uploader.on("state", this._updateState, this);
+				uploader.on("progress", this._updateProgress, this);
+				if (this.state() === "uploading") {
+					if (uploader.state() === "error")
+						uploader.reset();
+					if (uploader.state() === "idle")
+						uploader.upload();
+				}
+				return this;
 			},
 			
 			_upload: function () {
-				this._error = 0;
-				Objs.iter(this._uploaders, function (entry) {
-					if (!entry.success) {
-						this._uploaded -= entry.uploaded;
-						this._total -= entry.total;
-						entry.uploaded = null;
-						entry.uploader.upload();
-					}
+				Objs.iter(this._uploaders, function (uploader) {
+					if (uploader.state() === "error")
+						uploader.reset();
+					if (uploader.state() === "idle")
+						uploader.upload();
 				}, this);
+				this._updateState();
 			},
 			
-			_checkDone: function () {				
-				if (this._success + this._error == this._count) {
-					var datas = [];
-					Objs.iter(this._uploaders, function (uploader) {
-						datas.push(uploader.data);
-					}, this);
-					if (this._error === 0)
-						this._successCallback(datas);
-					else
-						this._errorCallback(datas);
-				}
-			}
+			_updateState: function () {
+				if (this.state() !== "uploading")
+					return;
+				var success = 0;
+				var error = false;
+				var uploading = false;
+				Objs.iter(this._uploaders, function (uploader) {
+					uploading = uploading || uploader.state() === "uploading";
+					error = error || uploader.state() === "error";
+				}, this);
+				if (uploading)
+					return;
+				var datas = [];
+				Objs.iter(this._uploaders, function (uploader) {
+					var result = (error && uploader.state() === "error") || (!error && uploader.state() === "success") ? uploader.data() : undefined;
+					datas.push(result);
+				}, this);
+				if (error)
+					this._errorCallback(datas);
+				else
+					this._successCallback(datas);
+			},
 			
+			_updateProgress: function () {
+				if (this.state() !== "uploading")
+					return;
+				var total = 0;
+				var uploaded = 0;
+				Objs.iter(this._uploaders, function (uploader) {
+					var state = uploader.state();
+					var progress = uploader.progress();
+					if (progress && progress.total) {
+						if (uploader.state() === "success") {
+							total += progress.total;
+							uploaded += progress.total;
+						}
+						if (uploader.state() === "uploading") {
+							total += progress.total;
+							uploaded += progress.uploaded;
+						}
+					}
+				}, this);
+				this._progressCallback(uploaded, total);
+			}
+
 		};
 	});
 });
@@ -1916,7 +1999,64 @@ Scoped.define("module:Dom", [
 			if (temp.remove)
 				temp.remove();
 			return s;
+		},
+		
+		elementSupportsFullscreen: function (element) {
+			return [
+			    "requestFullscreen",
+			    "webkitRequestFullscreen",
+			    "mozRequestFullScreen",
+			    "msRequestFullscreen"
+			].some(function (key) {
+				return key in element;
+			});
+		},
+		
+		elementEnterFullscreen: function (element) {
+			Objs.iter([
+			    "requestFullscreen",
+			    "webkitRequestFullscreen",
+			    "mozRequestFullScreen",
+			    "msRequestFullscreen"
+			], function (key) {
+				if (key in element)
+					element[key].call(element);
+				return !(key in element);
+			});
+		},
+		
+		elementIsFullscreen: function (element) {
+			return [
+			    "fullscreenElement",
+			    "webkitFullscreenElement",
+			    "mozFullScreenElement",
+			    "msFullscreenElement"
+			].some(function (key) {
+				return document[key] === element;
+			});
+		},
+		
+		elementOnFullscreenChange: function (element, callback, context) {
+			var self = this;
+			$(element).on([
+			    "fullscreenchange",
+			    "webkitfullscreenchange",
+			    "mozfullscreenchange",
+			    "MSFullscreenChange"
+            ].join(" "), function () {
+				callback.call(context || this, element, self.elementIsFullscreen(element));
+			});
+		},
+		
+		elementOffFullscreenChange: function (element) {
+			$(element).off([
+			    "fullscreenchange",
+			    "webkitfullscreenchange",
+			    "mozfullscreenchange",
+			    "MSFullscreenChange"
+            ].join(" "));
 		}
+		
 				
 	};
 });
@@ -2008,7 +2148,8 @@ Scoped.define("module:DomExtend.DomExtension", [
 			
 			computeActualBB: function (idealBB) {
 				var width = this._$element.width();
-				if (this._$element.width() <= idealBB.width && !this._element.style.width) {
+				//var height = this._$element.height();
+				if (this._$element.width() < idealBB.width && !this._element.style.width) {
 					this._element.style.width = idealBB.width + "px";
 					width = this._$element.width();
 					var current = this._$element;
@@ -2018,9 +2159,27 @@ Scoped.define("module:DomExtend.DomExtension", [
 					}
 					this._element.style.width = null;
 				}
+				/*
+				if (this._$element.height() < idealBB.height && !this._element.style.height) {
+					this._element.style.height = idealBB.height + "px";
+					height = this._$element.height();
+					var current = this._$element;
+					while (current.get(0) != document) {
+						current = current.parent();
+						height = Math.min(height, current.height());
+					}
+					this._element.style.height = null;
+				}
+				var arWidth = Math.round(height * idealBB.width / idealBB.height);
+				var arHeight = Math.round(width * idealBB.height / idealBB.width);
+				return {
+					width: Math.min(width, arWidth),
+					height: Math.min(height, arHeight)
+				};
+				*/
 				return {
 					width: width,
-					height: Math.round(width * idealBB.height / idealBB.width)
+					height: width * idealBB.height / idealBB.width
 				};
 			},
 			
@@ -2232,7 +2391,11 @@ Scoped.define("module:DomMutation.NodeInsertObserver", [
 	return ConditionalInstance.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 			
-			_nodeInserted: function (node) {
+			_nodeInserted: function (node, expand) {
+				if (expand) {
+					for (var i = 0; i < node.childNodes.length; ++i)
+						this._nodeInserted(node.childNodes[i], expand);
+				}
 				if (this._options.parent && node.parentNode !== this._options.parent)
 					return;
 				if (this._options.root && !this._options.root.contains(node))
@@ -2255,17 +2418,18 @@ Scoped.define("module:DomMutation.MutationObserverNodeInsertObserver", [
 		return {
 			
 			constructor: function (options) {
+				options = options || {};
 				inherited.constructor.call(this, options);
 				var self = this;
 				this._observer = new window.MutationObserver(function (mutations) {
 					Objs.iter(mutations, function (mutation) {
 						for (var i = 0; i < mutation.addedNodes.length; ++i)
-							self._nodeInserted(mutation.addedNodes[i]);
+							self._nodeInserted(mutation.addedNodes[i], true);
 					});
 				});
 				this._observer.observe(this._options.root || this._options.parent || document.body, {
 					childList: true,
-					subtree: !!this._options.parent
+					subtree: !this._options.parent
 				});
 			},
 			
@@ -2298,6 +2462,7 @@ Scoped.define("module:DomMutation.DOMNodeInsertedNodeInsertObserver", [
 		return {
 			
 			constructor: function (options) {
+				options = options || {};
 				inherited.constructor.call(this, options);
 				var self = this;
 				$(document).on("DOMNodeInserted." + this.cid(), function (event) {

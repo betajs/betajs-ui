@@ -1,12 +1,12 @@
 /*!
-betajs-ui - v1.0.14 - 2016-03-14
+betajs-ui - v1.0.14 - 2016-06-28
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
 /** @flow **//*!
-betajs-scoped - v0.0.7 - 2016-02-06
+betajs-scoped - v0.0.10 - 2016-04-07
 Copyright (c) Oliver Friedmann
-Apache 2.0 Software License.
+Apache-2.0 Software License.
 */
 var Scoped = (function () {
 var Globals = {
@@ -447,6 +447,19 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 						params.push(Helper.stringify(argmts[i]));
 					this.compiled += this.options.ident + "." + name + "(" + params.join(", ") + ");\n\n";
 				}
+				if (this.options.dependencies) {
+					this.dependencies[ns.path] = this.dependencies[ns.path] || {};
+					if (args.dependencies) {
+						args.dependencies.forEach(function (dep) {
+							this.dependencies[ns.path][this.resolve(dep).path] = true;
+						}, this);
+					}
+					if (args.hiddenDependencies) {
+						args.hiddenDependencies.forEach(function (dep) {
+							this.dependencies[ns.path][this.resolve(dep).path] = true;
+						}, this);
+					}
+				}
 				var result = this.options.compile ? {} : args.callback.apply(args.context || this, arguments);
 				callback.call(this, ns, result);
 			}, this);
@@ -468,10 +481,13 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 		options: {
 			lazy: false,
 			ident: "Scoped",
-			compile: false			
+			compile: false,
+			dependencies: false
 		},
 		
 		compiled: "",
+		
+		dependencies: {},
 		
 		nextScope: function () {
 			if (!nextScope)
@@ -665,7 +681,7 @@ var rootScope = newScope(null, rootNamespace, rootNamespace, globalNamespace);
 var Public = Helper.extend(rootScope, {
 		
 	guid: "4b6878ee-cb6a-46b3-94ac-27d91f58d666",
-	version: '37.1454812115138',
+	version: '43.1460041676769',
 		
 	upgrade: Attach.upgrade,
 	attach: Attach.attach,
@@ -693,7 +709,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.14 - 2016-03-14
+betajs-ui - v1.0.14 - 2016-06-28
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -708,7 +724,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "60.1457992447346"
+    "version": "62.1467137203945"
 };
 });
 Scoped.assumeVersion('base:version', 474);
@@ -1944,6 +1960,181 @@ Scoped.define("module:Interactions.DragStates.Stopping", [
 		};
 	});
 });
+Scoped.define("module:Interactions.Droplist", [
+        "module:Interactions.ElementInteraction",
+        "module:Elements.ElementSupport",
+	    "base:Objs",
+	    "jquery:"
+	], function (ElemInter, ElemSupp, Objs, $, scoped) {
+	return ElemInter.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+		    constructor: function (element, options, data) {
+				options = Objs.extend({
+					droppable: function () {
+						return true;
+					},
+					context: this,
+					bounding_box: function (bb) {
+						return bb;
+					},
+					floater: null
+				}, options);
+				inherited.constructor.call(this, element, options);
+				this._host.initialize(this.cls.classname + "States.Idle");
+				this.data = data;
+				this._floater = $(this._options.floater);
+				this._floater.css("display", "none");
+			},
+			
+			destroy: function () {
+				this._host.destroy();
+				inherited.destroy.call(this);
+			},
+			
+			_enable: function () {
+				this._host.state().next("Idle");
+			},
+			
+			_disable: function () {
+				this._host.state().next("Disabled");
+			},
+			
+			__eventData: function () {
+				return {
+					index: this._floater.index(),
+					element: this.element(),
+					target: this,
+					data: this.data,
+					source: this._host.state()._drag_source ? this._host.state()._drag_source : null
+				};
+			},
+			
+			__triggerEvent: function (label) {
+				this.trigger(label, this.__eventData());
+			},
+		
+			droppable: function (source) {
+				return this._options.droppable.call(this._options.context, source, this);
+			},
+			
+			__update_floater: function (data) {
+			    this._floater.css("display", "none");
+			    var coords = data.page_coords;
+			    var child = ElemSupp.childContainingElement(this.element(), data.underneath);
+			    if (!child)
+			        return;
+			    child = $(child);
+			    if (child.get(0) == this._floater.get(0)) {
+			        this._floater.css("display", "");
+			        return;
+			    }
+			    var bb = ElemSupp.elementBoundingBox(child);
+			    bb = this._options.bounding_box.call(this._options.context, bb);
+			    if (bb.top <= coords.y && coords.y <= bb.bottom)
+			    	return;
+		        this._floater.css("display", "");
+		        if (coords.y < bb.top)
+		        	this._floater.insertBefore(child);
+		        else
+		        	this._floater.insertAfter(child);
+			},
+			
+			insertAt: function (element, index) {
+				var lastIndex = this.element().children().size();
+				if (index < 0)
+					index = Math.max(0, lastIndex + 1 + index);
+				this.element().append(element);
+				if (index < lastIndex) 
+					this.element().children().eq(index).before(this.element().children().last());
+			}
+			
+		};
+	});
+});
+
+
+
+Scoped.define("module:Interactions.DroplistStates.Disabled", ["module:Interactions.State"], function (State, scoped) {
+   	return State.extend({scoped: scoped}, {
+		
+		_white_list: ["Idle"],
+		
+		trigger: function (label) {
+			this.parent().__triggerEvent(label);
+		}	
+	
+	});
+});
+
+
+Scoped.define("module:Interactions.DroplistStates.Idle", ["module:Interactions.DroplistStates.Disabled"], function (State, scoped) {
+   	return State.extend({scoped: scoped}, {
+		
+   		_white_list: ["Hover", "Disabled"],
+
+   		_start: function () {
+   			this.on(this.element(), "drag-hover", function (event) {
+   				var drag_source = event.originalEvent.detail;
+   				if (this.parent().droppable(drag_source))
+   					this.next("Hover");
+   			});
+   		}
+	
+	});
+});
+
+
+Scoped.define("module:Interactions.DroplistStates.Hover", ["module:Interactions.DroplistStates.Disabled"], function (State, scoped) {
+   	return State.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			_white_list: ["Idle", "Disabled", "Dropping"],
+			_persistents: ["drag_source"],
+		
+			_start: function () {
+				this.trigger("hover");
+				this.on(this.element(), "drag-hover", function (event) {
+					this._drag_source = event.originalEvent.detail;
+					this.parent().__update_floater(this._drag_source);
+				});
+				this.on(this.element(), "drag-stop drag-leave", function (event) {
+					this._drag_source = event.originalEvent.detail;
+					this.next("Idle");
+				});
+				this.on(this.element(), "drag-drop", function (event) {
+					this._drag_source = event.originalEvent.detail;
+					this.parent().__update_floater(this._drag_source);
+					this.next(this.parent()._floater.css("display") == "none" ? "Idle" : "Dropping");
+				});
+			},
+			
+			_end: function () {
+				this.trigger("unhover");
+				this.parent()._floater.css("display", "none");
+				inherited._end.call(this);
+			}
+		
+		};
+	});
+});
+
+
+Scoped.define("module:Interactions.DroplistStates.Dropping", ["module:Interactions.DroplistStates.Disabled"], function (State, scoped) {
+   	return State.extend({scoped: scoped}, {
+	
+		_white_list: ["Idle", "Disabled"],
+		_persistents: ["drag_source"],
+	
+		_start: function () {
+			this.trigger("dropped");
+			this._drag_source.source.dropped(this.parent());
+			this.next("Idle");
+		}
+	
+	});
+});
+
 Scoped.define("module:Interactions.Drop", [
         "module:Interactions.ElementInteraction",
 	    "base:Objs",
@@ -2133,181 +2324,6 @@ Scoped.define("module:Interactions.DropStates.Dropping", ["module:Interactions.D
 	
 	});
 });	
-
-Scoped.define("module:Interactions.Droplist", [
-        "module:Interactions.ElementInteraction",
-        "module:Elements.ElementSupport",
-	    "base:Objs",
-	    "jquery:"
-	], function (ElemInter, ElemSupp, Objs, $, scoped) {
-	return ElemInter.extend({scoped: scoped}, function (inherited) {
-		return {
-			
-		    constructor: function (element, options, data) {
-				options = Objs.extend({
-					droppable: function () {
-						return true;
-					},
-					context: this,
-					bounding_box: function (bb) {
-						return bb;
-					},
-					floater: null
-				}, options);
-				inherited.constructor.call(this, element, options);
-				this._host.initialize(this.cls.classname + "States.Idle");
-				this.data = data;
-				this._floater = $(this._options.floater);
-				this._floater.css("display", "none");
-			},
-			
-			destroy: function () {
-				this._host.destroy();
-				inherited.destroy.call(this);
-			},
-			
-			_enable: function () {
-				this._host.state().next("Idle");
-			},
-			
-			_disable: function () {
-				this._host.state().next("Disabled");
-			},
-			
-			__eventData: function () {
-				return {
-					index: this._floater.index(),
-					element: this.element(),
-					target: this,
-					data: this.data,
-					source: this._host.state()._drag_source ? this._host.state()._drag_source : null
-				};
-			},
-			
-			__triggerEvent: function (label) {
-				this.trigger(label, this.__eventData());
-			},
-		
-			droppable: function (source) {
-				return this._options.droppable.call(this._options.context, source, this);
-			},
-			
-			__update_floater: function (data) {
-			    this._floater.css("display", "none");
-			    var coords = data.page_coords;
-			    var child = ElemSupp.childContainingElement(this.element(), data.underneath);
-			    if (!child)
-			        return;
-			    child = $(child);
-			    if (child.get(0) == this._floater.get(0)) {
-			        this._floater.css("display", "");
-			        return;
-			    }
-			    var bb = ElemSupp.elementBoundingBox(child);
-			    bb = this._options.bounding_box.call(this._options.context, bb);
-			    if (bb.top <= coords.y && coords.y <= bb.bottom)
-			    	return;
-		        this._floater.css("display", "");
-		        if (coords.y < bb.top)
-		        	this._floater.insertBefore(child);
-		        else
-		        	this._floater.insertAfter(child);
-			},
-			
-			insertAt: function (element, index) {
-				var lastIndex = this.element().children().size();
-				if (index < 0)
-					index = Math.max(0, lastIndex + 1 + index);
-				this.element().append(element);
-				if (index < lastIndex) 
-					this.element().children().eq(index).before(this.element().children().last());
-			}
-			
-		};
-	});
-});
-
-
-
-Scoped.define("module:Interactions.DroplistStates.Disabled", ["module:Interactions.State"], function (State, scoped) {
-   	return State.extend({scoped: scoped}, {
-		
-		_white_list: ["Idle"],
-		
-		trigger: function (label) {
-			this.parent().__triggerEvent(label);
-		}	
-	
-	});
-});
-
-
-Scoped.define("module:Interactions.DroplistStates.Idle", ["module:Interactions.DroplistStates.Disabled"], function (State, scoped) {
-   	return State.extend({scoped: scoped}, {
-		
-   		_white_list: ["Hover", "Disabled"],
-
-   		_start: function () {
-   			this.on(this.element(), "drag-hover", function (event) {
-   				var drag_source = event.originalEvent.detail;
-   				if (this.parent().droppable(drag_source))
-   					this.next("Hover");
-   			});
-   		}
-	
-	});
-});
-
-
-Scoped.define("module:Interactions.DroplistStates.Hover", ["module:Interactions.DroplistStates.Disabled"], function (State, scoped) {
-   	return State.extend({scoped: scoped}, function (inherited) {
-		return {
-			
-			_white_list: ["Idle", "Disabled", "Dropping"],
-			_persistents: ["drag_source"],
-		
-			_start: function () {
-				this.trigger("hover");
-				this.on(this.element(), "drag-hover", function (event) {
-					this._drag_source = event.originalEvent.detail;
-					this.parent().__update_floater(this._drag_source);
-				});
-				this.on(this.element(), "drag-stop drag-leave", function (event) {
-					this._drag_source = event.originalEvent.detail;
-					this.next("Idle");
-				});
-				this.on(this.element(), "drag-drop", function (event) {
-					this._drag_source = event.originalEvent.detail;
-					this.parent().__update_floater(this._drag_source);
-					this.next(this.parent()._floater.css("display") == "none" ? "Idle" : "Dropping");
-				});
-			},
-			
-			_end: function () {
-				this.trigger("unhover");
-				this.parent()._floater.css("display", "none");
-				inherited._end.call(this);
-			}
-		
-		};
-	});
-});
-
-
-Scoped.define("module:Interactions.DroplistStates.Dropping", ["module:Interactions.DroplistStates.Disabled"], function (State, scoped) {
-   	return State.extend({scoped: scoped}, {
-	
-		_white_list: ["Idle", "Disabled"],
-		_persistents: ["drag_source"],
-	
-		_start: function () {
-			this.trigger("dropped");
-			this._drag_source.source.dropped(this.parent());
-			this.next("Idle");
-		}
-	
-	});
-});
 
 Scoped.define("module:Interactions.Infinitescroll", [
         "module:Interactions.Scroll",
@@ -2595,6 +2611,7 @@ Scoped.define("module:Interactions.State", [
  	});
 });
 
+
 Scoped.define("module:Interactions.Loopscroll", ["module:Interactions.Scroll"], function (Scroll, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
@@ -2651,6 +2668,10 @@ Scoped.define("module:Interactions.Loopscroll", ["module:Interactions.Scroll"], 
 		        this._whitespaceSetHeight(this.__top_white_space, this.options().whitespace);
 				this.element().scrollTop(this.element().scrollTop() + this.options().whitespace - h);
 		    },
+
+			scrollToElement: function (element, options) {
+				inherited.scrollToElement.call(this, element, options);
+			},
 		
 		    reset: function (increment) {
 		        this._whitespaceSetHeight(this.__bottom_white_space, this.options().whitespace);
@@ -2821,6 +2842,7 @@ Scoped.define("module:Interactions.PinchStates.Pinching", ["module:Interactions.
 		};
 	});
 });
+
 Scoped.define("module:Interactions.Scroll", [
         "module:Interactions.ElementInteraction",
 	    "base:Objs",
@@ -2932,7 +2954,7 @@ Scoped.define("module:Interactions.Scroll", [
 		    
 		    scrollToElement: function (element, options) {
 		    	var top = element.offset().top - this.element().offset().top + this.element().scrollTop();
-		    	this.scrollTo(top + (this._options.currentTop ? 0 : (element.outerHeight() - 1)), options);
+				this.scrollTo(top + (this._options.currentTop ? 0 : (element.outerHeight() - 1)), options);
 		    },
 		    
 		    disableScroll: function () {
@@ -3055,6 +3077,7 @@ Scoped.define("module:Interactions.ScrollStates.ScrollingTo", ["module:Interacti
 					this._animation.start();
 				} else {
 					this.element().scrollTop(this._scroll_top);
+					this._scroll();
 					this._finished();
 				}
 			},
