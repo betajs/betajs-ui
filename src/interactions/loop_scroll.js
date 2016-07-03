@@ -22,13 +22,7 @@ Scoped.define("module:Interactions.Loopscroll", ["module:Interactions.Scroll"], 
 		    	var count = this.itemsElement().children().length - 2;
 		    	var top_elements = (scroll_top - top_ws_height) / elements_height * count; 
 		    	var bottom_elements = (elements_height - (scroll_top - top_ws_height) - visible_height) / elements_height * count;
-		    	if (top_elements < 0) {
-					top_ws_height = scroll_top - (elements_height - visible_height) / 2;
-					this._whitespaceSetHeight(this.__top_white_space, top_ws_height);
-		    	} else if (bottom_elements < 0) {
-					top_ws_height = scroll_top - (elements_height - visible_height) / 2;
-		            this._whitespaceSetHeight(this.__top_white_space, top_ws_height);
-		    	} else if (top_elements < bottom_elements - 1) {
+		    	if (top_elements < bottom_elements - 1) {
 			    	while (top_elements < bottom_elements - 1) {
 						var item = this.itemsElement().find(":nth-last-child(2)");
 						item.insertAfter(this.__top_white_space);
