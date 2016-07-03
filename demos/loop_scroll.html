@@ -10,41 +10,80 @@
         <link rel="stylesheet" href="styles.css" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		<style>
-			#scrollbox {
+			surround {
+				display: flex;
+			}
+			#scrollbox, #scrollbox2 {
+				/*flex: 1 1 0;*/
 				width: 300px;
 				height: 300px;
 				overflow: scroll;
 				-webkit-overflow-scrolling: touch;
-                display: -ms-flexbox;
-                
-                display: -webkit-flex;
-                display: flex;
-                -webkit-flex-direction: column;
-                -ms-flex-direction: column;
-                flex-direction: column;
+                /*display: -ms-flexbox;*/
+
+                /*display: -webkit-flex;*/
+                /*display: flex;*/
+                /*-webkit-flex-direction: column;*/
+                /*-ms-flex-direction: column;*/
+                /*flex-direction: column;*/
 			}
 			.item {
 				border: 1px solid black;
 /*				height: 40px;*/
 
-                -webkit-flex: 0 0 40px;
-                -ms-flex: 0 0 40px;
-                flex: 0 0 40px;
+                /*-webkit-flex: 0 0 40px;*/
+                /*-ms-flex: 0 0 40px;*/
+                /*flex: 0 0 40px;*/
 			}
+
+			ba-test {
+				display: flex;
+				flex: 1 1 0;
+				flex-direction: column;
+				overflow-y: scroll;
+			}
+
+			ba-test element {
+			@include flex(0 0 40px);
+				flex: 0 0 40px;
+				color: grey;
+				background: #F4F4F4;
+
+				line-height: 30px;
+				display: block;
+				text-align: center;
+			}
+
+			ba-test .selected {color: black}
+
 		</style>
 	</head>
 	<body style="-webkit-overflow-scrolling: disable">
-		<div id="scrollbox">
-		</div>
+		<surround>
+			<ba-test id="scrollbox"></ba-test>
+			<ba-test id="scrollbox2"></ba-test>
+		</surround>
 		<input>
 		<button>ScrollTo</button>
 		<script>
 			var element = $("#scrollbox");
+			var element2 = $("#scrollbox2");
 
-			for (var i = 0; i < 20; ++i)
-				element.append("<div id='" +i + "' class='item'>Item " + i + "</div>");
+			var no_elements = 29;
+
+			for (var i = 0; i < no_elements; ++i) {
+				element.append("<element id='" + i + "' class='item'>Item " + i + "</element>");
+				element2.append("<element id='2" + i + "' class='item'>Item 2" + i + "</element>");
+			}
 
 			var scroll = new BetaJS.UI.Interactions.Loopscroll(element, {
+				enabled: true,
+				currentTop: false,
+				discrete: true,
+				scrollEndTimeout: 200,
+				currentCenter: true
+			});
+			var scroll2 = new BetaJS.UI.Interactions.Loopscroll(element2, {
 				enabled: true,
 				currentTop: true,
 				discrete: true,
@@ -57,7 +96,7 @@
 			$("button").on("click", function () {
 				var value =$('input').val() || 1;
 				value = isNaN(value) ? 1 : value;
-				scroll.scrollToElement($('#' + value%19), {
+				scroll.scrollToElement($('#' + value%no_elements), {
 					animate: false
 				});
 			});
