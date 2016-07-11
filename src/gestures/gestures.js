@@ -19,8 +19,9 @@ Scoped.define("module:Gestures.ElementStateHost", ["base:States.CompetingHost"],
 Scoped.define("module:Gestures.Gesture", [
 	    "module:Gestures.ElementStateHost",
 	    "base:States.CompetingComposite",
-	    "base:Objs"
-	], function (ElementStateHost, CompetingComposite, Objs, scoped) {
+	    "base:Objs",
+	    "module:Gestures.GestureStates.EventDrivenState"
+	], function (ElementStateHost, CompetingComposite, Objs, EventDrivenState, scoped) {
 	return ElementStateHost.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -38,7 +39,7 @@ Scoped.define("module:Gestures.Gesture", [
 		        		retreat: "Retreat"
 		        	}, machine[key]);
 		        }
-		        this.initialize(this.cls.classname + "States.EventDrivenState", {
+		        this.initialize(EventDrivenState, {
 		            state_descriptor: machine,
 		            current_state: "Initial"
 		        });
@@ -276,10 +277,8 @@ Scoped.define("module:Gestures.ElementMouseMoveOutEvent", [
 		            var current = MouseEvents.pageCoords(event);
 		            delta.x = Math.max(delta.x, Math.abs(position.x - current.x));
 		            delta.y = Math.max(delta.y, Math.abs(position.y - current.y));
-		            if (("x" in box && box.x >= 0 && delta.x >= box.x) || ("y" in box && box.y >= 0 && delta.y >= box.y)) {
-						//console.log(box, delta, position, current);
+		            if (("x" in box && box.x >= 0 && delta.x >= box.x) || ("y" in box && box.y >= 0 && delta.y >= box.y))
 		                this.callback();
-		            }
 		        });
 		    }
 
@@ -357,6 +356,13 @@ Scoped.define("module:Gestures.GestureStates.EventDrivenState", [
 Scoped.define("module:Gestures.defaultGesture", [
         "base:Objs",
         "module:Events.Mouse"
+    ], [
+        "module:Gestures.ElementTriggerEvent",
+        "module:Gestures.BodyTriggerEvent",
+        "module:Gestures.ElementTimerEvent",
+        "module:Gestures.ElementScrollEvent",
+        "module:Gestures.ElementScrollEndEvent",
+        "module:Gestures.ElementMouseMoveOutEvent"
     ], function (Objs, MouseEvents) {
 	return function (options) {
 	    options = Objs.extend({

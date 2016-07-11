@@ -7,8 +7,13 @@ Scoped.define("module:Interactions.Drag", [
 	    "module:Hardware.MouseCoords",
 	    "base:Ids",
 	    "base:Objs",
-	    "base:Functions"
-	], function (ElemInter, ElemMod, ElemSupp, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, Functions, scoped) {
+	    "base:Functions",
+	    "module:Interactions.DragStates"
+	], [
+	    "module:Interactions.DragStates.Idle",
+	    "module:Interactions.DragStates.Dragging",
+	    "module:Interactions.DragStates.Stopping"
+	], function (ElemInter, ElemMod, ElemSupp, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, Functions, DragStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -27,8 +32,8 @@ Scoped.define("module:Interactions.Drag", [
 						return true;
 					}
 				}, options);
-				inherited.constructor.call(this, element, options);
-				this._host.initialize(this.cls.classname + "States.Idle");
+				inherited.constructor.call(this, element, options, DragStates);
+				this._host.initialize("Idle");
 				this._modifier = new ElemMod(this._element);
 				this.data = data;
 			},

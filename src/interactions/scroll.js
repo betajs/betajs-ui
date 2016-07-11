@@ -8,7 +8,7 @@ Scoped.define("module:Interactions.Scroll", [
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
-		    constructor: function (element, options, data) {
+		    constructor: function (element, options, data, stateNS) {
 		    	options = Objs.extend({
 		    		discrete: false,
 		    		currentCenter: false,
@@ -19,10 +19,10 @@ Scoped.define("module:Interactions.Scroll", [
 					elementMargin: 20,
 					enable_scroll_modifier: "scroll"
 				}, options);
-				inherited.constructor.call(this, element, options);
+				inherited.constructor.call(this, element, options, stateNS);
 				this._itemsElement = options.itemsElement || element;
 				this._disableScrollCounter = 0;
-				this._host.initialize(this.cls.classname + "States.Idle");
+				this._host.initialize("Idle");
 				this._scrollingDirection = true;
 				this._lastScrollTop = null;
 				this.__on(this.element(), "scroll", function () {

@@ -1,7 +1,12 @@
 Scoped.define("module:Interactions.Infinitescroll", [
         "module:Interactions.Scroll",
-	    "base:Objs"
-	], function (Scroll, Objs, scoped) {
+	    "base:Objs",
+	    "module:Interactions.InfinitescrollStates"
+	], [
+	    "module:Interactions.InfinitescrollStates.Idle",
+	    "module:Interactions.InfinitescrollStates.Scrolling",
+	    "module:Interactions.InfinitescrollStates.ScrollingTo"
+	], function (Scroll, Objs, InfinitescrollStates, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -15,7 +20,7 @@ Scoped.define("module:Interactions.Infinitescroll", [
 		    		append: null, // function (count, callback); callback should say how many and whether there could be more
 		    		prepend: null // function (count, callback); callback should say how many and whether there could be more
 				}, options);
-		    	inherited.constructor.call(this, element, options);
+		    	inherited.constructor.call(this, element, options, data, InfinitescrollStates);
 				this._can_append = !!options.append;
 				this._can_prepend = !!options.prepend;
 				this._extending = false;

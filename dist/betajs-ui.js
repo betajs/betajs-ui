@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.15 - 2016-07-03
+betajs-ui - v1.0.16 - 2016-07-10
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -709,7 +709,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.15 - 2016-07-03
+betajs-ui - v1.0.16 - 2016-07-10
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -724,7 +724,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "63.1467570958112"
+    "version": "66.1468205098567"
 };
 });
 Scoped.assumeVersion('base:version', 474);
@@ -1203,8 +1203,9 @@ Scoped.define("module:Gestures.ElementStateHost", ["base:States.CompetingHost"],
 Scoped.define("module:Gestures.Gesture", [
 	    "module:Gestures.ElementStateHost",
 	    "base:States.CompetingComposite",
-	    "base:Objs"
-	], function (ElementStateHost, CompetingComposite, Objs, scoped) {
+	    "base:Objs",
+	    "module:Gestures.GestureStates.EventDrivenState"
+	], function (ElementStateHost, CompetingComposite, Objs, EventDrivenState, scoped) {
 	return ElementStateHost.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -1222,7 +1223,7 @@ Scoped.define("module:Gestures.Gesture", [
 		        		retreat: "Retreat"
 		        	}, machine[key]);
 		        }
-		        this.initialize(this.cls.classname + "States.EventDrivenState", {
+		        this.initialize(EventDrivenState, {
 		            state_descriptor: machine,
 		            current_state: "Initial"
 		        });
@@ -1460,10 +1461,8 @@ Scoped.define("module:Gestures.ElementMouseMoveOutEvent", [
 		            var current = MouseEvents.pageCoords(event);
 		            delta.x = Math.max(delta.x, Math.abs(position.x - current.x));
 		            delta.y = Math.max(delta.y, Math.abs(position.y - current.y));
-		            if (("x" in box && box.x >= 0 && delta.x >= box.x) || ("y" in box && box.y >= 0 && delta.y >= box.y)) {
-						//console.log(box, delta, position, current);
+		            if (("x" in box && box.x >= 0 && delta.x >= box.x) || ("y" in box && box.y >= 0 && delta.y >= box.y))
 		                this.callback();
-		            }
 		        });
 		    }
 
@@ -1541,6 +1540,13 @@ Scoped.define("module:Gestures.GestureStates.EventDrivenState", [
 Scoped.define("module:Gestures.defaultGesture", [
         "base:Objs",
         "module:Events.Mouse"
+    ], [
+        "module:Gestures.ElementTriggerEvent",
+        "module:Gestures.BodyTriggerEvent",
+        "module:Gestures.ElementTimerEvent",
+        "module:Gestures.ElementScrollEvent",
+        "module:Gestures.ElementScrollEndEvent",
+        "module:Gestures.ElementMouseMoveOutEvent"
     ], function (Objs, MouseEvents) {
 	return function (options) {
 	    options = Objs.extend({
@@ -1659,8 +1665,13 @@ Scoped.define("module:Interactions.Drag", [
 	    "module:Hardware.MouseCoords",
 	    "base:Ids",
 	    "base:Objs",
-	    "base:Functions"
-	], function (ElemInter, ElemMod, ElemSupp, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, Functions, scoped) {
+	    "base:Functions",
+	    "module:Interactions.DragStates"
+	], [
+	    "module:Interactions.DragStates.Idle",
+	    "module:Interactions.DragStates.Dragging",
+	    "module:Interactions.DragStates.Stopping"
+	], function (ElemInter, ElemMod, ElemSupp, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, Functions, DragStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -1679,8 +1690,8 @@ Scoped.define("module:Interactions.Drag", [
 						return true;
 					}
 				}, options);
-				inherited.constructor.call(this, element, options);
-				this._host.initialize(this.cls.classname + "States.Idle");
+				inherited.constructor.call(this, element, options, DragStates);
+				this._host.initialize("Idle");
 				this._modifier = new ElemMod(this._element);
 				this.data = data;
 			},
@@ -1964,8 +1975,15 @@ Scoped.define("module:Interactions.Drop", [
         "module:Interactions.ElementInteraction",
 	    "base:Objs",
 	    "module:Elements.ElementSupport",
-	    "module:Elements.ElementModifier"
-	], function (ElemInter, Objs, ElemSupp, ElemMod, scoped) {
+	    "module:Elements.ElementModifier",
+	    "module:Interactions.DropStates"
+	], [
+	    "module:Interactions.DropStates.Disabled",
+	    "module:Interactions.DropStates.Idle",
+	    "module:Interactions.DropStates.Hover",
+	    "module:Interactions.DropStates.InvalidHover",
+	    "module:Interactions.DropStates.Dropping"
+	], function (ElemInter, Objs, ElemSupp, ElemMod, DropStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -1979,8 +1997,8 @@ Scoped.define("module:Interactions.Drop", [
 						return bb;
 					}
 				}, options);
-				inherited.constructor.call(this, element, options);
-				this._host.initialize(this.cls.classname + "States.Idle");
+				inherited.constructor.call(this, element, options, DropStates);
+				this._host.initialize("Idle");
 				this._modifier = new ElemMod(this._element);
 				this.data = data;
 			},
@@ -2154,8 +2172,14 @@ Scoped.define("module:Interactions.Droplist", [
         "module:Interactions.ElementInteraction",
         "module:Elements.ElementSupport",
 	    "base:Objs",
-	    "jquery:"
-	], function (ElemInter, ElemSupp, Objs, $, scoped) {
+	    "jquery:",
+	    "module:Interactions.DroplistStates"
+	], [
+	    "module:Interactions.DroplistStates.Disabled",
+	    "module:Interactions.DroplistStates.Idle",
+	    "module:Interactions.DroplistStates.Hover",
+	    "module:Interactions.DroplistStates.Dropping"
+	], function (ElemInter, ElemSupp, Objs, $, DroplistStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -2170,8 +2194,8 @@ Scoped.define("module:Interactions.Droplist", [
 					},
 					floater: null
 				}, options);
-				inherited.constructor.call(this, element, options);
-				this._host.initialize(this.cls.classname + "States.Idle");
+				inherited.constructor.call(this, element, options, DroplistStates);
+				this._host.initialize("Idle");
 				this.data = data;
 				this._floater = $(this._options.floater);
 				this._floater.css("display", "none");
@@ -2327,8 +2351,13 @@ Scoped.define("module:Interactions.DroplistStates.Dropping", ["module:Interactio
 
 Scoped.define("module:Interactions.Infinitescroll", [
         "module:Interactions.Scroll",
-	    "base:Objs"
-	], function (Scroll, Objs, scoped) {
+	    "base:Objs",
+	    "module:Interactions.InfinitescrollStates"
+	], [
+	    "module:Interactions.InfinitescrollStates.Idle",
+	    "module:Interactions.InfinitescrollStates.Scrolling",
+	    "module:Interactions.InfinitescrollStates.ScrollingTo"
+	], function (Scroll, Objs, InfinitescrollStates, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -2342,7 +2371,7 @@ Scoped.define("module:Interactions.Infinitescroll", [
 		    		append: null, // function (count, callback); callback should say how many and whether there could be more
 		    		prepend: null // function (count, callback); callback should say how many and whether there could be more
 				}, options);
-		    	inherited.constructor.call(this, element, options);
+		    	inherited.constructor.call(this, element, options, data, InfinitescrollStates);
 				this._can_append = !!options.append;
 				this._can_prepend = !!options.prepend;
 				this._extending = false;
@@ -2488,12 +2517,13 @@ Scoped.define("module:Interactions.ElementInteraction", [
 	    "base:Async",
 	    "base:States.Host",
 	    "base:Ids",
-	    "base:Objs"
-	], function (Class, EventsMixin, MouseCoords, $, Async, StateHost, Ids, Objs, scoped) {
+	    "base:Objs",
+	    "base:Classes.ClassRegistry"
+	], function (Class, EventsMixin, MouseCoords, $, Async, StateHost, Ids, Objs, ClassRegistry, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 
-			constructor: function (element, options) {
+			constructor: function (element, options, stateNS) {
 				inherited.constructor.call(this);
 				MouseCoords.require();
 				this._element = $($(element).get(0));
@@ -2505,7 +2535,9 @@ Scoped.define("module:Interactions.ElementInteraction", [
 					if (enabled) 
 						Async.eventually(this.enable, this);
 				}
-				this._host = new StateHost();
+				this._host = new StateHost({
+					stateRegistry: stateNS ? new ClassRegistry(stateNS) : null
+				});
 				this._host.parent = this;
 			},
 			
@@ -2612,12 +2644,19 @@ Scoped.define("module:Interactions.State", [
 });
 
 
-Scoped.define("module:Interactions.Loopscroll", ["module:Interactions.Scroll"], function (Scroll, scoped) {
+Scoped.define("module:Interactions.Loopscroll", [
+    "module:Interactions.Scroll",
+    "module:Interactions.LoopscrollStates"
+], [
+	"module:Interactions.LoopscrollStates.Idle",
+	"module:Interactions.LoopscrollStates.Scrolling",
+	"module:Interactions.LoopscrollStates.ScrollingTo"
+], function (Scroll, LoopscrollStates, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
 
 		    constructor: function (element, options, data) {
-		    	inherited.constructor.call(this, element, options);
+		    	inherited.constructor.call(this, element, options, data, LoopscrollStates);
 				this.__top_white_space = this._whitespaceCreate();
 				this.itemsElement().prepend(this.__top_white_space);
 				this.__bottom_white_space = this._whitespaceCreate();
@@ -2712,13 +2751,19 @@ Scoped.define("module:Interactions.LoopscrollStates.ScrollingTo", ["module:Inter
    	});
 });
 
-Scoped.define("module:Interactions.Pinch", ["module:Interactions.ElementInteraction"], function (ElemInter, scoped) {
+Scoped.define("module:Interactions.Pinch", [
+    "module:Interactions.ElementInteraction",
+    "module:Interactions.PinchStates"
+], [
+	"module:Interactions.PinchStates.Idle",
+	"module:Interactions.PinchStates.Pinching"
+], function (ElemInter, PinchStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
 		    constructor: function (element, options, data) {
-		    	inherited.constructor.call(this, element, options);
-				this._host.initialize(this.cls.classname + "States.Idle");
+		    	inherited.constructor.call(this, element, options, PinchStates);
+				this._host.initialize("Idle");
 				this.data = data;
 			},
 			
@@ -2846,7 +2891,7 @@ Scoped.define("module:Interactions.Scroll", [
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
-		    constructor: function (element, options, data) {
+		    constructor: function (element, options, data, stateNS) {
 		    	options = Objs.extend({
 		    		discrete: false,
 		    		currentCenter: false,
@@ -2857,10 +2902,10 @@ Scoped.define("module:Interactions.Scroll", [
 					elementMargin: 20,
 					enable_scroll_modifier: "scroll"
 				}, options);
-				inherited.constructor.call(this, element, options);
+				inherited.constructor.call(this, element, options, stateNS);
 				this._itemsElement = options.itemsElement || element;
 				this._disableScrollCounter = 0;
-				this._host.initialize(this.cls.classname + "States.Idle");
+				this._host.initialize("Idle");
 				this._scrollingDirection = true;
 				this._lastScrollTop = null;
 				this.__on(this.element(), "scroll", function () {

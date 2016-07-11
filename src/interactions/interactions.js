@@ -6,12 +6,13 @@ Scoped.define("module:Interactions.ElementInteraction", [
 	    "base:Async",
 	    "base:States.Host",
 	    "base:Ids",
-	    "base:Objs"
-	], function (Class, EventsMixin, MouseCoords, $, Async, StateHost, Ids, Objs, scoped) {
+	    "base:Objs",
+	    "base:Classes.ClassRegistry"
+	], function (Class, EventsMixin, MouseCoords, $, Async, StateHost, Ids, Objs, ClassRegistry, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 
-			constructor: function (element, options) {
+			constructor: function (element, options, stateNS) {
 				inherited.constructor.call(this);
 				MouseCoords.require();
 				this._element = $($(element).get(0));
@@ -23,7 +24,9 @@ Scoped.define("module:Interactions.ElementInteraction", [
 					if (enabled) 
 						Async.eventually(this.enable, this);
 				}
-				this._host = new StateHost();
+				this._host = new StateHost({
+					stateRegistry: stateNS ? new ClassRegistry(stateNS) : null
+				});
 				this._host.parent = this;
 			},
 			

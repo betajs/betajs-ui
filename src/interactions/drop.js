@@ -2,8 +2,15 @@ Scoped.define("module:Interactions.Drop", [
         "module:Interactions.ElementInteraction",
 	    "base:Objs",
 	    "module:Elements.ElementSupport",
-	    "module:Elements.ElementModifier"
-	], function (ElemInter, Objs, ElemSupp, ElemMod, scoped) {
+	    "module:Elements.ElementModifier",
+	    "module:Interactions.DropStates"
+	], [
+	    "module:Interactions.DropStates.Disabled",
+	    "module:Interactions.DropStates.Idle",
+	    "module:Interactions.DropStates.Hover",
+	    "module:Interactions.DropStates.InvalidHover",
+	    "module:Interactions.DropStates.Dropping"
+	], function (ElemInter, Objs, ElemSupp, ElemMod, DropStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -17,8 +24,8 @@ Scoped.define("module:Interactions.Drop", [
 						return bb;
 					}
 				}, options);
-				inherited.constructor.call(this, element, options);
-				this._host.initialize(this.cls.classname + "States.Idle");
+				inherited.constructor.call(this, element, options, DropStates);
+				this._host.initialize("Idle");
 				this._modifier = new ElemMod(this._element);
 				this.data = data;
 			},

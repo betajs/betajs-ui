@@ -1,10 +1,17 @@
 
-Scoped.define("module:Interactions.Loopscroll", ["module:Interactions.Scroll"], function (Scroll, scoped) {
+Scoped.define("module:Interactions.Loopscroll", [
+    "module:Interactions.Scroll",
+    "module:Interactions.LoopscrollStates"
+], [
+	"module:Interactions.LoopscrollStates.Idle",
+	"module:Interactions.LoopscrollStates.Scrolling",
+	"module:Interactions.LoopscrollStates.ScrollingTo"
+], function (Scroll, LoopscrollStates, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
 
 		    constructor: function (element, options, data) {
-		    	inherited.constructor.call(this, element, options);
+		    	inherited.constructor.call(this, element, options, data, LoopscrollStates);
 				this.__top_white_space = this._whitespaceCreate();
 				this.itemsElement().prepend(this.__top_white_space);
 				this.__bottom_white_space = this._whitespaceCreate();

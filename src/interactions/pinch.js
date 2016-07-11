@@ -1,10 +1,16 @@
-Scoped.define("module:Interactions.Pinch", ["module:Interactions.ElementInteraction"], function (ElemInter, scoped) {
+Scoped.define("module:Interactions.Pinch", [
+    "module:Interactions.ElementInteraction",
+    "module:Interactions.PinchStates"
+], [
+	"module:Interactions.PinchStates.Idle",
+	"module:Interactions.PinchStates.Pinching"
+], function (ElemInter, PinchStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
 		    constructor: function (element, options, data) {
-		    	inherited.constructor.call(this, element, options);
-				this._host.initialize(this.cls.classname + "States.Idle");
+		    	inherited.constructor.call(this, element, options, PinchStates);
+				this._host.initialize("Idle");
 				this.data = data;
 			},
 			

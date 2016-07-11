@@ -2,8 +2,14 @@ Scoped.define("module:Interactions.Droplist", [
         "module:Interactions.ElementInteraction",
         "module:Elements.ElementSupport",
 	    "base:Objs",
-	    "jquery:"
-	], function (ElemInter, ElemSupp, Objs, $, scoped) {
+	    "jquery:",
+	    "module:Interactions.DroplistStates"
+	], [
+	    "module:Interactions.DroplistStates.Disabled",
+	    "module:Interactions.DroplistStates.Idle",
+	    "module:Interactions.DroplistStates.Hover",
+	    "module:Interactions.DroplistStates.Dropping"
+	], function (ElemInter, ElemSupp, Objs, $, DroplistStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -18,8 +24,8 @@ Scoped.define("module:Interactions.Droplist", [
 					},
 					floater: null
 				}, options);
-				inherited.constructor.call(this, element, options);
-				this._host.initialize(this.cls.classname + "States.Idle");
+				inherited.constructor.call(this, element, options, DroplistStates);
+				this._host.initialize("Idle");
 				this.data = data;
 				this._floater = $(this._options.floater);
 				this._floater.css("display", "none");
