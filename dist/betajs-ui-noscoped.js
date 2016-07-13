@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.16 - 2016-07-10
+betajs-ui - v1.0.17 - 2016-07-12
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -14,7 +14,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "66.1468205098567"
+    "version": "67.1468377617626"
 };
 });
 Scoped.assumeVersion('base:version', 474);
@@ -24,6 +24,8 @@ Scoped.define("module:Dynamics.GesturePartial", [
     "module:Gestures.Gesture",
     "module:Gestures",
     "base:Objs"
+], [
+	"module:Gestures.defaultGesture"
 ], function (Partial, Gesture, Gestures, Objs, scoped) {
  	var Cls = Partial.extend({scoped: scoped}, function (inherited) {
 		return {
@@ -472,12 +474,18 @@ Scoped.define("module:Events.Support", [
 	};
 });
 
-Scoped.define("module:Gestures.ElementStateHost", ["base:States.CompetingHost"], function (CompetingHost, scoped) {
+Scoped.define("module:Gestures.ElementStateHost", [
+    "base:States.CompetingHost",
+    "module:Gestures.GestureStates",
+    "base:Classes.ClassRegistry"
+], function (CompetingHost, GestureStates, ClassRegistry, scoped) {
 	return CompetingHost.extend({scoped: scoped}, function (inherited) {
 		return {
 		    
 		    constructor: function (element, composite) {
-		        inherited.constructor.call(this, composite);
+		        inherited.constructor.call(this, composite, {
+		        	stateRegistry: new ClassRegistry(GestureStates)
+		        });
 		        this._element = element;
 		    },
 		    

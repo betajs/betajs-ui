@@ -1,9 +1,15 @@
-Scoped.define("module:Gestures.ElementStateHost", ["base:States.CompetingHost"], function (CompetingHost, scoped) {
+Scoped.define("module:Gestures.ElementStateHost", [
+    "base:States.CompetingHost",
+    "module:Gestures.GestureStates",
+    "base:Classes.ClassRegistry"
+], function (CompetingHost, GestureStates, ClassRegistry, scoped) {
 	return CompetingHost.extend({scoped: scoped}, function (inherited) {
 		return {
 		    
 		    constructor: function (element, composite) {
-		        inherited.constructor.call(this, composite);
+		        inherited.constructor.call(this, composite, {
+		        	stateRegistry: new ClassRegistry(GestureStates)
+		        });
 		        this._element = element;
 		    },
 		    

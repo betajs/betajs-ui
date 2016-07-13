@@ -3,6 +3,8 @@ Scoped.define("module:Dynamics.GesturePartial", [
     "module:Gestures.Gesture",
     "module:Gestures",
     "base:Objs"
+], [
+	"module:Gestures.defaultGesture"
 ], function (Partial, Gesture, Gestures, Objs, scoped) {
  	var Cls = Partial.extend({scoped: scoped}, function (inherited) {
 		return {
