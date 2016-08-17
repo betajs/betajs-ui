@@ -3,12 +3,14 @@ Scoped.define("module:Interactions.Scroll", [
         "module:Interactions.ElementInteraction",
 	    "base:Objs",
 	    "jquery:",
-	    "module:Elements.ElementSupport"
-	], function (ElemInter, Objs, $, ElemSupp, scoped) {
+	    "module:Elements.ElementSupport",
+	    "module:Interactions.ScrollStates"
+	], function (ElemInter, Objs, $, ElemSupp, ScrollStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
 		    constructor: function (element, options, data, stateNS) {
+		    	stateNS = stateNS || ScrollStates;
 		    	options = Objs.extend({
 		    		discrete: false,
 		    		currentCenter: false,

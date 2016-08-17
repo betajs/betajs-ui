@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.17 - 2016-07-12
+betajs-ui - v1.0.18 - 2016-08-17
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -709,7 +709,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.17 - 2016-07-12
+betajs-ui - v1.0.18 - 2016-08-17
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -724,7 +724,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "67.1468377617626"
+    "version": "68.1471468304826"
 };
 });
 Scoped.assumeVersion('base:version', 474);
@@ -2894,12 +2894,14 @@ Scoped.define("module:Interactions.Scroll", [
         "module:Interactions.ElementInteraction",
 	    "base:Objs",
 	    "jquery:",
-	    "module:Elements.ElementSupport"
-	], function (ElemInter, Objs, $, ElemSupp, scoped) {
+	    "module:Elements.ElementSupport",
+	    "module:Interactions.ScrollStates"
+	], function (ElemInter, Objs, $, ElemSupp, ScrollStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
 		    constructor: function (element, options, data, stateNS) {
+		    	stateNS = stateNS || ScrollStates;
 		    	options = Objs.extend({
 		    		discrete: false,
 		    		currentCenter: false,
@@ -3172,6 +3174,30 @@ Scoped.define("module:Interactions.ScrollStates.ScrollingTo", ["module:Interacti
 				inherited._end.call(this);
 			}
 			
+		};
+	});
+});
+Scoped.define("module:Interactions.Shiftscroll", [
+	"module:Interactions.Scroll",
+	"base:Async"
+], function (Scroll, Async, scoped) {
+	return Scroll.extend({scoped: scoped}, function (inherited) {
+		return {
+
+			constructor: function () {
+		    	inherited.constructor.apply(this, arguments);		    			    
+				this.__bottom_white_space = this._whitespaceCreate();
+				this.itemsElement().append(this.__bottom_white_space);
+				this._whitespaceFix();
+				Async.eventually(this._whitespaceFix, this);
+		    },
+		    
+		    _whitespaceFix: function () {
+		    	var boxHeight = this.element().innerHeight();
+		    	var itemHeight = this.itemsElement().find(":nth-child(1)").outerHeight();
+				this._whitespaceSetHeight(this.__bottom_white_space, boxHeight - itemHeight);
+		    }
+		    		
 		};
 	});
 });
