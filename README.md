@@ -65,23 +65,24 @@ You can use the library in the browser and compile it as well.
 | :--------- | --: |
 | Homepage   | [http://betajs.com](http://betajs.com) |
 | Git        | [git://github.com/betajs/betajs-ui.git](git://github.com/betajs/betajs-ui.git) |
-| Repository | [http://github.com/betajs/betajs-ui](http://github.com/betajs/betajs-ui) |
+| Repository | [https://github.com/betajs/betajs-ui](https://github.com/betajs/betajs-ui) |
 | Blog       | [http://blog.betajs.com](http://blog.betajs.com) | 
 | Twitter    | [http://twitter.com/thebetajs](http://twitter.com/thebetajs) | 
+ 
 
 
 
 ## Compatability
 | Target | Versions |
 | :----- | -------: |
-| Firefox | 4 - Latest |
+| Firefox | 6 - Latest |
 | Chrome | 15 - Latest |
 | Safari | 4 - Latest |
 | Opera | 12 - Latest |
 | Internet Explorer | 8 - Latest |
 | Edge | 12 - Latest |
-| iOS | 7.0 - Latest |
-| Android | 4.0 - Latest |
+| iOS | 3.0 - Latest |
+| Android | 2.2 - Latest |
 
 
 ## CDN
@@ -112,14 +113,23 @@ You can use the library in the browser and compile it as well.
 | betajs-scoped | [Open](https://github.com/betajs/betajs-scoped) |
 
 
-## Contributors
+## Main Contributors
 
 - Victor Lingenthal
 - Oliver Friedmann
 
-
 ## License
 
 Apache-2.0
+
+
+
+
+
+
+## Sponsors
+
+- Ziggeo
+- Browserstack
 
 

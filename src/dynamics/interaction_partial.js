@@ -3,8 +3,9 @@ Scoped.define("module:Dynamics.InteractionPartial", [
     "module:Interactions",
     "base:Strings",
     "base:Objs",
-    "base:Types"
-], function (Partial, Interactions, Strings, Objs, Types, scoped) {
+    "base:Types",
+    "jquery:"
+], function (Partial, Interactions, Strings, Objs, Types, $, scoped) {
  	var Cls = Partial.extend({scoped: scoped}, function (inherited) {
  		return {
 			
@@ -18,7 +19,8 @@ Scoped.define("module:Dynamics.InteractionPartial", [
 				} 
 				value = Objs.extend(value, value.options);
 				var InteractionClass = Interactions[Strings.capitalize(value.type)];
-				var interaction = new InteractionClass(value.sub ? this._node._$element.find(value.sub) : this._node._$element, Objs.extend({
+				var $element = $(this._node.element());
+				var interaction = new InteractionClass(value.sub ? $element.find(value.sub) : $element, Objs.extend({
 					enabled: true,
 					context: handler
 				}, value), value.data);

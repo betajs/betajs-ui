@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.18 - 2016-08-17
+betajs-ui - v1.0.18 - 2016-12-04
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -14,7 +14,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "68.1471468304826"
+    "version": "70.1480885720289"
 };
 });
 Scoped.assumeVersion('base:version', 474);
@@ -23,10 +23,11 @@ Scoped.define("module:Dynamics.GesturePartial", [
     "dynamics:Handlers.Partial",
     "module:Gestures.Gesture",
     "module:Gestures",
-    "base:Objs"
+    "base:Objs",
+    "jquery:"
 ], [
 	"module:Gestures.defaultGesture"
-], function (Partial, Gesture, Gestures, Objs, scoped) {
+], function (Partial, Gesture, Gestures, Objs, $, scoped) {
  	var Cls = Partial.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -37,7 +38,8 @@ Scoped.define("module:Dynamics.GesturePartial", [
 				if (this._postfix in node.gestures && !node.gestures[this._postfix].destroyed())
 					return;
 				value = Objs.extend(value, value.options);
-				var gesture = new Gesture(this._node._$element, Gestures.defaultGesture(value));
+				var $element = $(this._node.element());
+				var gesture = new Gesture($element, Gestures.defaultGesture(value));
 				node.gestures[this._postfix] = gesture;
 				gesture.on("activate", function () {
 					if (value.activate_event)
@@ -53,7 +55,7 @@ Scoped.define("module:Dynamics.GesturePartial", [
 				}, this);		
 				if (value.transition_event) {
 					gesture.on("start", function () {
-						handler.call(value.transition_event, this._node._$element, gesture);
+						handler.call(value.transition_event, $element, gesture);
 					}, this);
 				}
 			},
@@ -85,8 +87,9 @@ Scoped.define("module:Dynamics.InteractionPartial", [
     "module:Interactions",
     "base:Strings",
     "base:Objs",
-    "base:Types"
-], function (Partial, Interactions, Strings, Objs, Types, scoped) {
+    "base:Types",
+    "jquery:"
+], function (Partial, Interactions, Strings, Objs, Types, $, scoped) {
  	var Cls = Partial.extend({scoped: scoped}, function (inherited) {
  		return {
 			
@@ -100,7 +103,8 @@ Scoped.define("module:Dynamics.InteractionPartial", [
 				} 
 				value = Objs.extend(value, value.options);
 				var InteractionClass = Interactions[Strings.capitalize(value.type)];
-				var interaction = new InteractionClass(value.sub ? this._node._$element.find(value.sub) : this._node._$element, Objs.extend({
+				var $element = $(this._node.element());
+				var interaction = new InteractionClass(value.sub ? $element.find(value.sub) : $element, Objs.extend({
 					enabled: true,
 					context: handler
 				}, value), value.data);

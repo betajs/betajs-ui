@@ -2,10 +2,11 @@ Scoped.define("module:Dynamics.GesturePartial", [
     "dynamics:Handlers.Partial",
     "module:Gestures.Gesture",
     "module:Gestures",
-    "base:Objs"
+    "base:Objs",
+    "jquery:"
 ], [
 	"module:Gestures.defaultGesture"
-], function (Partial, Gesture, Gestures, Objs, scoped) {
+], function (Partial, Gesture, Gestures, Objs, $, scoped) {
  	var Cls = Partial.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -16,7 +17,8 @@ Scoped.define("module:Dynamics.GesturePartial", [
 				if (this._postfix in node.gestures && !node.gestures[this._postfix].destroyed())
 					return;
 				value = Objs.extend(value, value.options);
-				var gesture = new Gesture(this._node._$element, Gestures.defaultGesture(value));
+				var $element = $(this._node.element());
+				var gesture = new Gesture($element, Gestures.defaultGesture(value));
 				node.gestures[this._postfix] = gesture;
 				gesture.on("activate", function () {
 					if (value.activate_event)
@@ -32,7 +34,7 @@ Scoped.define("module:Dynamics.GesturePartial", [
 				}, this);		
 				if (value.transition_event) {
 					gesture.on("start", function () {
-						handler.call(value.transition_event, this._node._$element, gesture);
+						handler.call(value.transition_event, $element, gesture);
 					}, this);
 				}
 			},

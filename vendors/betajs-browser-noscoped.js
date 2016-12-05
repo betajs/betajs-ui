@@ -1,5 +1,5 @@
 /*!
-betajs-browser - v1.0.43 - 2016-10-15
+betajs-browser - v1.0.53 - 2016-12-04
 Copyright (c) Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -8,12 +8,10 @@ Apache-2.0 Software License.
 var Scoped = this.subScope();
 Scoped.binding('module', 'global:BetaJS.Browser');
 Scoped.binding('base', 'global:BetaJS');
-Scoped.binding('jquery', 'global:jQuery');
-Scoped.binding('resumablejs', 'global:Resumable');
 Scoped.define("module:", function () {
 	return {
     "guid": "02450b15-9bbf-4be2-b8f6-b483bc015d06",
-    "version": "94.1476572905943"
+    "version": "108.1480901119997"
 };
 });
 Scoped.assumeVersion('base:version', 531);
@@ -76,7 +74,7 @@ Scoped.define("module:Ajax.IframePostmessageAjax", [
 				raw_data = raw_data[postmessageName];
 				if (post_message_fallback)
 					window.postMessage = null;
-				window.removeEventListener("message", message_event_handler);
+				window.removeEventListener("message", message_event_handler, false);
 				document.body.removeChild(form);
 				document.body.removeChild(iframe);				
 				AjaxSupport.promiseReturnData(promise, options, raw_data, "json"); //options.decodeType);
@@ -84,13 +82,13 @@ Scoped.define("module:Ajax.IframePostmessageAjax", [
 			iframe.onerror = function () {
 				if (post_message_fallback)
 					window.postMessage = null;
-				window.removeEventListener("message", message_event_handler);
+				window.removeEventListener("message", message_event_handler, false);
 				document.body.removeChild(form);
 				document.body.removeChild(iframe);
 				// TODO
 				//AjaxSupport.promiseRequestException(promise, xmlhttp.status, xmlhttp.statusText, xmlhttp.responseText, "json"); //options.decodeType);)
 			};				
-			window.addEventListener("message", message_event_handler);
+			window.addEventListener("message", message_event_handler, false);
 			if (post_message_fallback) 
 				window.postMessage = handle_success;
 			form.submit();			
@@ -155,7 +153,11 @@ Scoped.define("module:Ajax.JsonpScriptAjax", [
 			var head = document.getElementsByTagName("head")[0];
 			var script = document.createElement("script");
 			var executed = false; 
-			script.onerror = function () {
+			script.onerror = function (event) {
+				if (event.stopPropagation)
+					event.stopPropagation();
+				else
+					event.cancelBubble = true;
 				if (hasResult)
 					return;
 				hasResult = true;
@@ -197,11 +199,15 @@ Scoped.define("module:Ajax.XDomainRequestAjax", [
     "base:Types",
     "base:Ajax.RequestException",
     "module:Info",
-    "base:Async"
-], function (AjaxSupport, Uri, HttpHeader, Promise, Types, RequestException, Info, Async) {
+    "base:Async",
+    "base:Ids"
+], function (AjaxSupport, Uri, HttpHeader, Promise, Types, RequestException, Info, Async, Ids) {
 	
 	var Module = {
 		
+		// IE Garbage Collection for XDomainRequest is broken
+		__requests: {},
+			
 		supports: function (options) {
 			if (!window.XDomainRequest)
 				return false;
@@ -222,20 +228,24 @@ Scoped.define("module:Ajax.XDomainRequestAjax", [
 			var promise = Promise.create();
 			
 			var xdomreq = new XDomainRequest();
+			Module.__requests[Ids.objectId(xdomreq)] = xdomreq;
 
 			xdomreq.onload = function () {
 		    	// TODO: Figure out response type.
 		    	AjaxSupport.promiseReturnData(promise, options, xdomreq.responseText, "json"); //options.decodeType);
+				delete Module.__requests[Ids.objectId(xdomreq)];
 			};
 			
 			xdomreq.ontimeout = function () {
 				AjaxSupport.promiseRequestException(promise, HttpHeader.HTTP_STATUS_GATEWAY_TIMEOUT, HttpHeader.format(HttpHeader.HTTP_STATUS_GATEWAY_TIMEOUT), null, "json"); //options.decodeType);)
+				delete Module.__requests[Ids.objectId(xdomreq)];
 			};
 			
 			xdomreq.onerror = function () {
 				AjaxSupport.promiseRequestException(promise, HttpHeader.HTTP_STATUS_BAD_REQUEST, HttpHeader.format(HttpHeader.HTTP_STATUS_BAD_REQUEST), null, "json"); //options.decodeType);)
+				delete Module.__requests[Ids.objectId(xdomreq)];
 			};
-			
+
 			xdomreq.open(options.method, uri);
 			
 			Async.eventually(function () {
@@ -280,16 +290,15 @@ Scoped.define("module:Ajax.XmlHttpRequestAjax", [
 				return false;
 			if (Info.isInternetExplorer() && Info.internetExplorerVersion() < 10 && options.isCorsRequest)
 				return false;
-			Objs.iter(options.data, function (value) {
-				if (value instanceof Blob || value instanceof File)
-					options.requireFormData = true;
-			});
-			if (options.requireFormData) {
-				try {
+			try {
+				Objs.iter(options.data, function (value) {
+					if ((typeof Blob !== "undefined" && value instanceof Blob) || (typeof File !== "undefined" && value instanceof File))
+						options.requireFormData = true;
+				});
+				if (options.requireFormData)
 					new FormData();
-				} catch (e) {
-					options.requireFormData = false;
-				}
+			} catch (e) {
+				options.requireFormData = false;
 			}
 			return true;
 		},
@@ -330,6 +339,7 @@ Scoped.define("module:Ajax.XmlHttpRequestAjax", [
 					Objs.iter(options.data, function (value, key) {
 						formData.append(key, value);
 					}, this);
+					// xmlhttp.setRequestHeader("Content-Type", "multipart/form-data");
 					xmlhttp.send(formData);
 				} else if (options.contentType === "json") {
 					if (options.sendContentType)
@@ -479,6 +489,24 @@ function tryIframeApproach() {
 }
 
  */
+Scoped.define("module:Blobs", [], function() {
+	return {
+
+		createBlobByArrayBufferView : function(arrayBuffer, offset, size, type) {
+			try {
+				return new Blob([ new DataView(arrayBuffer, offset,size) ], {
+					type : type
+				});
+			} catch (e) {
+				return new Blob([ new Uint8Array(arrayBuffer, offset,size) ], {
+					type : type
+				});
+			}
+
+		}
+
+	};
+});
 Scoped.define("module:Cookies", ["base:Objs", "base:Types"], function (Objs, Types) {
 	return {
 		
@@ -548,6 +576,74 @@ Scoped.define("module:Cookies", ["base:Objs", "base:Types"], function (Objs, Typ
 	};
 });
 
+Scoped.define("module:Events", [
+    "base:Class",
+    "base:Objs",
+    "base:Functions"
+], function (Class, Objs, Functions, scoped) {
+	return Class.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function () {
+				inherited.constructor.call(this);
+				this.__callbacks = {};
+			},
+			
+			destroy: function () {
+				this.clear();
+				inherited.destroy.call(this);
+			},
+			
+			on: function (element, events, callback, context) {
+				events.split(" ").forEach(function (event) {
+					if (!event)
+						return;
+					var callback_function = Functions.as_method(callback, context || element);
+					element.addEventListener(event, callback_function, false);
+					this.__callbacks[event] = this.__callbacks[event] || [];
+					this.__callbacks[event].push({
+						element: element,
+						callback_function: callback_function,
+						callback: callback,
+						context: context
+					});
+				}, this);
+				return this;
+			},
+			
+			off: function (element, events, callback, context) {
+				events.split(" ").forEach(function (event) {
+					if (!event)
+						return;
+					var entries = this.__callbacks[event];
+					if (entries) {
+						var i = 0;
+						while (i < entries.length) {
+							var entry = entries[i];
+							if ((!element || element == entry.element) && (!callback || callback == entry.callback) && (!context || context == entry.context)) {
+								entry.element.removeEventListener(event, entry.callback_function, false);
+								entries[i] = entries[entries.length - 1];
+								entries.pop();
+							} else
+								++i;
+						}
+					}
+				}, this);
+				return this;
+			},
+			
+			clear: function () {
+				Objs.iter(this.__callbacks, function (entries, event) {
+					entries.forEach(function (entry) {
+						entry.element.removeEventListener(event, entry.callback_function, false);
+					});
+				});
+				this.__callbacks = {};
+			}
+			
+		};
+	});	
+});
 /*
 Copyright (c) Copyright (c) 2007, Carl S. Yestrau All rights reserved.
 Code licensed under the BSD License: http://www.featureblend.com/license.txt
@@ -681,22 +777,22 @@ Scoped.define("module:FlashDetect", ["base:Class"], function (Class, scoped) {
 
 
 Scoped.define("module:FlashHelper", [
-    "base:Time", "base:Objs", "base:Types", "base:Net.Uri", "base:Ids", "module:Info", "jquery:"
-], function (Time, Objs, Types, Uri, Ids, Info, $) {
+    "base:Time", "base:Objs", "base:Types", "base:Net.Uri", "base:Ids", "module:Info", "module:Dom"
+], function (Time, Objs, Types, Uri, Ids, Info, Dom) {
 	return {
 		
 		getFlashObject: function (container) {
-			var embed = $(container).find("embed").get(0);
+			container = Dom.unbox(container);
+			var embed = container.getElementsByTagName("EMBED")[0];
 			if (Info.isInternetExplorer() && Info.internetExplorerVersion() <= 10)
 				embed = null;
 			if (!embed)
-				embed = $(container).find("object").get(0);
+				embed = container.getElementsByTagName("OBJECT")[0];
 			if (!embed) {
-				var objs = $("object");
-				for (var i = 0; i < objs.length; ++i) {
-					if ($(objs[i]).closest(container).length > 0)
-						embed = $(objs[i]).get(0);
-				}
+				var objs = document.getElementsByTagName("OBJECT");
+				for (var i = 0; i < objs.length; ++i)
+					if (container.contains(objs[i]))
+						embed = objs[i];
 			}
 			return embed;
 		},
@@ -799,11 +895,11 @@ Scoped.define("module:FlashHelper", [
 		},
 		
 		embedFlashObject: function (container, options) {
+			container = Dom.unbox(container);
 			options = options || {};
-			var $container = $(container);
 			if (options.parentBgcolor) {
 				try {
-					var hex = $container.css("background-color");
+					var hex = container.style.backgroundColor || "";
 					if (hex.indexOf("rgb") >= 0) {
 						var rgb = hex.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
 					    var convert = function (x) {
@@ -817,14 +913,14 @@ Scoped.define("module:FlashHelper", [
 			}
 			if (options.fixHalfPixels) {
 				try {
-					var offset = $container.offset();
+					var offset = Dom.elementOffset(container);
 					if (offset.top % 1 !== 0)
-						$container.css("margin-top", (Math.round(offset.top) - offset.top) + "px");
+						container.style.marginTop = (Math.round(offset.top) - offset.top) + "px";
 					if (offset.left % 1 !== 0)
-						$container.css("margin-left", (Math.round(offset.left) - offset.left) + "px");
+						container.style.marginLeft = (Math.round(offset.left) - offset.left) + "px";
 				} catch (e) {}
 			}
-			$container.html(this.embedTemplate(options));
+			container.innerHTML = this.embedTemplate(options);
 			return this.getFlashObject(container);
 		}
 		
@@ -840,7 +936,9 @@ Scoped.define("module:FlashHelper", [
  * License : BSD
  */
 
-Scoped.define("module:Hotkeys", ["base:Objs", "jquery:"], function (Objs, $) {
+Scoped.define("module:Hotkeys", [
+	"base:Objs"
+], function (Objs) {
 	return {		
 		
 		SHIFT_NUMS: {
@@ -938,7 +1036,6 @@ Scoped.define("module:Hotkeys", ["base:Objs", "jquery:"], function (Objs, $) {
 				"target": document,
 				"keycode": false
 			}, options);
-			options.target = $(options.target);
 			var keys = hotkey.toLowerCase().split("+");
 			var func = function (e) {
 				if (options.disable_in_input) {
@@ -978,7 +1075,7 @@ Scoped.define("module:Hotkeys", ["base:Objs", "jquery:"], function (Objs, $) {
 						e.preventDefault();
 				}
 			};
-			options.target.on(options.type, func);
+			options.target.addEventListener(options.type, func, false);
 			return {
 				target: options.target,
 				type: options.type,
@@ -987,7 +1084,7 @@ Scoped.define("module:Hotkeys", ["base:Objs", "jquery:"], function (Objs, $) {
 		},
 		
 		unregister: function (handle) {
-			handle.target.off(handle.type, handle.func);
+			handle.target.removeEventListener(handle.type, handle.func, false);
 		} 
 		
 	};
@@ -1019,8 +1116,8 @@ Scoped.define("module:Info", [
 		
 		__cache: {},
 		
-		__cached: function (key, value_func) {
-			if (!(key in this.__cache)) {
+		__cached: function (key, value_func, force) {
+			if (!(key in this.__cache) || force) {
 				var n = this.getNavigator();
 				this.__cache[key] = value_func.call(this, n, n.userAgent, n.userAgent.toLowerCase());
 			}
@@ -1038,10 +1135,10 @@ Scoped.define("module:Info", [
 			});
 		},
 	
-		flash: function () {
+		flash: function (force) {
 			return this.__cached("flash", function () {
 				return new FlashDetect();
-			});
+			}, force);
 		},
 		
 		isiOS: function () {
@@ -1131,6 +1228,19 @@ Scoped.define("module:Info", [
 			});
 		},
 		
+		androidVersion: function () {
+			return this.__cached("androidVersion", function (nav) {
+				if (!this.isAndroid())
+					return false;
+			    var v = (nav.userAgent).match(/Android (\d+)\.(\d+)\.?(\d+)?/);
+			    return {
+			    	major: parseInt(v[1], 10),
+			    	minor: parseInt(v[2], 10),
+			    	revision: parseInt(v[3] || 0, 10)
+			    };
+			});
+		},
+
 		isMobile: function () {
 			return this.__cached("isMobile", function () {
 				return this.isiOS() || this.isAndroid() || this.isWebOS() || this.isWindowsPhone() || this.isBlackberry();
@@ -1425,8 +1535,9 @@ Scoped.define("module:Info", [
 });	
 
 Scoped.define("module:Loader", [
-    "base:Ajax.Support"
-], function (AjaxSupport) {
+    "base:Ajax.Support",
+    "module:Info"
+], function (AjaxSupport, Info) {
 	return {				
 		
 		loadScript: function (url, callback, context) {
@@ -1467,7 +1578,11 @@ Scoped.define("module:Loader", [
 		inlineStyles: function (styles) {
 			var head = document.getElementsByTagName("head")[0];
 			var style = document.createElement("style");
-			style.textContent = styles;
+			if (Info.isInternetExplorer() && Info.internetExplorerVersion() < 9) {
+				style.setAttribute('type', 'text/css');
+				style.styleSheet.cssText = styles;
+			} else
+				style.textContent = styles;
 			head.appendChild(style);
 			return style;
 		},
@@ -1518,21 +1633,19 @@ Scoped.define("module:Loader", [
 
 	};
 });
-Scoped.define("module:HashRouteBinder", ["base:Router.RouteBinder", "jquery:"], function (RouteBinder, $, scoped) {
+Scoped.define("module:HashRouteBinder", [
+    "base:Router.RouteBinder",
+    "module:Events"
+], function (RouteBinder, Events, scoped) {
 	return RouteBinder.extend({scoped: scoped}, function (inherited) {
 		return {
 
 			constructor: function (router) {
 				inherited.constructor.call(this, router);
-				var self = this;
-				$(window).on("hashchange.events" + this.cid(), function () {
-					self._localRouteChanged();
-				});
-			},
-			
-			destroy: function () {				
-				$(window).off("hashchange.events" + this.cid());
-				inherited.destroy.call(this);
+				var events = this.auto_destroy(new Events());
+				events.on(window, "hashchange", function () {
+					this._localRouteChanged();
+				}, this);
 			},
 			
 			_getLocalRoute: function () {
@@ -1549,25 +1662,24 @@ Scoped.define("module:HashRouteBinder", ["base:Router.RouteBinder", "jquery:"], 
 });
 
 
-Scoped.define("module:HistoryRouteBinder", ["base:Router.RouteBinder", "jquery:"], function (RouteBinder, $, scoped) {
+Scoped.define("module:HistoryRouteBinder", [
+    "base:Router.RouteBinder",
+    "module:Events"
+], function (RouteBinder, Events, scoped) {
 	return RouteBinder.extend({scoped: scoped}, function (inherited) {
 		return {
 
+			__used: false,
+			
 			constructor: function (router) {
 				inherited.constructor.call(this, router);
-				var self = this;
-				this.__used = false;
-				$(window).on("popstate.events" + this.cid(), function () {
-					if (self.__used)
-						self._localRouteChanged();
-				});
+				var events = this.auto_destroy(new Events());
+				events.on(window, "hashchange", function () {
+					if (this.__used)
+						this._localRouteChanged();
+				}, this);
 			},
 			
-			destroy: function () {
-				$(window).off("popstate.events" + this.cid());
-				inherited.destroy.call(this);
-			},
-		
 			_getLocalRoute: function () {
 				return window.location.pathname;
 			},
@@ -1576,6 +1688,7 @@ Scoped.define("module:HistoryRouteBinder", ["base:Router.RouteBinder", "jquery:"
 				window.history.pushState({}, document.title, currentRoute.route);
 				this.__used = true;
 			}
+			
 		};
 	}, {
 		supported: function () {
@@ -1585,7 +1698,9 @@ Scoped.define("module:HistoryRouteBinder", ["base:Router.RouteBinder", "jquery:"
 });
 
 
-Scoped.define("module:LocationRouteBinder", ["base:Router.RouteBinder"], function (RouteBinder, scoped) {
+Scoped.define("module:LocationRouteBinder", [
+    "base:Router.RouteBinder"
+], function (RouteBinder, scoped) {
 	return RouteBinder.extend({scoped: scoped}, {
 		
 		_getLocalRoute: function () {
@@ -1600,18 +1715,10 @@ Scoped.define("module:LocationRouteBinder", ["base:Router.RouteBinder"], functio
 });
 
 Scoped.define("module:Dom", [
-    "base:Objs",
-    "jquery:",
     "base:Types",
     "module:Info"
-], function (Objs, $, Types, Info) {
+], function (Types, Info) {
 	return {
-		
-		outerHTML: function (element) {
-			if (!Info.isFirefox() || Info.firefoxVersion() >= 11)
-				return element.outerHTML;
-			return $('<div>').append($(element).clone()).html();
-		},
 		
 		changeTag: function (node, name) {
 			var replacement = document.createElement(name);
@@ -1621,295 +1728,198 @@ Scoped.define("module:Dom", [
 			}
 		    while (node.firstChild)
 		        replacement.appendChild(node.firstChild);
-		    node.parentNode.replaceChild(replacement, node);
+		    if (node.parentNode)
+		    	node.parentNode.replaceChild(replacement, node);
 			return replacement;
 		},		
 		
 		traverseNext: function (node, skip_children) {
-			if ("get" in node)
-				node = node.get(0);
+			node = this.unbox(node);
 			if (node.firstChild && !skip_children)
-				return $(node.firstChild);
+				return node.firstChild;
 			if (!node.parentNode)
 				return null;
 			if (node.nextSibling)
-				return $(node.nextSibling);
+				return node.nextSibling;
 			return this.traverseNext(node.parentNode, true);
 		},
-		
-		/** @suppress {checkTypes} */
-		selectNode : function(node, offset) {
-			node = $(node).get(0);
-			var selection = null;
-			var range = null;
-			if (window.getSelection) {
-				selection = window.getSelection();
-				selection.removeAllRanges();
-				range = document.createRange();
-			} else if (document.selection) {
-				selection = document.selection;
-				range = selection.createRange();
-			}
-			if (offset) {
-				range.setStart(node, offset);
-				range.setEnd(node, offset);
-				selection.addRange(range);
-			} else {
-				range.selectNode(node);
-				selection.addRange(range);
-			}
-		},
-	
-		/** @suppress {checkTypes} */
-		selectionStartNode : function() {
-			if (window.getSelection)
-				return $(window.getSelection().getRangeAt(0).startContainer);
-			else if (document.selection)
-				return $(document.selection.createRange().startContainer);
-			return null;
-		},
-		
-		/** @suppress {checkTypes} */
-		selectedHtml : function() {
-			if (window.getSelection)
-				return window.getSelection().toString();
-			else if (document.selection)
-				return document.selection.createRange().htmlText;
-			return "";
-		},
-		
-		/** @suppress {checkTypes} */
-		selectionAncestor : function() {
-			if (window.getSelection)
-				return $(window.getSelection().getRangeAt(0).commonAncestorContainer);
-			else if (document.selection)
-				return $(document.selection.createRange().parentElement());
-			return null;
-		},
-		
-		/** @suppress {checkTypes} */
-		selectionStartOffset: function () {
-			if (window.getSelection)
-				return window.getSelection().getRangeAt(0).startOffset;
-			else if (document.selection)
-				return document.selection.createRange().startOffset;
-			return null;
-		},
-		
-		/** @suppress {checkTypes} */
-		selectionEndOffset: function () {
-			if (window.getSelection)
-				return window.getSelection().getRangeAt(0).endOffset;
-			else if (document.selection)
-				return document.selection.createRange().endOffset;
-			return null;
-		},
-	
-		/** @suppress {checkTypes} */
-		selectionStart : function() {
-			if (window.getSelection)
-				return $(window.getSelection().getRangeAt(0).startContainer);
-			else if (document.selection)
-				return $(document.selection.createRange().startContainer);
-			return null;
-		},
-	
-		/** @suppress {checkTypes} */
-		selectionEnd : function() {
-			if (window.getSelection)
-				return $(window.getSelection().getRangeAt(0).endContainer);
-			else if (document.selection)
-				return $(document.selection.createRange().endContainer);
-			return null;
-		},
-		
-		/** @suppress {checkTypes} */
-		selectionNonEmpty: function () {
-			var start = this.selectionStart();
-			var end = this.selectionEnd();
-			return start && end && start.get(0) && end.get(0) && (start.get(0) != end.get(0) || this.selectionStartOffset() != this.selectionEndOffset());
-		},
-		
-		/** @suppress {checkTypes} */
-		selectionContained: function (node) {
-			return node.has(this.selectionStart()).length > 0 && node.has(this.selectionEnd()).length > 0;
-		},
-	
-		/** @suppress {checkTypes} */
-		selectionNodes: function () {
-			var result = [];
-			var start = this.selectionStart();
-			var end = this.selectionEnd();
-			result.push(start);
-			var current = start;
-			while (current.get(0) != end.get(0)) {
-				current = this.traverseNext(current);
-				result.push(current);
-			}
-			return result;
-		},
-		
-		/** @suppress {checkTypes} */
-		selectionLeaves: function () {
-			return Objs.filter(this.selectionNodes(), function (node) { return node.children().length === 0; });
-		},
-		
-		contentSiblings: function (node) {
-			return node.parent().contents().filter(function () {
-				return this != node.get(0);
-			});
-		},
-		
-		remove_tag_from_parent_path: function (node, tag, context) {	
-			tag = tag.toLowerCase();
-			node = $(node);
-			var parents = node.parents(context ? context + " " + tag : tag);
-			for (var i = 0; i < parents.length; ++i) {
-				var parent = parents.get(i);
-				parent = $(parent);
-				while (node.get(0) != parent.get(0)) {
-					this.contentSiblings(node).wrap("<" + tag + "></" + tag + ">");
-					node = node.parent();
-				}
-				parent.contents().unwrap();
-			}
-		},
-		
-		/** @suppress {checkTypes} */
-		selectionSplitOffsets: function () {
-			var startOffset = this.selectionStartOffset();
-			var endOffset = this.selectionEndOffset();
-			var start = this.selectionStart();
-			var end = this.selectionEnd();
-			var single = start.get(0) == end.get(0);
-			if (endOffset < end.get(0).wholeText.length) {
-				var endElem = end.get(0);
-				endElem.splitText(endOffset);
-				end = $(endElem);
-				if (single)
-					start = end;
-			}
-			if (startOffset > 0) {
-				start = $(start.get(0).splitText(startOffset));
-				if (single)
-					end = start;
-			}
-			this.selectRange(start, end);
-		},
-		
-		/** @suppress {checkTypes} */
-		selectRange: function (start_node, end_node, start_offset, end_offset) {
-			start_node = $(start_node);
-			end_node = $(end_node);
-			var selection = null;
-			var range = null;
-			if (window.getSelection) {
-				selection = window.getSelection();
-				selection.removeAllRanges();
-				range = document.createRange();
-			} else if (document.selection) {
-				selection = document.selection;
-				range = selection.createRange();
-			}
-			range.setStart(start_node.get(0), start_offset || 0);
-			range.setEnd(end_node.get(0), end_offset || end_node.get(0).data.length);
-			selection.addRange(range);
-		},
-		
+				
 		splitNode: function (node, start_offset, end_offset) {
-			node = $(node);
 			start_offset = start_offset || 0;
-			end_offset = end_offset || node.get(0).data.length;
-			if (end_offset < node.get(0).data.length) {
-				var elem = node.get(0);
-				elem.splitText(end_offset);
-				node = $(elem);
-			}
+			end_offset = end_offset || (node.wholeText ? node.wholeText.length : 0);
+			if (end_offset < (node.wholeText ? node.wholeText.length : 0))
+				node.splitText(end_offset);
 			if (start_offset > 0) 
-				node = $(node.get(0).splitText(start_offset));
+				node = node.splitText(start_offset);
 			return node;
 		},
 		
-		entitiesToUnicode: function (s) {
-			if (!s || !Types.is_string(s) || s.indexOf("&") < 0)
-				return s;
-			var temp = document.createElement("span");
-			temp.innerHTML = s;
-			s = $(temp).text();
-			if (temp.remove)
-				temp.remove();
-			return s;
-		},
+		__FULLSCREEN_EVENTS: ["fullscreenchange", "webkitfullscreenchange", "mozfullscreenchange", "MSFullscreenChange"],
+		__FULLSCREEN_METHODS: ["requestFullscreen", "webkitRequestFullscreen", "mozRequestFullScreen", "msRequestFullscreen"],
+		__FULLSCREEN_ATTRS: ["fullscreenElement", "webkitFullscreenElement", "mozFullScreenElement", "msFullscreenElement"],
 		
 		elementSupportsFullscreen: function (element) {
-			return [
-			    "requestFullscreen",
-			    "webkitRequestFullscreen",
-			    "mozRequestFullScreen",
-			    "msRequestFullscreen"
-			].some(function (key) {
+			return this.__FULLSCREEN_METHODS.some(function (key) {
 				return key in element;
 			});
 		},
 		
 		elementEnterFullscreen: function (element) {
-			Objs.iter([
-			    "requestFullscreen",
-			    "webkitRequestFullscreen",
-			    "mozRequestFullScreen",
-			    "msRequestFullscreen"
-			], function (key) {
-				if (key in element)
+			var done = false;
+			this.__FULLSCREEN_METHODS.forEach(function (key) {
+				if (!done && (key in element)) {
 					element[key].call(element);
-				return !(key in element);
+					done = true;
+				}
 			});
 		},
 		
 		elementIsFullscreen: function (element) {
-			return [
-			    "fullscreenElement",
-			    "webkitFullscreenElement",
-			    "mozFullScreenElement",
-			    "msFullscreenElement"
-			].some(function (key) {
+			return this.__FULLSCREEN_ATTRS.some(function (key) {
 				return document[key] === element;
 			});
 		},
 		
 		elementOnFullscreenChange: function (element, callback, context) {
 			var self = this;
-			$(element).on([
-			    "fullscreenchange",
-			    "webkitfullscreenchange",
-			    "mozfullscreenchange",
-			    "MSFullscreenChange"
-            ].join(" "), function () {
+			var listener = function () {
 				callback.call(context || this, element, self.elementIsFullscreen(element));
+			};
+			this.__FULLSCREEN_EVENTS.forEach(function (event) {
+				element.addEventListener(event, listener, false);
 			});
+			return listener;
 		},
 		
-		elementOffFullscreenChange: function (element) {
-			$(element).off([
-			    "fullscreenchange",
-			    "webkitfullscreenchange",
-			    "mozfullscreenchange",
-			    "MSFullscreenChange"
-            ].join(" "));
+		elementOffFullscreenChange: function (element, listener) {
+			this.__FULLSCREEN_EVENTS.forEach(function (event) {
+				element.removeEventListener(event, listener, false);
+			});
+		},
+
+		entitiesToUnicode: function (s) {
+			if (!s || !Types.is_string(s) || s.indexOf("&") < 0)
+				return s;
+			var temp = document.createElement("span");
+			temp.innerHTML = s;
+			s = temp.textContent || temp.innerText;
+			if (temp.remove)
+				temp.remove();
+			return s;
+		},
+		
+		unbox: function (element) {
+			return !element || element.nodeType ? element : element.get(0);
+		},
+		
+		triggerDomEvent: function (element, eventName) {
+			element = this.unbox(element);
+			eventName = eventName.toLowerCase();
+			var onEvent = "on" + eventName;
+			var onEventHandler = null;
+			var onEventCalled = false;
+			if (element[onEvent]) {
+				onEventHandler = element[onEvent];
+				element[onEvent] = function () {
+					if (onEventCalled)
+						return;
+					onEventCalled = true;
+					onEventHandler.apply(this, arguments);
+				};
+			}
+			try {
+				var event;
+				try {
+					event = new Event(eventName);
+				} catch (e) {
+					try {
+						event = document.createEvent('Event');
+						event.initEvent(eventName, false, false);
+					} catch (e) {
+						event = document.createEventObject();
+						event.type = eventName;
+					}
+				}
+				element.dispatchEvent(event);
+				if (onEventHandler) {
+					if (!onEventCalled)
+						onEventHandler.call(element, event);
+					element[onEvent] = onEventHandler;
+				}
+			} catch (e) {
+				if (onEventHandler)
+					element[onEvent] = onEventHandler;
+				throw e;
+			}
+		},
+		
+		elementOffset: function (element) {
+			element = this.unbox(element);
+			var top = 0;
+			var left = 0;
+			if (element.getBoundingClientRect) {
+				var box = element.getBoundingClientRect();
+				top = box.top;
+				left = box.left;
+			}
+			docElem = document.documentElement;
+			return {
+				top: top + (window.pageYOffset || docElem.scrollTop) - (docElem.clientTop || 0),
+				left: left + (window.pageXOffset || docElem.scrollLeft) - (docElem.clientLeft || 0)
+			};
+		},
+		
+		elementDimensions: function (element) {
+			element = this.unbox(element);
+			var cs, w, h;
+			if (window.getComputedStyle) {
+				cs = window.getComputedStyle(element);
+				w = parseInt(cs.width, 10);
+				h = parseInt(cs.height, 10);
+				if (w && h) {
+					return {
+						width: w,
+						height: h
+					};
+				}
+			}
+			if (element.currentStyle) {
+				cs = element.currentStyle;
+				w = element.clientWidth - parseInt(cs.paddingLeft || 0, 10) - parseInt(cs.paddingRight || 0, 10);
+				h = element.clientHeight - parseInt(cs.paddingTop || 0, 10) - parseInt(cs.paddingTop || 0, 10);
+				if (w && h) {
+					return {
+						width: w,
+						height: h
+					};
+				}
+			}
+			if (element.getBoundingClientRect) {
+				var box = element.getBoundingClientRect();
+				h = box.bottom - box.top;
+				w = box.right - box.left;
+				return {
+					width: w,
+					height: h
+				};
+			}
+			return {
+				width: 0,
+				height: 0
+			};
 		}
 		
-				
 	};
 });
 Scoped.define("module:DomExtend.DomExtension", [
     "base:Class",
-    "jquery:",
     "base:Objs",
     "base:Functions",
     "base:Async",
+    "module:Dom",
     "module:DomMutation.NodeRemoveObserver",
-    "module:DomMutation.NodeResizeObserver",
-    "jquery:"
-], function (Class, jquery, Objs, Functions, Async, NodeRemoveObserver, NodeResizeObserver, $, scoped) {
+    "module:DomMutation.NodeResizeObserver"
+], function (Class, Objs, Functions, Async, Dom, NodeRemoveObserver, NodeResizeObserver, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -1918,9 +1928,8 @@ Scoped.define("module:DomExtend.DomExtension", [
 			
 			constructor: function (element, attrs) {
 				inherited.constructor.call(this);
-				this._element = element;
-				this._$element = $(element);
-				element.domExtension = this;
+				this._element = Dom.unbox(element);
+				this._element.domExtension = this;
 				this._actualBB = null;
 				this._idealBB = null;
 				this._attrs = attrs || {};
@@ -1931,20 +1940,20 @@ Scoped.define("module:DomExtend.DomExtension", [
 					this._element[method] = Functions.as_method(this[method], this);
 				}, this);
 				Async.eventually(function () {
-					this._nodeRemoveObserver = this.auto_destroy(new NodeRemoveObserver(element));
+					this._nodeRemoveObserver = this.auto_destroy(new NodeRemoveObserver(this._element));
 					this._nodeRemoveObserver.on("node-removed", this.weakDestroy, this);
-					this._nodeResizeObserver = this.auto_destroy(new NodeResizeObserver(element));
+					this._nodeResizeObserver = this.auto_destroy(new NodeResizeObserver(this._element));
 					this._nodeResizeObserver.on("node-resized", function () {
 						this.recomputeBB();
 						this._notify("resized");
 					}, this);
 				}, this);
-				if (!this._$element.css("display") || this._$element.css("display") == "inline")
-					this._$element.css("display", "inline-block");
+				if (!this._element.style.display || this._element.style.display == "inline")
+					this._element.style.display = "inline-block";
 			},
 			
 			domEvent: function (eventName) {
-				this._$element.trigger(eventName);
+				Dom.triggerDomEvent(this._element, eventName);
 			},
 			
 			readAttr: function (key) {
@@ -1987,26 +1996,26 @@ Scoped.define("module:DomExtend.DomExtension", [
 			},
 			
 			computeActualBB: function (idealBB) {
-				var width = this._$element.width();
-				//var height = this._$element.height();
-				if (this._$element.width() < idealBB.width && !this._element.style.width) {
+				var width = Dom.elementDimensions(this._element).width;
+				//var height = Dom.elementDimensions(this._element).height;
+				if (width < idealBB.width && !this._element.style.width) {
 					this._element.style.width = idealBB.width + "px";
-					width = this._$element.width();
-					var current = this._$element;
-					while (current.get(0) != document) {
-						current = current.parent();
-						width = Math.min(width, current.width());
+					width = Dom.elementDimensions(this._element).width;
+					var current = this._element;
+					while (current != document.body) {
+						current = current.parentNode;
+						width = Math.min(width, Dom.elementDimensions(current).width);
 					}
 					this._element.style.width = null;
 				}
 				/*
-				if (this._$element.height() < idealBB.height && !this._element.style.height) {
+				if (height < idealBB.height && !this._element.style.height) {
 					this._element.style.height = idealBB.height + "px";
-					height = this._$element.height();
-					var current = this._$element;
-					while (current.get(0) != document) {
-						current = current.parent();
-						height = Math.min(height, current.height());
+					height = Dom.elementDimensions(this._element).height;
+					var current = this._element;
+					while (current != document) {
+						current = current.parentNode;
+						height = Math.min(height, Dom.elementDimensions(current).height);
 					}
 					this._element.style.height = null;
 				}
@@ -2110,22 +2119,17 @@ Scoped.define("module:DomMutation.MutationObserverNodeRemoveObserver", [
 Scoped.define("module:DomMutation.DOMNodeRemovedNodeRemoveObserver", [
 	"module:DomMutation.NodeRemoveObserver",
 	"module:Info",
-	"jquery:"
-], function (Observer, Info, $, scoped) {
+	"module:Events"
+], function (Observer, Info, Events, scoped) {
 	return Observer.extend({scoped: scoped}, function (inherited) {
 		return {
 			
 			constructor: function (node) {
 				inherited.constructor.call(this, node);
-				var self = this;
-				$(document).on("DOMNodeRemoved." + this.cid(), function (event) {
-					self._nodeRemoved(event.target);
-				});
-			},
-			
-			destroy: function () {
-				$(document).off("DOMNodeRemoved." + this.cid());
-				inherited.destroy.call(this);
+				var events = this.auto_destroy(new Events());
+				events.on(document, "DOMNodeRemoved", function (event) {
+					this._nodeRemoved(event.target);
+				}, this);
 			}
 			
 		};
@@ -2143,9 +2147,8 @@ Scoped.define("module:DomMutation.DOMNodeRemovedNodeRemoveObserver", [
 
 Scoped.define("module:DomMutation.TimerNodeRemoveObserver", [
   	"module:DomMutation.NodeRemoveObserver",
-  	"base:Timers.Timer",
-  	"jquery:"
-], function (Observer, Timer, $, scoped) {
+  	"base:Timers.Timer"
+], function (Observer, Timer, scoped) {
 	return Observer.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -2197,22 +2200,17 @@ Scoped.extend("module:DomMutation.NodeRemoveObserver", [
 Scoped.define("module:DomMutation.NodeResizeObserver", [
     "base:Class",
     "base:Events.EventsMixin",
-    "jquery:"
-], function (Class, EventsMixin, $, scoped) {
+    "module:Events"
+], function (Class, EventsMixin, Events, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 			
 			constructor: function (node) {
 				inherited.constructor.call(this);
-				var self = this;
-				$(window).on("resize." + this.cid(), function () {
-					self._resized();
-				});
-			},
-			
-			destroy: function () {
-				$(window).off("." + this.cid());
-				inherited.destroy.call(this);
+				var events = this.auto_destroy(new Events());
+				events.on(window, "resize", function (event) {
+					this._resized();
+				}, this);
 			},
 			
 			_resized: function () {
@@ -2296,23 +2294,18 @@ Scoped.define("module:DomMutation.MutationObserverNodeInsertObserver", [
 
 Scoped.define("module:DomMutation.DOMNodeInsertedNodeInsertObserver", [
 	"module:DomMutation.NodeInsertObserver",
-	"jquery:"
-], function (Observer, $, scoped) {
+	"module:Events"
+], function (Observer, Events, scoped) {
 	return Observer.extend({scoped: scoped}, function (inherited) {
 		return {
 			
 			constructor: function (options) {
 				options = options || {};
 				inherited.constructor.call(this, options);
-				var self = this;
-				$(document).on("DOMNodeInserted." + this.cid(), function (event) {
-					self._nodeInserted(event.target);
-				});
-			},
-			
-			destroy: function () {
-				$(document).off("DOMNodeInserted." + this.cid());
-				inherited.destroy.call(this);
+				var events = this.auto_destroy(new Events());
+				events.on(document, "DOMNodeInserted", function (event) {
+					this._nodeInserted(event.target, true);
+				}, this);
 			}
 			
 		};
@@ -2334,6 +2327,279 @@ Scoped.extend("module:DomMutation.NodeInsertObserver", [
 	Observer.register(MutationObserverNodeInsertObserver, 3);
 	Observer.register(DOMNodeInsertedNodeInsertObserver, 2);
 	return {};
+});
+
+Scoped.define("module:Selection", [
+    "module:Dom"
+], function (Dom) {
+	return {
+		
+		/** @suppress {checkTypes} */
+		selectNode : function(node, offset) {
+			var selection = null;
+			var range = null;
+			if (window.getSelection) {
+				selection = window.getSelection();
+				selection.removeAllRanges();
+				range = document.createRange();
+			} else if (document.selection) {
+				selection = document.selection;
+				range = selection.createRange();
+			}
+			if (offset) {
+				range.setStart(node, offset);
+				range.setEnd(node, offset);
+				selection.addRange(range);
+			} else {
+				range.selectNode(node);
+				selection.addRange(range);
+			}
+		},
+	
+		/** @suppress {checkTypes} */
+		selectedHtml : function() {
+			if (window.getSelection)
+				return window.getSelection().toString();
+			else if (document.selection)
+				return document.selection.createRange().htmlText;
+			return "";
+		},
+		
+		/** @suppress {checkTypes} */
+		selectionStartOffset: function () {
+			if (window.getSelection)
+				return window.getSelection().getRangeAt(0).startOffset;
+			else if (document.selection)
+				return document.selection.createRange().startOffset;
+			return null;
+		},
+		
+		/** @suppress {checkTypes} */
+		selectionEndOffset: function () {
+			if (window.getSelection)
+				return window.getSelection().getRangeAt(0).endOffset;
+			else if (document.selection)
+				return document.selection.createRange().endOffset;
+			return null;
+		},
+	
+		/** @suppress {checkTypes} */
+		selectionNonEmpty: function () {
+			var start = this.selectionStart();
+			var end = this.selectionEnd();
+			return start && end && start && end && (start != end || this.selectionStartOffset() != this.selectionEndOffset());
+		},
+		
+		/** @suppress {checkTypes} */
+		selectionContained: function (node) {
+			return node.contains(this.selectionStart()) && node.contains(this.selectionEnd());
+		},
+	
+		/** @suppress {checkTypes} */
+		selectionNodes: function () {
+			var result = [];
+			var start = this.selectionStart();
+			var end = this.selectionEnd();
+			result.push(start);
+			var current = start;
+			while (current != end) {
+				current = Dom.traverseNext(current);
+				result.push(current);
+			}
+			return result;
+		},
+		
+		/** @suppress {checkTypes} */
+		selectionLeaves: function () {
+			return this.selectionNodes().filter(function (node) {
+				return !node.hasChildNodes();
+			});
+		},
+				
+		/** @suppress {checkTypes} */
+		selectionStartNode : function() {
+			if (window.getSelection)
+				return window.getSelection().getRangeAt(0).startContainer;
+			else if (document.selection)
+				return document.selection.createRange().startContainer;
+			return null;
+		},
+		
+		/** @suppress {checkTypes} */
+		selectionAncestor : function() {
+			if (window.getSelection)
+				return window.getSelection().getRangeAt(0).commonAncestorContainer;
+			else if (document.selection)
+				return document.selection.createRange().parentElement();
+			return null;
+		},
+		
+		/** @suppress {checkTypes} */
+		selectionStart : function() {
+			if (window.getSelection)
+				return window.getSelection().getRangeAt(0).startContainer;
+			else if (document.selection)
+				return document.selection.createRange().startContainer;
+			return null;
+		},
+	
+		/** @suppress {checkTypes} */
+		selectionEnd : function() {
+			if (window.getSelection)
+				return window.getSelection().getRangeAt(0).endContainer;
+			else if (document.selection)
+				return document.selection.createRange().endContainer;
+			return null;
+		},
+		
+		/** @suppress {checkTypes} */
+		selectionSplitOffsets: function () {
+			var startOffset = this.selectionStartOffset();
+			var endOffset = this.selectionEndOffset();
+			var start = this.selectionStart();
+			var end = this.selectionEnd();
+			var single = start == end;
+			if (endOffset < end.wholeText.length) {
+				end.splitText(endOffset);
+				if (single)
+					start = end;
+			}
+			if (startOffset > 0) {
+				start = start.splitText(startOffset);
+				if (single)
+					end = start;
+			}
+			this.selectRange(start, end);
+		},
+		
+		/** @suppress {checkTypes} */
+		selectRange: function (start_node, end_node, start_offset, end_offset) {
+			var selection = null;
+			var range = null;
+			if (window.getSelection) {
+				selection = window.getSelection();
+				selection.removeAllRanges();
+				range = document.createRange();
+			} else if (document.selection) {
+				selection = document.selection;
+				range = selection.createRange();
+			}
+			range.setStart(start_node, start_offset || 0);
+			range.setEnd(end_node, end_offset || end_node.data.length);
+			selection.addRange(range);
+		}
+						
+	};
+});
+
+
+Scoped.define("module:Upload.ChunkedFileUploader", [
+     "module:Upload.FileUploader",
+     "module:Upload.MultiUploader",
+     "module:Blobs",
+     "base:Promise",
+     "base:Objs",
+     "base:Tokens",
+     "base:Ajax.Support"
+], function (FileUploader, MultiUploader, Blobs, Promise, Objs, Tokens, AjaxSupport, scoped) {
+	
+	return FileUploader.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (options) {
+				inherited.constructor.call(this, options);
+				this._multiUploader = new MultiUploader({
+					uploadLimit: this._options.uploadLimit
+				});
+				this._options.identifierParameter = this._options.identifierParameter || "identifier";
+				this._options.chunks = Objs.extend({
+					size: 1000000,
+					chunkNumberParameter: "chunknumber"
+				}, this._options.chunks);
+				this._options.assembly = Objs.extend({
+					fileNameParameter: "filename",
+					totalSizeParameter: "totalsize",
+					chunkNumberParameter: "chunknumber",
+					fileTypeParameter: "filetype",
+					ajaxOptions: null
+				}, this._options.assembly);
+			},
+
+			destroy: function () {
+				this._multiUploader.destroy();
+				inherited.destroy.call(this);
+			},
+			
+			reset: function () {
+				inherited.reset.call(this);
+				this._multiUploader.destroy();
+				this._multiUploader = new MultiUploader({
+					uploadLimit: this._options.uploadLimit
+				});
+			},
+			
+			__generateIdentifier: function () {
+				return Tokens.generate_token();
+			},
+		
+			_upload: function () {
+				var identifier = this.__generateIdentifier();
+				var file = this._options.isBlob ? this._options.source : this._options.source.files[0];
+				var fileReader = new FileReader();
+				var arrayBufferPromise = Promise.create();
+				fileReader.onloadend = function (e) {
+					arrayBufferPromise.asyncSuccess(e.target.result);
+				};
+				fileReader.readAsArrayBuffer(file);
+				arrayBufferPromise.success(function (arrayBuffer) {
+					var chunkNumber = 0;
+					while (chunkNumber * this._options.chunks.size < file.size) {
+						var data = {};
+						data[this._options.chunks.chunkNumberParameter] = chunkNumber+1;
+						data[this._options.identifierParameter] = identifier;
+						var offset = chunkNumber * this._options.chunks.size;
+						var size = Math.min(this._options.chunks.size, file.size - offset);
+						this._multiUploader.addUploader(this._multiUploader.auto_destroy(FileUploader.create({
+							url: this._options.chunks.url || this._options.url,
+							source: Blobs.createBlobByArrayBufferView(arrayBuffer, offset, size, file.type),
+							data: Objs.extend(data, this._options.data)
+						})));
+						chunkNumber++;
+					}
+					this._multiUploader.on("error", function (error) {
+						this._errorCallback(error);
+					}, this).on("progress", function (uploaded, total) {
+						this._progressCallback(uploaded, total);
+					}, this).on("success", function () {
+						var data = {};
+						data[this._options.identifierParameter] = identifier;
+						data[this._options.assembly.fileNameParameter] = file.name || "blob";
+						data[this._options.assembly.totalSizeParameter] = file.size;
+						data[this._options.assembly.chunkNumberParameter] = chunkNumber;
+						data[this._options.assembly.fileTypeParameter] = file.type;
+						AjaxSupport.execute(Objs.extend({
+							method: "POST",
+							uri: this._options.assembly.url || this._options.url,
+							data: Objs.extend(data, this._options.data)
+						}, this._options.assembly.ajaxOptions)).success(function () {
+							this._successCallback();
+						}, this).error(function (error) {
+							this._errorCallback(error);
+						}, this);
+					}, this);
+					this._multiUploader.upload();
+				}, this);
+			}
+			
+		};
+	}, {
+		
+		supported: function (options) {
+			return typeof Blob !== "undefined" && typeof FileReader !== "undefined" && typeof DataView !== "undefined" && options.serverSupportsChunked;
+		}
+		
+	});	
+
 });
 
 
@@ -2383,8 +2649,10 @@ Scoped.define("module:Upload.FileUploader", [
     "base:Classes.ConditionalInstance",
     "base:Events.EventsMixin",
     "base:Objs",
-    "base:Types"
-], function (ConditionalInstance, EventsMixin, Objs, Types, scoped) {
+    "base:Types",
+    "base:Async",
+    "base:Promise"
+], function (ConditionalInstance, EventsMixin, Objs, Types, Async, Promise, scoped) {
 	return ConditionalInstance.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 			
@@ -2458,12 +2726,26 @@ Scoped.define("module:Upload.FileUploader", [
 				if (this.state() !== "uploading")
 					return;
 				if (this._options.resilience > 0) {
-					this.__upload();
+					Async.eventually(function () {
+						this.__upload();
+					}, this, this._options.resilience_delay);					
+					return;
+				}
+				if (!this._options.essential) {
+					this._successCallback({});
 					return;
 				}
 				this._data = data;
 				this._setState("error", data);
-			}
+			},
+			
+			uploadedBytes: function () {
+				return this._uploaded;
+			},
+			
+			totalBytes: function () {
+				return this._total || (this._options.isBlob ? this._options.source : this._options.source.files[0]).size;
+			}			
 			
 		};
 	}], {
@@ -2477,6 +2759,8 @@ Scoped.define("module:Upload.FileUploader", [
 				serverSupportPostMessage: false,
 				isBlob: typeof Blob !== "undefined" && options.source instanceof Blob,
 				resilience: 1,
+				resilience_delay: 1000,
+				essential: true,
 				data: {}
 			}, options);
 		}
@@ -2509,10 +2793,29 @@ Scoped.define("module:Upload.CustomUploader", [
 	});	
 });
 
+
+
+Scoped.extend("module:Upload.FileUploader", [
+	"module:Upload.FileUploader",
+	"module:Upload.FormDataFileUploader",
+	"module:Upload.FormIframeFileUploader",
+	"module:Upload.CordovaFileUploader",
+	"module:Upload.ChunkedFileUploader"
+], function (FileUploader, FormDataFileUploader, FormIframeFileUploader, CordovaFileUploader, ChunkedFileUploader) {
+	FileUploader.register(FormDataFileUploader, 2);
+	FileUploader.register(FormIframeFileUploader, 1);
+	FileUploader.register(CordovaFileUploader, 4);
+	FileUploader.register(ChunkedFileUploader, 5);
+	return {};
+});
+
+
+
+
 Scoped.define("module:Upload.FormDataFileUploader", [
     "module:Upload.FileUploader",
     "module:Info",
-    "base:Ajax.Support:",
+    "base:Ajax.Support",
     "base:Objs"
 ], function (FileUploader, Info, AjaxSupport, Objs, scoped) {
 	return FileUploader.extend({scoped: scoped}, {
@@ -2547,11 +2850,13 @@ Scoped.define("module:Upload.FormDataFileUploader", [
 
 
 
+
 Scoped.define("module:Upload.FormIframeFileUploader", [
      "module:Upload.FileUploader",
      "base:Net.Uri",
-     "base:Objs"
-], function (FileUploader, Uri, Objs, scoped) {
+     "base:Objs",
+     "base:Async"
+], function (FileUploader, Uri, Objs, Async, scoped) {
 	return FileUploader.extend({scoped: scoped}, {
 		
 		_upload: function () {
@@ -2569,6 +2874,8 @@ Scoped.define("module:Upload.FormIframeFileUploader", [
 			document.body.appendChild(form);
 			var oldParent = this._options.source.parent;
 			form.appendChild(this._options.source);
+			if (!this._options.source.name)
+				this._options.source.name = "file";
 			Objs.iter(this._options.data, function (value, key) {
 				var input = document.createElement("input");
 				input.type = "hidden";
@@ -2584,7 +2891,7 @@ Scoped.define("module:Upload.FormIframeFileUploader", [
 			iframe.onerror = function () {
 				if (post_message_fallback)
 					window.postMessage = null;
-				window.removeEventListener("message", message_event_handler);
+				window.removeEventListener("message", message_event_handler, false);
 				if (oldParent)
 					oldParent.appendChild(self._options.source);
 				document.body.removeChild(form);
@@ -2596,15 +2903,17 @@ Scoped.define("module:Upload.FormIframeFileUploader", [
 			handle_success = function (raw_data) {
 				if (post_message_fallback)
 					window.postMessage = null;
-				window.removeEventListener("message", message_event_handler);
 				if (oldParent)
 					oldParent.appendChild(self._options.source);
-				var data = JSON.parse(raw_data);
 				document.body.removeChild(form);
 				document.body.removeChild(iframe);
+				var data = JSON.parse(raw_data);
 				self._successCallback(data);
+				Async.eventually(function () {
+					window.removeEventListener("message", message_event_handler, false);
+				});
 			};
-			window.addEventListener("message", message_event_handler);
+			window.addEventListener("message", message_event_handler, false);
 			if (post_message_fallback) 
 				window.postMessage = handle_success;
 			form.submit();
@@ -2621,21 +2930,6 @@ Scoped.define("module:Upload.FormIframeFileUploader", [
 
 
 
-
-Scoped.extend("module:Upload.FileUploader", [
-	"module:Upload.FileUploader",
-	"module:Upload.FormDataFileUploader",
-	"module:Upload.FormIframeFileUploader",
-	"module:Upload.CordovaFileUploader"
-], function (FileUploader, FormDataFileUploader, FormIframeFileUploader, CordovaFileUploader) {
-	FileUploader.register(FormDataFileUploader, 2);
-	FileUploader.register(FormIframeFileUploader, 1);
-	FileUploader.register(CordovaFileUploader, 4);
-	return {};
-});
-
-
-
 Scoped.define("module:Upload.MultiUploader", [
     "module:Upload.FileUploader",
     "base:Objs"
@@ -2646,6 +2940,14 @@ Scoped.define("module:Upload.MultiUploader", [
 			constructor: function (options) {
 				inherited.constructor.call(this, options);
 				this._uploaders = {};
+				this._uploadLimit = this._options.uploadLimit || 5;
+				this._uploadingCount = 0;
+				this._end = !this._options.manualEnd;
+			},
+			
+			end: function () {
+				this._end = true;
+				this._updateState();
 			},
 			
 			addUploader: function (uploader) {
@@ -2655,8 +2957,10 @@ Scoped.define("module:Upload.MultiUploader", [
 				if (this.state() === "uploading") {
 					if (uploader.state() === "error")
 						uploader.reset();
-					if (uploader.state() === "idle")
+					if (uploader.state() === "idle" && this._uploadingCount < this._uploadLimit) {
+						this._uploadingCount++;
 						uploader.upload();
+					}
 				}
 				return this;
 			},
@@ -2665,8 +2969,10 @@ Scoped.define("module:Upload.MultiUploader", [
 				Objs.iter(this._uploaders, function (uploader) {
 					if (uploader.state() === "error")
 						uploader.reset();
-					if (uploader.state() === "idle")
+					if (uploader.state() === "idle" && this._uploadingCount < this._uploadLimit) {
+						this._uploadingCount++;
 						uploader.upload();
+					}
 				}, this);
 				this._updateState();
 			},
@@ -2674,21 +2980,41 @@ Scoped.define("module:Upload.MultiUploader", [
 			_updateState: function () {
 				if (this.state() !== "uploading")
 					return;
-				var success = 0;
+				this._uploadingCount = 0;
 				var error = false;
-				var uploading = false;
+				var idleCount = 0;
 				Objs.iter(this._uploaders, function (uploader) {
-					uploading = uploading || uploader.state() === "uploading";
-					error = error || uploader.state() === "error";
+					switch (uploader.state()) {
+						case "uploading":
+							this._uploadingCount++;
+							break;
+						case "error":
+							error = true;
+							break;
+						case "idle":
+							idleCount++;
+							break;
+					}
 				}, this);
-				if (uploading)
+				if (idleCount > 0 && this._uploadingCount < this._uploadLimit) {
+					Objs.iter(this._uploaders, function (uploader) {
+						if (this._uploadingCount < this._uploadLimit && uploader.state() === "idle") {
+							uploader.upload();
+							idleCount--;
+							this._uploadingCount++;
+						}
+					}, this);
+				}
+				if (this._uploadingCount > 0)
+					return;
+				if (!this._end)
 					return;
 				var datas = [];
 				Objs.iter(this._uploaders, function (uploader) {
 					var result = (error && uploader.state() === "error") || (!error && uploader.state() === "success") ? uploader.data() : undefined;
 					datas.push(result);
 				}, this);
-				if (error)
+				if (error > 0)
 					this._errorCallback(datas);
 				else
 					this._successCallback(datas);
@@ -2697,23 +3023,23 @@ Scoped.define("module:Upload.MultiUploader", [
 			_updateProgress: function () {
 				if (this.state() !== "uploading")
 					return;
-				var total = 0;
+				this._progressCallback(this.uploadedBytes(), this.totalBytes());
+			},
+			
+			uploadedBytes: function () {
 				var uploaded = 0;
 				Objs.iter(this._uploaders, function (uploader) {
-					var state = uploader.state();
-					var progress = uploader.progress();
-					if (progress && progress.total) {
-						if (uploader.state() === "success") {
-							total += progress.total;
-							uploaded += progress.total;
-						}
-						if (uploader.state() === "uploading") {
-							total += progress.total;
-							uploaded += progress.uploaded;
-						}
-					}
+					uploaded += uploader.uploadedBytes();
 				}, this);
-				this._progressCallback(uploaded, total);
+				return uploaded;
+			},
+			
+			totalBytes: function () {
+				var total = 0;
+				Objs.iter(this._uploaders, function (uploader) {
+					total += uploader.totalBytes();
+				}, this);
+				return total;
 			}
 
 		};
@@ -2722,85 +3048,108 @@ Scoped.define("module:Upload.MultiUploader", [
 
 
 
-Scoped.define("module:Upload.ResumableFileUploader", [
-    "module:Upload.FileUploader",
-    "resumablejs:",
-    "base:Async",
-    "base:Objs",
-    "jquery:"
-], function (FileUploader, ResumableJS, Async, Objs, $, scoped) {
-	return FileUploader.extend({scoped: scoped}, {
+
+Scoped.define("module:Upload.StreamingFileUploader", [
+     "module:Upload.FileUploader",
+     "module:Upload.MultiUploader",
+     "base:Promise",
+     "base:Objs",
+     "base:Tokens",
+     "base:Ajax.Support"
+], function (FileUploader, MultiUploader, Promise, Objs, Tokens, AjaxSupport, scoped) {
+	
+	return FileUploader.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function (options) {
+				inherited.constructor.call(this, options);
+				this._multiUploader = new MultiUploader({
+					uploadLimit: this._options.uploadLimit,
+					manualEnd: true
+				});
+				this._options.identifierParameter = this._options.identifierParameter || "identifier";
+				this._options.chunks = Objs.extend({
+					chunkNumberParameter: "chunknumber"
+				}, this._options.chunks);
+				this._options.assembly = Objs.extend({
+					totalSizeParameter: "totalsize",
+					chunkNumberParameter: "chunknumber",
+					ajaxOptions: null
+				}, this._options.assembly);
+				this._identifier = this.__generateIdentifier();
+				this._chunkNumber = 0;
+				this._totalSize = 0;
+			},
+
+			destroy: function () {
+				this._multiUploader.destroy();
+				inherited.destroy.call(this);
+			},
+			
+			reset: function () {
+				inherited.reset.call(this);
+				this._multiUploader.destroy();
+				this._multiUploader = new MultiUploader({
+					uploadLimit: this._options.uploadLimit
+				});
+				this._identifier = this.__generateIdentifier();
+				this._chunkNumber = 0;
+				this._totalSize = 0;
+			},
+			
+			__generateIdentifier: function () {
+				return Tokens.generate_token();
+			},
+			
+			addChunk: function (blob) {
+				var data = {};
+				data[this._options.chunks.chunkNumberParameter] = this._chunkNumber+1;
+				data[this._options.identifierParameter] = this._identifier;
+				this._multiUploader.addUploader(this._multiUploader.auto_destroy(FileUploader.create({
+					url: this._options.chunks.url || this._options.url,
+					source: blob,
+					data: Objs.extend(data, this._options.data)
+				})));
+				this._chunkNumber++;
+				this._totalSize += blob.size;
+			},
+			
+			end: function () {
+				this._multiUploader.end();
+			},
 		
-		_upload: function () {
-			this._resumable = new ResumableJS(Objs.extend({
-				target: this._options.url,
-				headers: this._options.data
-			}, this._options.resumable));
-			if (this._options.isBlob)
-				this._options.source.fileName = "blob";
-			this._resumable.addFile(this._options.isBlob ? this._options.source : this._options.source.files[0]);
-			var self = this;
-			this._resumable.on("fileProgress", function (file) {
-				var size = self._resumable.getSize();
-				self._progressCallback(Math.floor(self._resumable.progress() * size), size);
-			});
-			this._resumable.on("fileSuccess", function (file, message) {
-				if (self._options.resumable.assembleUrl)
-					self._resumableSuccessCallback(file, message, self._options.resumable.assembleResilience || 1);
-				else
-					self._successCallback(message);
-			});
-			this._resumable.on("fileError", function (file, message) {
-				self._errorCallback(message);
-			});
-			Async.eventually(this._resumable.upload, this._resumable);
-		},
-		
-		_resumableSuccessCallback: function (file, message, resilience) {
-			if (resilience <= 0)
-				this._errorCallback(message);
-			var self = this;
-			$.ajax({
-				type: "POST",
-				async: true,
-				url: this._options.resumable.assembleUrl,
-				dataType: null, 
-				data: Objs.extend({
-					resumableIdentifier: file.file.uniqueIdentifier,
-					resumableFilename: file.file.fileName || file.file.name,
-					resumableTotalSize: file.file.size,
-					resumableType: file.file.type
-				}, this._options.data),
-				success: function (response) {
-					self._successCallback(message);
-				},
-				error: function (jqXHR, textStatus, errorThrown) {
-					if (self._options.resumable.acceptedAssembleError && self._options.resumable.acceptedAssembleError == jqXHR.status) {
-						self._successCallback(message);
-						return;
-					}
-					Async.eventually(function () {
-						self._resumableSuccessCallback(file, message, resilience - 1);
-					}, self._options.resumable.assembleResilienceTimeout || 0);
-				}
-			});
-		}
-		
+			_upload: function () {
+				this._multiUploader.on("error", function (error) {
+					this._errorCallback(error);
+				}, this).on("progress", function (uploaded, total) {
+					this._progressCallback(uploaded, total);
+				}, this).on("success", function () {
+					var data = {};
+					data[this._options.identifierParameter] = this._identifier;
+					data[this._options.assembly.totalSizeParameter] = this._totalSize;
+					data[this._options.assembly.chunkNumberParameter] = this._chunkNumber;
+					AjaxSupport.execute(Objs.extend({
+						method: "POST",
+						uri: this._options.assembly.url || this._options.url,
+						data: Objs.extend(data, this._options.data)
+					}, this._options.assembly.ajaxOptions)).success(function () {
+						this._successCallback();
+					}, this).error(function (error) {
+						this._errorCallback(error);
+					}, this);
+				}, this);
+				this._multiUploader.upload();
+			}
+			
+		};
 	}, {
 		
 		supported: function (options) {
-			return options.serverSupportChunked && (new ResumableJS()).support;
+			return typeof Blob !== "undefined" && options.serverSupportsChunked;
 		}
-		
-	});	
-});
 
-Scoped.extend("module:Upload.FileUploader", [
-	"module:Upload.FileUploader",
-	"module:Upload.ResumableFileUploader"
-], function (FileUploader, ResumableFileUploader) {
- 	FileUploader.register(ResumableFileUploader, 3);
- 	return {};
+	});	
+
 });
 
 }).call(Scoped);
