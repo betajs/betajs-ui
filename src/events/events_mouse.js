@@ -18,8 +18,9 @@ Scoped.define("module:Events.Mouse", ["browser:Info"], function (Info) {
 		},
 				
 		customCoords: function (event, type, multi) {
-			if (event.originalEvent.touches && event.originalEvent.touches.length) {
-				var touches = event.originalEvent.touches;
+			event = event.originalEvent ? event.originalEvent : event;
+			if (event.touches && event.touches.length) {
+				var touches = event.touches;
 				if (multi) {
 					var touch_coords = [];
 					for (var i = 0; i < touches.length; ++i) {

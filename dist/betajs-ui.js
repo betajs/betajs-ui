@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.18 - 2016-12-04
+betajs-ui - v1.0.20 - 2016-12-10
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.18 - 2016-12-04
+betajs-ui - v1.0.20 - 2016-12-10
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1019,7 +1019,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "70.1480885720289"
+    "version": "71.1481406855407"
 };
 });
 Scoped.assumeVersion('base:version', 474);
@@ -1396,8 +1396,9 @@ Scoped.define("module:Events.Mouse", ["browser:Info"], function (Info) {
 		},
 				
 		customCoords: function (event, type, multi) {
-			if (event.originalEvent.touches && event.originalEvent.touches.length) {
-				var touches = event.originalEvent.touches;
+			event = event.originalEvent ? event.originalEvent : event;
+			if (event.touches && event.touches.length) {
+				var touches = event.touches;
 				if (multi) {
 					var touch_coords = [];
 					for (var i = 0; i < touches.length; ++i) {
@@ -1928,27 +1929,26 @@ Scoped.define("module:Gestures.defaultGesture", [
 	};
 });
 Scoped.define("module:Hardware.MouseCoords", [
-	    "base:Ids",
-	    "base:Objs",
-	    "jquery:",
-	    "module:Events.Mouse"
-	], function (Ids, Objs, $, MouseEvents) {
+    "base:Ids",
+    "base:Objs",
+    "browser:Events",
+    "module:Events.Mouse"
+], function (Ids, Objs, DomEvents, MouseEvents) {
 	return {		
 			
 		__required: 0,
+		
+		__domevents: null,
 		
 		coords: {x: 0, y: 0},
 			
 		require: function () {
 			if (this.__required === 0) {
-				var self = this;
-				var events = [MouseEvents.moveEvent(), MouseEvents.upEvent(), MouseEvents.downEvent()];
-				Objs.iter(events, function (eventName) {
-					$("body").on(eventName + "." + Ids.objectId(this), function (event) {
-						var result = MouseEvents.pageCoords(event);
-						if (result.x && result.y)
-							self.coords = result; 
-					});
+				this.__domevents = new DomEvents();
+				this.__domevents.on(document.body, [MouseEvents.moveEvent(), MouseEvents.upEvent(), MouseEvents.downEvent()].join(" "), function (event) {
+					var result = MouseEvents.pageCoords(event);
+					if (result.x && result.y)
+						this.coords = result; 
 				}, this);
 			}
 			this.__required++;
@@ -1956,9 +1956,8 @@ Scoped.define("module:Hardware.MouseCoords", [
 		
 		unrequire: function () {
 			this.__required--;
-			if (this.__required === 0) {
-				$("body").off("." + Ids.objectId(this));
-			}
+			if (this.__required === 0)
+				this.__domevents.destroy();
 		}
 		
 	};
