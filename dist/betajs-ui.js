@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.20 - 2016-12-10
+betajs-ui - v1.0.21 - 2016-12-12
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.20 - 2016-12-10
+betajs-ui - v1.0.21 - 2016-12-12
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1019,7 +1019,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "71.1481406855407"
+    "version": "72.1481521444849"
 };
 });
 Scoped.assumeVersion('base:version', 474);
@@ -1595,11 +1595,12 @@ Scoped.define("module:Gestures.ElementState", [
 
 
 Scoped.define("module:Gestures.ElementEvent", [
- 	    "base:Class",
- 	    "base:Ids",
- 	    "base:Objs",
- 	    "jquery:"
- 	], function (Class, Ids, Objs, $, scoped) {
+    "base:Class",
+    "base:Ids",
+    "base:Objs",
+    "browser:Events",
+    "browser:Dom"
+], function (Class, Ids, Objs, DomEvents, Dom, scoped) {
  	return Class.extend({scoped: scoped}, function (inherited) {
  		return {
 		    
@@ -1608,6 +1609,7 @@ Scoped.define("module:Gestures.ElementEvent", [
 		        this._element = element;
 		        this._callback = callback;
 		        this._context = context;
+		        this._domevents = this.auto_destroy(new DomEvents());
 		    },
 		    
 		    callback: function () {
@@ -1616,20 +1618,10 @@ Scoped.define("module:Gestures.ElementEvent", [
 		    },
 		    
 		    on: function (event, func, context, element) {
-		        var self = this;
-		        var events = event.split(" ");
-		        element = element || this._element;
-		        Objs.iter(events, function (eventName) {
-		            element.on(eventName + "." + Ids.objectId(this), function (event) {
-		                func.call(context || self, event);
-		            });
-		        }, this);
-		    },
-		
-		    destroy: function () {
-		        this._element.off("." + Ids.objectId(this));
-		        $("body").off("." + Ids.objectId(this));
-		        inherited.destroy.call(this);
+		    	element = Dom.unbox(element || this._element);
+		    	event.split(" ").forEach(function (eventName) {
+		    		this._domevents.on(element, eventName, func, context || this);
+		    	}, this);
 		    }
 		
  		};
@@ -1653,7 +1645,7 @@ Scoped.define("module:Gestures.ElementTriggerEvent", ["module:Gestures.ElementEv
 });
 
 
-Scoped.define("module:Gestures.BodyTriggerEvent", ["module:Gestures.ElementEvent", "jquery:"], function (ElementEvent, $, scoped) {
+Scoped.define("module:Gestures.BodyTriggerEvent", ["module:Gestures.ElementEvent"], function (ElementEvent, scoped) {
 	return ElementEvent.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -1661,7 +1653,7 @@ Scoped.define("module:Gestures.BodyTriggerEvent", ["module:Gestures.ElementEvent
 		        inherited.constructor.call(this, element, callback, context);
 		        this.on(ev, function () {
 		            this.callback();
-		        }, this, $("body"));
+		        }, this, document.body);
 		    }
 		
 		};

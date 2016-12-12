@@ -109,11 +109,12 @@ Scoped.define("module:Gestures.ElementState", [
 
 
 Scoped.define("module:Gestures.ElementEvent", [
- 	    "base:Class",
- 	    "base:Ids",
- 	    "base:Objs",
- 	    "jquery:"
- 	], function (Class, Ids, Objs, $, scoped) {
+    "base:Class",
+    "base:Ids",
+    "base:Objs",
+    "browser:Events",
+    "browser:Dom"
+], function (Class, Ids, Objs, DomEvents, Dom, scoped) {
  	return Class.extend({scoped: scoped}, function (inherited) {
  		return {
 		    
@@ -122,6 +123,7 @@ Scoped.define("module:Gestures.ElementEvent", [
 		        this._element = element;
 		        this._callback = callback;
 		        this._context = context;
+		        this._domevents = this.auto_destroy(new DomEvents());
 		    },
 		    
 		    callback: function () {
@@ -130,20 +132,10 @@ Scoped.define("module:Gestures.ElementEvent", [
 		    },
 		    
 		    on: function (event, func, context, element) {
-		        var self = this;
-		        var events = event.split(" ");
-		        element = element || this._element;
-		        Objs.iter(events, function (eventName) {
-		            element.on(eventName + "." + Ids.objectId(this), function (event) {
-		                func.call(context || self, event);
-		            });
-		        }, this);
-		    },
-		
-		    destroy: function () {
-		        this._element.off("." + Ids.objectId(this));
-		        $("body").off("." + Ids.objectId(this));
-		        inherited.destroy.call(this);
+		    	element = Dom.unbox(element || this._element);
+		    	event.split(" ").forEach(function (eventName) {
+		    		this._domevents.on(element, eventName, func, context || this);
+		    	}, this);
 		    }
 		
  		};
@@ -167,7 +159,7 @@ Scoped.define("module:Gestures.ElementTriggerEvent", ["module:Gestures.ElementEv
 });
 
 
-Scoped.define("module:Gestures.BodyTriggerEvent", ["module:Gestures.ElementEvent", "jquery:"], function (ElementEvent, $, scoped) {
+Scoped.define("module:Gestures.BodyTriggerEvent", ["module:Gestures.ElementEvent"], function (ElementEvent, scoped) {
 	return ElementEvent.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -175,7 +167,7 @@ Scoped.define("module:Gestures.BodyTriggerEvent", ["module:Gestures.ElementEvent
 		        inherited.constructor.call(this, element, callback, context);
 		        this.on(ev, function () {
 		            this.callback();
-		        }, this, $("body"));
+		        }, this, document.body);
 		    }
 		
 		};
