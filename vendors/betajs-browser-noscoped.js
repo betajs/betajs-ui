@@ -1,5 +1,5 @@
 /*!
-betajs-browser - v1.0.55 - 2016-12-08
+betajs-browser - v1.0.57 - 2016-12-21
 Copyright (c) Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -11,7 +11,7 @@ Scoped.binding('base', 'global:BetaJS');
 Scoped.define("module:", function () {
 	return {
     "guid": "02450b15-9bbf-4be2-b8f6-b483bc015d06",
-    "version": "110.1481215039448"
+    "version": "121.1482350880681"
 };
 });
 Scoped.assumeVersion('base:version', 531);
@@ -494,15 +494,21 @@ Scoped.define("module:Blobs", [], function() {
 
 		createBlobByArrayBufferView : function(arrayBuffer, offset, size, type) {
 			try {
-				return new Blob([ new DataView(arrayBuffer, offset,size) ], {
+				return new Blob([ new DataView(arrayBuffer, offset, size) ], {
 					type : type
 				});
 			} catch (e) {
-				return new Blob([ new Uint8Array(arrayBuffer, offset,size) ], {
-					type : type
-				});
+				try {
+					return new Blob([ new Uint8Array(arrayBuffer, offset, size) ], {
+						type : type
+					});
+				} catch (e) {
+					var BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder || window.MSBlobBuilder;
+					var bb = new BlobBuilder();
+			        bb.append(arrayBuffer.slice(offset, offset + size));
+			        return bb.getBlob(type);
+				}
 			}
-
 		}
 
 	};
@@ -1923,8 +1929,51 @@ Scoped.define("module:Dom", [
 				width: 0,
 				height: 0
 			};
-		}
+		},
 		
+		childContainingElement: function (parent, element) {
+			parent = this.unbox(parent);
+			element = this.unbox(element);
+			while (element.parentNode != parent) {
+				if (element == document.body)
+					return null;
+				element = element.parentNode;
+			}
+			return element;
+		},
+		
+		elementBoundingBox : function(element) {
+			var offset = this.elementOffset(element);
+			var dimensions = this.elementDimensions(element);
+			return {
+				left : offset.left,
+				top : offset.top,
+				right : offset.left + dimensions.width - 1,
+				bottom : offset.top + dimensions.height - 1
+			};
+		},
+		
+		pointWithinElement : function(x, y, element) {
+			var bb = this.elementBoundingBox(element);
+			return bb.left <= x && x <= bb.right && bb.top <= y && y <= bb.bottom;
+		},
+		
+		elementFromPoint : function(x, y, disregarding) {
+			disregarding = disregarding || [];
+			if (!Types.is_array(disregarding))
+				disregarding = [ disregarding ];
+			var backup = [];
+			for (var i = 0; i < disregarding.length; ++i) {
+				disregarding[i] = this.unbox(disregarding[i]);
+				backup.push(disregarding[i].style.zIndex);
+				disregarding[i].style.zIndex = -1;
+			}
+			var element = document.elementFromPoint(x - window.pageXOffset, y - window.pageYOffset);
+			for (i = 0; i < disregarding.length; ++i)
+				disregarding[i].style.zIndex = backup[i];
+			return element;
+		}
+
 	};
 });
 Scoped.define("module:DomExtend.DomExtension", [

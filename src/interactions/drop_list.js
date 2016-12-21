@@ -1,15 +1,15 @@
 Scoped.define("module:Interactions.Droplist", [
         "module:Interactions.ElementInteraction",
-        "module:Elements.ElementSupport",
 	    "base:Objs",
 	    "jquery:",
-	    "module:Interactions.DroplistStates"
+	    "module:Interactions.DroplistStates",
+	    "browser:Dom"
 	], [
 	    "module:Interactions.DroplistStates.Disabled",
 	    "module:Interactions.DroplistStates.Idle",
 	    "module:Interactions.DroplistStates.Hover",
 	    "module:Interactions.DroplistStates.Dropping"
-	], function (ElemInter, ElemSupp, Objs, $, DroplistStates, scoped) {
+	], function (ElemInter, Objs, $, DroplistStates, Dom, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -65,7 +65,7 @@ Scoped.define("module:Interactions.Droplist", [
 			__update_floater: function (data) {
 			    this._floater.css("display", "none");
 			    var coords = data.page_coords;
-			    var child = ElemSupp.childContainingElement(this.element(), data.underneath);
+			    var child = Dom.childContainingElement(this.element(), data.underneath);
 			    if (!child)
 			        return;
 			    child = $(child);
@@ -73,7 +73,7 @@ Scoped.define("module:Interactions.Droplist", [
 			        this._floater.css("display", "");
 			        return;
 			    }
-			    var bb = ElemSupp.elementBoundingBox(child);
+			    var bb = Dom.elementBoundingBox(child);
 			    bb = this._options.bounding_box.call(this._options.context, bb);
 			    if (bb.top <= coords.y && coords.y <= bb.bottom)
 			    	return;

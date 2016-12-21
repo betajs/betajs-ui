@@ -1,16 +1,16 @@
 Scoped.define("module:Interactions.Drop", [
         "module:Interactions.ElementInteraction",
 	    "base:Objs",
-	    "module:Elements.ElementSupport",
 	    "module:Elements.ElementModifier",
-	    "module:Interactions.DropStates"
+	    "module:Interactions.DropStates",
+	    "browser:Dom"
 	], [
 	    "module:Interactions.DropStates.Disabled",
 	    "module:Interactions.DropStates.Idle",
 	    "module:Interactions.DropStates.Hover",
 	    "module:Interactions.DropStates.InvalidHover",
 	    "module:Interactions.DropStates.Dropping"
-	], function (ElemInter, Objs, ElemSupp, ElemMod, DropStates, scoped) {
+	], function (ElemInter, Objs, ElemMod, DropStates, Dom, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -69,7 +69,7 @@ Scoped.define("module:Interactions.Drop", [
 			_is_hovering: function (source) {
 				if (!source.source.options().droppable)
 					return false;
-				var bb = ElemSupp.elementBoundingBox(this.element());
+				var bb = Dom.elementBoundingBox(this.element());
 				bb = this._options.bounding_box.call(this._options.context, bb);
 				var co = source.page_coords;
 				return bb.left <= co.x && co.x <= bb.right && bb.top <= co.y && co.y <= bb.bottom;

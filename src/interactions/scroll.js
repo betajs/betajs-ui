@@ -3,9 +3,9 @@ Scoped.define("module:Interactions.Scroll", [
         "module:Interactions.ElementInteraction",
 	    "base:Objs",
 	    "jquery:",
-	    "module:Elements.ElementSupport",
+	    "browser:Dom",
 	    "module:Interactions.ScrollStates"
-	], function (ElemInter, Objs, $, ElemSupp, ScrollStates, scoped) {
+	], function (ElemInter, Objs, $, Dom, ScrollStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -84,7 +84,7 @@ Scoped.define("module:Interactions.Scroll", [
 		    	var offset = this.element().offset();
 		    	var h = this._options.currentTop ? this._options.elementMargin : (this.element().innerHeight() - 1 - this._options.elementMargin);
 		    	var w = this.element().innerWidth() / 2;
-		    	var current = $(ElemSupp.elementFromPoint(offset.left + w, offset.top + h));
+		    	var current = $(Dom.elementFromPoint(offset.left + w, offset.top + h));
 		    	while (current && current.get(0) && current.parent().get(0) != this.itemsElement().get(0))
 		    		current = current.parent();
 		    	if (!current || !current.get(0))

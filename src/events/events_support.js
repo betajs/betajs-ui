@@ -2,8 +2,8 @@ Scoped.define("module:Events.Support", [
 	    "base:Objs",
 	    "base:Types",
 	    "jquery:",
-	    "module:Elements.ElementSupport"
-	], function (Objs, Types, $, ElemSupp) {
+	    "browser:Dom"
+	], function (Objs, Types, $, Dom) {
 	return {		
 	
 		dispatchElementEvent: function (element, label, data, options) {
@@ -33,11 +33,11 @@ Scoped.define("module:Events.Support", [
 			excluded = excluded ? (Types.is_array(excluded) ? excluded : [excluded]) : [];
 			this.dispatchManualBubbleEvent(element, label, function () {
 				for (var i = 0; i < included.length; ++i) {
-					if (!ElemSupp.pointWithinElement(included[i].x, included[i].y, this))
+					if (!Dom.pointWithinElement(included[i].x, included[i].y, this))
 						return false;
 				}
 				for (i = 0; i < excluded.length; ++i) {
-					if (ElemSupp.pointWithinElement(excluded[i].x, excluded[i].y, this))
+					if (Dom.pointWithinElement(excluded[i].x, excluded[i].y, this))
 						return false;
 				}
 				return true;

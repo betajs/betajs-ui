@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.21 - 2016-12-12
+betajs-ui - v1.0.21 - 2016-12-21
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.21 - 2016-12-12
+betajs-ui - v1.0.21 - 2016-12-21
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1019,7 +1019,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "72.1481521444849"
+    "version": "73.1482350912310"
 };
 });
 Scoped.assumeVersion('base:version', 474);
@@ -1328,54 +1328,6 @@ Scoped.define("module:Elements.ElementModifier", [
 		};
 	});
 });
-Scoped.define("module:Elements.ElementSupport", ["base:Types", "jquery:"], function (Types, $) {
-	return {		
-	
-		elementFromPoint : function(x, y, disregarding) {
-			disregarding = disregarding || [];
-			if (!Types.is_array(disregarding))
-				disregarding = [ disregarding ];
-			var backup = [];
-			for (var i = 0; i < disregarding.length; ++i) {
-				disregarding[i] = $(disregarding[i]);
-				backup.push(disregarding[i].css("z-index"));
-				disregarding[i].css("z-index", -1);
-			}
-			var element = document.elementFromPoint(x - window.pageXOffset, y - window.pageYOffset);
-			for (i = 0; i < disregarding.length; ++i)
-				disregarding[i].css("z-index", backup[i]);
-			return element;
-		},
-	
-		elementBoundingBox : function(element) {
-			element = $(element);
-			var offset = element.offset();
-			return {
-				left : offset.left,
-				top : offset.top,
-				right : offset.left + element.outerWidth() - 1,
-				bottom : offset.top + element.outerHeight() - 1
-			};
-		},
-	
-		pointWithinElement : function(x, y, element) {
-			var bb = this.elementBoundingBox(element);
-			return bb.left <= x && x <= bb.right && bb.top <= y && y <= bb.bottom;
-		},
-		
-		childContainingElement: function (parent, element) {
-			parent = $(parent).get(0);
-			element = $(element).get(0);
-			while (element.parentNode != parent) {
-				if (element == document.body)
-					return null;
-				element = element.parentNode;
-			}
-			return element;
-		}
-		
-	};
-});
 Scoped.define("module:Events.Mouse", ["browser:Info"], function (Info) {
 	return {		
 			
@@ -1439,8 +1391,8 @@ Scoped.define("module:Events.Support", [
 	    "base:Objs",
 	    "base:Types",
 	    "jquery:",
-	    "module:Elements.ElementSupport"
-	], function (Objs, Types, $, ElemSupp) {
+	    "browser:Dom"
+	], function (Objs, Types, $, Dom) {
 	return {		
 	
 		dispatchElementEvent: function (element, label, data, options) {
@@ -1470,11 +1422,11 @@ Scoped.define("module:Events.Support", [
 			excluded = excluded ? (Types.is_array(excluded) ? excluded : [excluded]) : [];
 			this.dispatchManualBubbleEvent(element, label, function () {
 				for (var i = 0; i < included.length; ++i) {
-					if (!ElemSupp.pointWithinElement(included[i].x, included[i].y, this))
+					if (!Dom.pointWithinElement(included[i].x, included[i].y, this))
 						return false;
 				}
 				for (i = 0; i < excluded.length; ++i) {
-					if (ElemSupp.pointWithinElement(excluded[i].x, excluded[i].y, this))
+					if (Dom.pointWithinElement(excluded[i].x, excluded[i].y, this))
 						return false;
 				}
 				return true;
@@ -1957,7 +1909,7 @@ Scoped.define("module:Hardware.MouseCoords", [
 Scoped.define("module:Interactions.Drag", [
         "module:Interactions.ElementInteraction",
 	    "module:Elements.ElementModifier",
-	    "module:Elements.ElementSupport",
+	    "browser:Dom",
 	    "module:Events.Support",
 	    "module:Events.Mouse",
 	    "module:Hardware.MouseCoords",
@@ -1969,7 +1921,7 @@ Scoped.define("module:Interactions.Drag", [
 	    "module:Interactions.DragStates.Idle",
 	    "module:Interactions.DragStates.Dragging",
 	    "module:Interactions.DragStates.Stopping"
-	], function (ElemInter, ElemMod, ElemSupp, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, Functions, DragStates, scoped) {
+	], function (ElemInter, ElemMod, Dom, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, Functions, DragStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -2071,14 +2023,14 @@ Scoped.define("module:Interactions.Drag", [
 			
 			__triggerDomEvent: function (label) {
 				var data = this.__eventData();
-				var underneath = ElemSupp.elementFromPoint(data.page_coords.x, data.page_coords.y, this.actionable_element());
+				var underneath = Dom.elementFromPoint(data.page_coords.x, data.page_coords.y, this.actionable_element());
 				if (underneath)
 					EventsSupp.dispatchElementEvent(underneath, "drag-" + label, data);
 			},
 			
 			__triggerDomMove: function () {
 				var data = this.__eventData();
-				var underneath = ElemSupp.elementFromPoint(data.page_coords.x, data.page_coords.y, this.actionable_element());
+				var underneath = Dom.elementFromPoint(data.page_coords.x, data.page_coords.y, this.actionable_element());
 				if (underneath) {
 					if (this.__old_coords && this.__underneath && this.__underneath != underneath) {
 						EventsSupp.dispatchPointsSeparatorEvent(underneath, "drag-enter", data.page_coords, this.__old_coords, data);
@@ -2272,16 +2224,16 @@ Scoped.define("module:Interactions.DragStates.Stopping", [
 Scoped.define("module:Interactions.Drop", [
         "module:Interactions.ElementInteraction",
 	    "base:Objs",
-	    "module:Elements.ElementSupport",
 	    "module:Elements.ElementModifier",
-	    "module:Interactions.DropStates"
+	    "module:Interactions.DropStates",
+	    "browser:Dom"
 	], [
 	    "module:Interactions.DropStates.Disabled",
 	    "module:Interactions.DropStates.Idle",
 	    "module:Interactions.DropStates.Hover",
 	    "module:Interactions.DropStates.InvalidHover",
 	    "module:Interactions.DropStates.Dropping"
-	], function (ElemInter, Objs, ElemSupp, ElemMod, DropStates, scoped) {
+	], function (ElemInter, Objs, ElemMod, DropStates, Dom, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -2340,7 +2292,7 @@ Scoped.define("module:Interactions.Drop", [
 			_is_hovering: function (source) {
 				if (!source.source.options().droppable)
 					return false;
-				var bb = ElemSupp.elementBoundingBox(this.element());
+				var bb = Dom.elementBoundingBox(this.element());
 				bb = this._options.bounding_box.call(this._options.context, bb);
 				var co = source.page_coords;
 				return bb.left <= co.x && co.x <= bb.right && bb.top <= co.y && co.y <= bb.bottom;
@@ -2468,16 +2420,16 @@ Scoped.define("module:Interactions.DropStates.Dropping", ["module:Interactions.D
 
 Scoped.define("module:Interactions.Droplist", [
         "module:Interactions.ElementInteraction",
-        "module:Elements.ElementSupport",
 	    "base:Objs",
 	    "jquery:",
-	    "module:Interactions.DroplistStates"
+	    "module:Interactions.DroplistStates",
+	    "browser:Dom"
 	], [
 	    "module:Interactions.DroplistStates.Disabled",
 	    "module:Interactions.DroplistStates.Idle",
 	    "module:Interactions.DroplistStates.Hover",
 	    "module:Interactions.DroplistStates.Dropping"
-	], function (ElemInter, ElemSupp, Objs, $, DroplistStates, scoped) {
+	], function (ElemInter, Objs, $, DroplistStates, Dom, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -2533,7 +2485,7 @@ Scoped.define("module:Interactions.Droplist", [
 			__update_floater: function (data) {
 			    this._floater.css("display", "none");
 			    var coords = data.page_coords;
-			    var child = ElemSupp.childContainingElement(this.element(), data.underneath);
+			    var child = Dom.childContainingElement(this.element(), data.underneath);
 			    if (!child)
 			        return;
 			    child = $(child);
@@ -2541,7 +2493,7 @@ Scoped.define("module:Interactions.Droplist", [
 			        this._floater.css("display", "");
 			        return;
 			    }
-			    var bb = ElemSupp.elementBoundingBox(child);
+			    var bb = Dom.elementBoundingBox(child);
 			    bb = this._options.bounding_box.call(this._options.context, bb);
 			    if (bb.top <= coords.y && coords.y <= bb.bottom)
 			    	return;
@@ -3184,9 +3136,9 @@ Scoped.define("module:Interactions.Scroll", [
         "module:Interactions.ElementInteraction",
 	    "base:Objs",
 	    "jquery:",
-	    "module:Elements.ElementSupport",
+	    "browser:Dom",
 	    "module:Interactions.ScrollStates"
-	], function (ElemInter, Objs, $, ElemSupp, ScrollStates, scoped) {
+	], function (ElemInter, Objs, $, Dom, ScrollStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -3265,7 +3217,7 @@ Scoped.define("module:Interactions.Scroll", [
 		    	var offset = this.element().offset();
 		    	var h = this._options.currentTop ? this._options.elementMargin : (this.element().innerHeight() - 1 - this._options.elementMargin);
 		    	var w = this.element().innerWidth() / 2;
-		    	var current = $(ElemSupp.elementFromPoint(offset.left + w, offset.top + h));
+		    	var current = $(Dom.elementFromPoint(offset.left + w, offset.top + h));
 		    	while (current && current.get(0) && current.parent().get(0) != this.itemsElement().get(0))
 		    		current = current.parent();
 		    	if (!current || !current.get(0))

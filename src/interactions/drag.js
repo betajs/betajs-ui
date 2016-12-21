@@ -1,7 +1,7 @@
 Scoped.define("module:Interactions.Drag", [
         "module:Interactions.ElementInteraction",
 	    "module:Elements.ElementModifier",
-	    "module:Elements.ElementSupport",
+	    "browser:Dom",
 	    "module:Events.Support",
 	    "module:Events.Mouse",
 	    "module:Hardware.MouseCoords",
@@ -13,7 +13,7 @@ Scoped.define("module:Interactions.Drag", [
 	    "module:Interactions.DragStates.Idle",
 	    "module:Interactions.DragStates.Dragging",
 	    "module:Interactions.DragStates.Stopping"
-	], function (ElemInter, ElemMod, ElemSupp, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, Functions, DragStates, scoped) {
+	], function (ElemInter, ElemMod, Dom, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, Functions, DragStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -115,14 +115,14 @@ Scoped.define("module:Interactions.Drag", [
 			
 			__triggerDomEvent: function (label) {
 				var data = this.__eventData();
-				var underneath = ElemSupp.elementFromPoint(data.page_coords.x, data.page_coords.y, this.actionable_element());
+				var underneath = Dom.elementFromPoint(data.page_coords.x, data.page_coords.y, this.actionable_element());
 				if (underneath)
 					EventsSupp.dispatchElementEvent(underneath, "drag-" + label, data);
 			},
 			
 			__triggerDomMove: function () {
 				var data = this.__eventData();
-				var underneath = ElemSupp.elementFromPoint(data.page_coords.x, data.page_coords.y, this.actionable_element());
+				var underneath = Dom.elementFromPoint(data.page_coords.x, data.page_coords.y, this.actionable_element());
 				if (underneath) {
 					if (this.__old_coords && this.__underneath && this.__underneath != underneath) {
 						EventsSupp.dispatchPointsSeparatorEvent(underneath, "drag-enter", data.page_coords, this.__old_coords, data);
