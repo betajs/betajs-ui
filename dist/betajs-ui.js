@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.21 - 2016-12-21
+betajs-ui - v1.0.22 - 2017-01-05
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.21 - 2016-12-21
+betajs-ui - v1.0.22 - 2017-01-05
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1019,7 +1019,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "73.1482350912310"
+    "version": "74.1483659929909"
 };
 });
 Scoped.assumeVersion('base:version', 474);
@@ -1390,9 +1390,8 @@ Scoped.define("module:Events.Mouse", ["browser:Info"], function (Info) {
 Scoped.define("module:Events.Support", [
 	    "base:Objs",
 	    "base:Types",
-	    "jquery:",
 	    "browser:Dom"
-	], function (Objs, Types, $, Dom) {
+	], function (Objs, Types, Dom) {
 	return {		
 	
 		dispatchElementEvent: function (element, label, data, options) {
@@ -1414,19 +1413,26 @@ Scoped.define("module:Events.Support", [
 		},
 		
 		dispatchManualBubbleEvent: function (element, label, predicate, data, options) {
-			this.dispatchElementsEvent($(element).parents().andSelf().filter(predicate), label, data, options); 
+			var elements = [];
+			var current = Dom.unbox(element);
+			while (current) {
+				if (predicate(current))
+					elements.push(current);
+				current = current.parentNode;
+			}
+			this.dispatchElementsEvent(elements, label, data, options); 
 		},
 		
 		dispatchPointsSeparatorEvent: function (element, label, included, excluded, data, options) {
 			included = included ? (Types.is_array(included) ? included : [included]) : [];
 			excluded = excluded ? (Types.is_array(excluded) ? excluded : [excluded]) : [];
-			this.dispatchManualBubbleEvent(element, label, function () {
+			this.dispatchManualBubbleEvent(element, label, function (element) {
 				for (var i = 0; i < included.length; ++i) {
-					if (!Dom.pointWithinElement(included[i].x, included[i].y, this))
+					if (!Dom.pointWithinElement(included[i].x, included[i].y, element))
 						return false;
 				}
 				for (i = 0; i < excluded.length; ++i) {
-					if (Dom.pointWithinElement(excluded[i].x, excluded[i].y, this))
+					if (Dom.pointWithinElement(excluded[i].x, excluded[i].y, element))
 						return false;
 				}
 				return true;
