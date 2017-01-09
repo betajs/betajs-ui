@@ -10,6 +10,7 @@ Scoped.define("module:Interactions.Scroll", [
 		return {
 			
 		    constructor: function (element, options, data, stateNS) {
+		    	element = $(element);
 		    	stateNS = stateNS || ScrollStates;
 		    	options = Objs.extend({
 		    		discrete: false,

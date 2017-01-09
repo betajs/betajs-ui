@@ -17,8 +17,8 @@ Scoped.define("module:Dynamics.GesturePartial", [
 				if (this._postfix in node.gestures && !node.gestures[this._postfix].destroyed())
 					return;
 				value = Objs.extend(value, value.options);
-				var $element = $(this._node.element());
-				var gesture = new Gesture($element, Gestures.defaultGesture(value));
+				var element = this._node.element();
+				var gesture = new Gesture(element, Gestures.defaultGesture(value));
 				node.gestures[this._postfix] = gesture;
 				gesture.on("activate", function () {
 					if (value.activate_event)
@@ -34,7 +34,7 @@ Scoped.define("module:Dynamics.GesturePartial", [
 				}, this);		
 				if (value.transition_event) {
 					gesture.on("start", function () {
-						handler.call(value.transition_event, $element, gesture);
+						handler.call(value.transition_event, element, gesture);
 					}, this);
 				}
 			},

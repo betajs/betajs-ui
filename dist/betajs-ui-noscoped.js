@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.22 - 2017-01-05
+betajs-ui - v1.0.22 - 2017-01-08
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -14,7 +14,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "74.1483659929909"
+    "version": "76.1483926925799"
 };
 });
 Scoped.assumeVersion('base:version', 474);
@@ -38,8 +38,8 @@ Scoped.define("module:Dynamics.GesturePartial", [
 				if (this._postfix in node.gestures && !node.gestures[this._postfix].destroyed())
 					return;
 				value = Objs.extend(value, value.options);
-				var $element = $(this._node.element());
-				var gesture = new Gesture($element, Gestures.defaultGesture(value));
+				var element = this._node.element();
+				var gesture = new Gesture(element, Gestures.defaultGesture(value));
 				node.gestures[this._postfix] = gesture;
 				gesture.on("activate", function () {
 					if (value.activate_event)
@@ -55,7 +55,7 @@ Scoped.define("module:Dynamics.GesturePartial", [
 				}, this);		
 				if (value.transition_event) {
 					gesture.on("start", function () {
-						handler.call(value.transition_event, $element, gesture);
+						handler.call(value.transition_event, element, gesture);
 					}, this);
 				}
 			},
@@ -87,9 +87,8 @@ Scoped.define("module:Dynamics.InteractionPartial", [
     "module:Interactions",
     "base:Strings",
     "base:Objs",
-    "base:Types",
-    "jquery:"
-], function (Partial, Interactions, Strings, Objs, Types, $, scoped) {
+    "base:Types"
+], function (Partial, Interactions, Strings, Objs, Types, scoped) {
  	var Cls = Partial.extend({scoped: scoped}, function (inherited) {
  		return {
 			
@@ -103,8 +102,8 @@ Scoped.define("module:Dynamics.InteractionPartial", [
 				} 
 				value = Objs.extend(value, value.options);
 				var InteractionClass = Interactions[Strings.capitalize(value.type)];
-				var $element = $(this._node.element());
-				var interaction = new InteractionClass(value.sub ? $element.find(value.sub) : $element, Objs.extend({
+				var elem = value.sub ? this._node.element().querySelector(value.sub) : this._node.element();
+				var interaction = new InteractionClass(elem, Objs.extend({
 					enabled: true,
 					context: handler
 				}, value), value.data);
@@ -401,7 +400,8 @@ Scoped.define("module:Events.Support", [
 			for (var i = 0; i < elements.length; ++i) {
 				elements[i].dispatchEvent(new CustomEvent(label, Objs.extend({
 					bubbles: false,
-					cancelable: true,
+					cancelable
+					: true,
 					detail: data
 				}, options)));
 			}
@@ -465,12 +465,14 @@ Scoped.define("module:Gestures.Gesture", [
 	    "module:Gestures.ElementStateHost",
 	    "base:States.CompetingComposite",
 	    "base:Objs",
-	    "module:Gestures.GestureStates.EventDrivenState"
-	], function (ElementStateHost, CompetingComposite, Objs, EventDrivenState, scoped) {
+	    "module:Gestures.GestureStates.EventDrivenState",
+	    "jquery:"
+	], function (ElementStateHost, CompetingComposite, Objs, EventDrivenState, $, scoped) {
 	return ElementStateHost.extend({scoped: scoped}, function (inherited) {
 		return {
 			
 			constructor: function (element, machine) {
+				element = $(element);
 		        var composite = element.data("gestures");
 		        if (!composite) {
 		            composite = new CompetingComposite();
@@ -2144,6 +2146,7 @@ Scoped.define("module:Interactions.Scroll", [
 		return {
 			
 		    constructor: function (element, options, data, stateNS) {
+		    	element = $(element);
 		    	stateNS = stateNS || ScrollStates;
 		    	options = Objs.extend({
 		    		discrete: false,

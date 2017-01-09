@@ -26,12 +26,14 @@ Scoped.define("module:Gestures.Gesture", [
 	    "module:Gestures.ElementStateHost",
 	    "base:States.CompetingComposite",
 	    "base:Objs",
-	    "module:Gestures.GestureStates.EventDrivenState"
-	], function (ElementStateHost, CompetingComposite, Objs, EventDrivenState, scoped) {
+	    "module:Gestures.GestureStates.EventDrivenState",
+	    "jquery:"
+	], function (ElementStateHost, CompetingComposite, Objs, EventDrivenState, $, scoped) {
 	return ElementStateHost.extend({scoped: scoped}, function (inherited) {
 		return {
 			
 			constructor: function (element, machine) {
+				element = $(element);
 		        var composite = element.data("gestures");
 		        if (!composite) {
 		            composite = new CompetingComposite();
