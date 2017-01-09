@@ -1,13 +1,14 @@
 Scoped.define("module:Elements.Animators", [
-	    "base:Class",
-	    "base:Objs"
-	], function (Class, Objs, scoped) {
+    "base:Class",
+    "base:Objs",
+    "browser:Dom"
+], function (Class, Objs, Dom, scoped) {
 	return Class.extend({scoped: scoped}, function (inherited) {
 		return {
 			
 			constructor: function (element, options, callback, context) {
 				inherited.constructor.call(this);
-				this._element = element;
+				this._element = Dom.unbox(element);
 				this._options = Objs.extend({
 					callback_on_revert: true,
 					callback_on_complete: true,
@@ -81,35 +82,76 @@ Scoped.define("module:Elements.Animators", [
 
 
 Scoped.define("module:Elements.DefaultAnimator", [
-	    "module:Elements.Animators",
-	    "base:Objs"
-	], function (Animators, Objs, scoped) {
+    "module:Elements.Animators",
+    "base:Objs",
+    "base:Types",
+    "base:Timers.Timer"
+], function (Animators, Objs, Types, Timer, scoped) {
 	return Animators.extend({scoped: scoped}, function (inherited) {
+		
+		var Methods = {
+			linear: function (x) {
+				return x;
+			},
+			swing: function (x) {
+				return Math.sin(x * Math.PI / 2);
+			}
+		};
+		
 		return {
 	
 			constructor: function (element, options, callback, context) {
 				options = Objs.extend({
 					duration: 250,
+					delay: 10,
 					styles: {},
 					method: "swing"
-				}, options);		
+				}, options);
+				if (Types.is_string(options.method))
+					options.method = Methods[options.method] || Methods.linear;
+				this.__timer = this.auto_destroy(new Timer({
+					delay: options.delay,
+					start: false,
+					context: this,
+					fire: this.__fire
+				}));
 				inherited.constructor.call(this, element, options, callback, context);
+			},
+
+			__setProgress: function (progress) {
+				progress = Math.max(0.0, Math.min(1.0, progress));
+				Objs.iter(this.__styles, function (value, key) {
+					this._element.style[key] = Math.round(value.start + (value.end - value.start) * progress) + value.postfix;
+				}, this);
+			},
+			
+			__fire: function () {
+				this.__setProgress(this._options.method(this.__timer.duration() / this._options.duration));
+				if (this.__timer.duration() >= this._options.duration)
+					this._complete();
 			},
 		
 			_start: function () {
-				var self = this;
-				this.__animate = this._element.animate(this._options.styles, this._options.duration, this._options.method, function () {
-					self._finished();
-				});
+				this.__timer.stop();
+				this.__styles = Objs.map(this._options.styles, function (value, key) {
+					return {
+						start: parseFloat(this._element.style[key]),
+						end: parseFloat(value),
+						postfix: Types.is_string(value) ? value.replace(/[\d\.]/g, "") : ""
+					};
+				}, this);
+				this.__timer.start();
 			},
 			
 			_revert: function () {
-				this.__animate.stop();
+				this.__timer.stop();
+				this.__setProgress(0.0);
 				this._reverted();
 			},
 			
 			_complete: function () {
-				this.__animate.stop(true);
+				this.__timer.stop();
+				this.__setProgress(1.0);
 				this._completed();
 			}			
 	
