@@ -193,7 +193,7 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
 				this._cloned_modifier.css("position", "absolute");
 				this._cloned_modifier.css("width", width + "px");
 				this._cloned_modifier.css("height", height + "px");
-				this._cloned_modifier.css("z-index", zindex + 1);
+				this._cloned_modifier.css("zIndex", zindex + 1);
 				this._cloned_modifier.css("left", this._initial_element_coords.x + "px");
 				this._cloned_modifier.css("top", this._initial_element_coords.y + "px");
 				$("body").append(this._cloned_element);
