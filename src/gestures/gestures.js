@@ -1,8 +1,9 @@
 Scoped.define("module:Gestures.ElementStateHost", [
     "base:States.CompetingHost",
     "module:Gestures.GestureStates",
-    "base:Classes.ClassRegistry"
-], function (CompetingHost, GestureStates, ClassRegistry, scoped) {
+    "base:Classes.ClassRegistry",
+    "browser:Dom"
+], function (CompetingHost, GestureStates, ClassRegistry, Dom, scoped) {
 	return CompetingHost.extend({scoped: scoped}, function (inherited) {
 		return {
 		    
@@ -10,7 +11,7 @@ Scoped.define("module:Gestures.ElementStateHost", [
 		        inherited.constructor.call(this, composite, {
 		        	stateRegistry: new ClassRegistry(GestureStates)
 		        });
-		        this._element = element;
+		        this._element = Dom.unbox(element);
 		    },
 		    
 		    element: function () {
@@ -27,17 +28,17 @@ Scoped.define("module:Gestures.Gesture", [
 	    "base:States.CompetingComposite",
 	    "base:Objs",
 	    "module:Gestures.GestureStates.EventDrivenState",
-	    "jquery:"
-	], function (ElementStateHost, CompetingComposite, Objs, EventDrivenState, $, scoped) {
+	    "browser:Dom"
+	], function (ElementStateHost, CompetingComposite, Objs, EventDrivenState, Dom, scoped) {
 	return ElementStateHost.extend({scoped: scoped}, function (inherited) {
 		return {
 			
 			constructor: function (element, machine) {
-				element = $(element);
-		        var composite = element.data("gestures");
+				element = Dom.unbox(element);
+		        var composite = element.gestures_handler;
 		        if (!composite) {
 		            composite = new CompetingComposite();
-		            element.data("gestures", composite);
+		            element.gestures_handler = composite;
 		        }
 		        inherited.constructor.call(this, element, composite);
 		        for (var key in machine) {
@@ -59,19 +60,25 @@ Scoped.define("module:Gestures.Gesture", [
 
 
 Scoped.define("module:Gestures.ElementState", [
-  	    "base:States.CompetingState",
-  	    "base:Ids",
-  	    "base:Objs"
-  	], function (CompetingState, Ids, Objs, scoped) {
+    "base:States.CompetingState",
+    "base:Ids",
+    "base:Objs",
+    "browser:Events"
+], function (CompetingState, Ids, Objs, DomEvents, scoped) {
   	return CompetingState.extend({scoped: scoped}, function (inherited) {
   		return {
 
 		    _persistents: ["client_pos", "screen_pos"],
+		    
+		    constructor: function () {
+		    	inherited.constructor.apply(this, arguments);
+		    	this._domevents = this.auto_destroy(new DomEvents());
+		    },
 		
 		    _start: function () {
 		    	inherited._start.call(this);
 		        this.on("mousemove touchmove", function (event) {
-		            var original = event.type == "mousemove" ? event.originalEvent : event.originalEvent.touches[0];
+		            var original = event.type == "mousemove" ? event : event.touches[0];
 		            this._client_pos = {
 		                x: original.clientX,
 		                y: original.clientY
@@ -88,17 +95,13 @@ Scoped.define("module:Gestures.ElementState", [
 		    },
 		    
 		    on: function (event, func) {
-		        var self = this;
-		        var events = event.split(" ");
-		        Objs.iter(events, function (eventName) {
-		            this.element().on(eventName + "." + Ids.objectId(this), function (event) {
-		                func.call(self, event);
-		            });
-		        }, this);
+	        	this._domevents.on(this.element(), event, function (event) {
+	        		func.call(this, event);
+	        	}, this);
 		    },
 		    
 		    _end: function () {
-		        this.element().off("." + Ids.objectId(this));
+		    	this._domevents.clear();
 		    },
 		    
 		    trigger: function () {
