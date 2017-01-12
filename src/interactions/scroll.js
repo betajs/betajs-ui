@@ -171,12 +171,12 @@ Scoped.define("module:Interactions.ScrollStates.Scrolling", ["module:Interaction
 						self.parent().trigger("scrollend");
 						self._scrollend();
 						var current = self.parent().currentElement();
-						if (opts.discrete && current)
+						if (opts.discrete && current) {
 							self.parent().scrollToElement(current, {
 								animate: true,
 								abortable: true
 							});
-						else
+						} else
 							self.eventualNext("Idle");
 					}, opts.scrollEndTimeout);
 				});

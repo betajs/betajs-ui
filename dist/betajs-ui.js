@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.26 - 2017-01-11
+betajs-ui - v1.0.26 - 2017-01-12
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.26 - 2017-01-11
+betajs-ui - v1.0.26 - 2017-01-12
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1019,7 +1019,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "81.1484142081031"
+    "version": "82.1484224106377"
 };
 });
 Scoped.assumeVersion('base:version', 474);
@@ -1267,7 +1267,7 @@ Scoped.define("module:Elements.DefaultAnimator", [
 			__setProgress: function (progress) {
 				progress = Math.max(0.0, Math.min(1.0, progress));
 				Objs.iter(this.__styles, function (value, key) {
-					this._element.style[key] = Math.round(value.start + (value.end - value.start) * progress) + value.postfix;
+					value.target[key] = Math.round(value.start + (value.end - value.start) * progress) + value.postfix;
 				}, this);
 			},
 			
@@ -1278,10 +1278,13 @@ Scoped.define("module:Elements.DefaultAnimator", [
 			},
 		
 			_start: function () {
+				this.__completed = false;
 				this.__timer.stop();
 				this.__styles = Objs.map(this._options.styles, function (value, key) {
+					var target = key in this._element ? this._element : this._element.style;
 					return {
-						start: parseFloat(this._element.style[key]),
+						target: target,
+						start: parseFloat(target[key]),
 						end: parseFloat(value),
 						postfix: Types.is_string(value) ? value.replace(/[\d\.]/g, "") : ""
 					};
@@ -1296,8 +1299,11 @@ Scoped.define("module:Elements.DefaultAnimator", [
 			},
 			
 			_complete: function () {
-				this.__timer.stop();
+				if (this.__completed)
+					return;
+				this.__completed = true;
 				this.__setProgress(1.0);
+				this.__timer.stop();
 				this._completed();
 			}			
 	
@@ -3355,12 +3361,12 @@ Scoped.define("module:Interactions.ScrollStates.Scrolling", ["module:Interaction
 						self.parent().trigger("scrollend");
 						self._scrollend();
 						var current = self.parent().currentElement();
-						if (opts.discrete && current)
+						if (opts.discrete && current) {
 							self.parent().scrollToElement(current, {
 								animate: true,
 								abortable: true
 							});
-						else
+						} else
 							self.eventualNext("Idle");
 					}, opts.scrollEndTimeout);
 				});
