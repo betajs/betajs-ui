@@ -7,15 +7,18 @@ Scoped.define("module:Interactions.ElementInteraction", [
 	    "base:States.Host",
 	    "base:Ids",
 	    "base:Objs",
-	    "base:Classes.ClassRegistry"
-	], function (Class, EventsMixin, MouseCoords, $, Async, StateHost, Ids, Objs, ClassRegistry, scoped) {
+	    "base:Classes.ClassRegistry",
+	    "browser:Dom",
+	    "browser:Events"
+	], function (Class, EventsMixin, MouseCoords, $, Async, StateHost, Ids, Objs, ClassRegistry, Dom, DomEvents, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 
 			constructor: function (element, options, stateNS) {
 				inherited.constructor.call(this);
+				this._domEvents = new DomEvents();
 				MouseCoords.require();
-				this._element = $($(element).get(0));
+				this._element = Dom.unbox(element);
 				this._enabled = false;
 				this._options = options || {};
 				if ("enabled" in this._options) {
@@ -31,17 +34,11 @@ Scoped.define("module:Interactions.ElementInteraction", [
 			},
 			
 			__on: function (element, event, callback, context) {
-				var self = this;
-				var events = event.split(" ");
-		        Objs.iter(events, function (eventName) {
-					$(element).on(eventName + "." + Ids.objectId(this), function () {
-						callback.apply(context || self, arguments);
-					});
-		        }, this);
+				this._domEvents.on(Dom.unbox(element), event, callback, context || this);
 			},
 			
 			destroy: function () {
-				this.element().off("." + Ids.objectId(this));
+				this._domEvents.destroy();
 				this.disable();
 				this._host.destroy();
 				MouseCoords.unrequire();
@@ -78,13 +75,12 @@ Scoped.define("module:Interactions.ElementInteraction", [
 
 	}], {
 			
-		multiple: function (element, options, callback, context) {
-			var self = this;
-			$(element).each(function () {
-				var obj = new self(this, options);
+		multiple: function (elements, options, callback, context) {
+			for (var i = 0; i < elements.length; ++i) {
+				var obj = new this(elements[i], options);
 				if (callback)
 					callback.call(context || obj, obj);
-			});
+			}
 		}
 		
 	});
@@ -93,41 +89,43 @@ Scoped.define("module:Interactions.ElementInteraction", [
 
 
 Scoped.define("module:Interactions.State", [
- 	    "base:States.State",
- 	    "jquery:",
- 	    "base:Ids",
- 	    "base:Objs"
- 	], function (State, $, Ids, Objs, scoped) {
- 	return State.extend({scoped: scoped}, {
-		
-		parent: function () {
-			return this.host.parent;
-		},
-		
-		element: function () {
-			return this.parent().element();
-		},
-		
-		options: function () {
-			return this.parent().options();
-		},
-		
-		on: function (element, event, callback, context) {
-			var self = this;
-			var events = event.split(" ");
-	        Objs.iter(events, function (eventName) {
-				$(element).on(eventName + "." + Ids.objectId(this), function () {
-					if (self.destroyed())
-						return;
-					callback.apply(context || self, arguments);
-				});
-	        }, this);
-		},
-		
-		_end: function () {
-			this.element().off("." + Ids.objectId(this));			
-			$("body").off("." + Ids.objectId(this));
-		}	
-	
+    "base:States.State",
+    "browser:Events",
+    "browser:Dom",
+    "base:Ids",
+    "base:Objs"
+], function (State, DomEvents, Dom, Ids, Objs, scoped) {
+ 	return State.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function () {
+				inherited.constructor.apply(this, arguments);
+				this._domEvents = this.auto_destroy(new DomEvents());
+			},
+			
+			parent: function () {
+				return this.host.parent;
+			},
+			
+			element: function () {
+				return this.parent().element();
+			},
+			
+			options: function () {
+				return this.parent().options();
+			},
+			
+			on: function (element, event, callback, context) {
+				this._domEvents.on(Dom.unbox(element), event, function () {
+					if (!this.destroyed())
+						callback.apply(context || this, arguments);
+				}, this);
+			},
+			
+			_end: function () {
+				this._domEvents.clear();
+			}
+			
+		};
  	});
 });

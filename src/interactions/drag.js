@@ -8,12 +8,13 @@ Scoped.define("module:Interactions.Drag", [
 	    "base:Ids",
 	    "base:Objs",
 	    "base:Functions",
-	    "module:Interactions.DragStates"
+	    "module:Interactions.DragStates",
+	    "jquery:"
 	], [
 	    "module:Interactions.DragStates.Idle",
 	    "module:Interactions.DragStates.Dragging",
 	    "module:Interactions.DragStates.Stopping"
-	], function (ElemInter, ElemMod, Dom, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, Functions, DragStates, scoped) {
+	], function (ElemInter, ElemMod, Dom, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, Functions, DragStates, $, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -34,7 +35,7 @@ Scoped.define("module:Interactions.Drag", [
 				}, options);
 				inherited.constructor.call(this, element, options, DragStates);
 				this._host.initialize("Idle");
-				this._modifier = new ElemMod(this._element);
+				this._modifier = new ElemMod(this.element());
 				this.data = data;
 			},
 			
@@ -46,11 +47,11 @@ Scoped.define("module:Interactions.Drag", [
 			
 			_enable: function () {
 				if (this._options.start_event)
-					this._element.on(this._options.start_event + "." + Ids.objectId(this), Functions.as_method(this.start, this));
+					this.element().on(this._options.start_event + "." + Ids.objectId(this), Functions.as_method(this.start, this));
 			},
 			
 			_disable: function () {
-				this._element.off("." + Ids.objectId(this));
+				this.element().off("." + Ids.objectId(this));
 				this.stop();
 			},
 			
@@ -82,9 +83,13 @@ Scoped.define("module:Interactions.Drag", [
 				}
 			},
 			
+			element: function () {
+				return $(this._element);
+			},
+			
 			actionable_element: function () {
 				var c = this._host.state()._cloned_element;
-				return c ? c : this._element;
+				return c ? c : this.element();
 			},
 			
 			modifier: function () {
@@ -215,9 +220,9 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
 				}
 			}
 			this.trigger("start");
-			this.on("body", MouseEvents.moveEvent(), this.__dragging);
+			this.on(document.body, MouseEvents.moveEvent(), this.__dragging);
 			if (opts.stop_event) {
-				this.on("body", opts.stop_event, function () {
+				this.on(document.body, opts.stop_event, function () {
 					if (opts.droppable)
 						this.triggerDom("drop");
 					if ("next" in this)

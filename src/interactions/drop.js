@@ -3,14 +3,15 @@ Scoped.define("module:Interactions.Drop", [
 	    "base:Objs",
 	    "module:Elements.ElementModifier",
 	    "module:Interactions.DropStates",
-	    "browser:Dom"
+	    "browser:Dom",
+	    "jquery:"
 	], [
 	    "module:Interactions.DropStates.Disabled",
 	    "module:Interactions.DropStates.Idle",
 	    "module:Interactions.DropStates.Hover",
 	    "module:Interactions.DropStates.InvalidHover",
 	    "module:Interactions.DropStates.Dropping"
-	], function (ElemInter, Objs, ElemMod, DropStates, Dom, scoped) {
+	], function (ElemInter, Objs, ElemMod, DropStates, Dom, $, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -26,7 +27,7 @@ Scoped.define("module:Interactions.Drop", [
 				}, options);
 				inherited.constructor.call(this, element, options, DropStates);
 				this._host.initialize("Idle");
-				this._modifier = new ElemMod(this._element);
+				this._modifier = new ElemMod(this.element());
 				this.data = data;
 			},
 			
@@ -36,6 +37,10 @@ Scoped.define("module:Interactions.Drop", [
 				inherited.destroy.call(this);
 			},
 			
+			element: function () {
+				return $(this._element);
+			},
+
 			_enable: function () {
 				this._host.state().next("Idle");
 			},
@@ -102,7 +107,7 @@ Scoped.define("module:Interactions.DropStates.Idle", ["module:Interactions.DropS
 			this.on(this.element(), "drag-hover", function (event) {
 				if (!this.parent()._enabled)
 					return;
-				var drag_source = event.originalEvent.detail;
+				var drag_source = event.detail;
 				if (this.parent()._is_hovering(drag_source))
 					this.next(this.parent().droppable(drag_source) ? "Hover" : "InvalidHover", {drag_source: drag_source});
 			});
@@ -124,16 +129,16 @@ Scoped.define("module:Interactions.DropStates.Hover", ["module:Interactions.Drop
 				if (this.options().classes && this.options().classes["hover.modifier"])
 					this.parent().modifier().csscls(this.options().classes["hover.modifier"], true);
 				this.on(this.element(), "drag-hover", function (event) {
-					this._drag_source = event.originalEvent.detail;
+					this._drag_source = event.detail;
 					if (!this.parent()._is_hovering(this._drag_source))
 						this.next("Idle");
 				});
 				this.on(this.element(), "drag-stop drag-leave", function (event) {
-					this._drag_source = event.originalEvent.detail;
+					this._drag_source = event.detail;
 					this.next("Idle");
 				});
 				this.on(this.element(), "drag-drop", function (event) {
-					this._drag_source = event.originalEvent.detail;
+					this._drag_source = event.detail;
 					this.next("Dropping");
 				});
 			},
@@ -159,12 +164,12 @@ Scoped.define("module:Interactions.DropStates.InvalidHover", ["module:Interactio
 			_start: function () {
 				this.trigger("hover-invalid");
 				this.on(this.element(), "drag-hover", function (event) {
-					this._drag_source = event.originalEvent.detail;
+					this._drag_source = event.detail;
 					if (!this.parent()._is_hovering(this._drag_source))
 						this.next("Idle");
 				});
 				this.on(this.element(), "drag-drop drag-stop drag-leave", function (event) {
-					this._drag_source = event.originalEvent.detail;
+					this._drag_source = event.detail;
 					this.next("Idle");
 				});
 			},

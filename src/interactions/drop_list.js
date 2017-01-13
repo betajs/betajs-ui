@@ -36,6 +36,10 @@ Scoped.define("module:Interactions.Droplist", [
 				inherited.destroy.call(this);
 			},
 			
+			element: function () {
+				return $(this._element);
+			},
+
 			_enable: function () {
 				this._host.state().next("Idle");
 			},
@@ -119,7 +123,7 @@ Scoped.define("module:Interactions.DroplistStates.Idle", ["module:Interactions.D
 
    		_start: function () {
    			this.on(this.element(), "drag-hover", function (event) {
-   				var drag_source = event.originalEvent.detail;
+   				var drag_source = event.detail;
    				if (this.parent().droppable(drag_source))
    					this.next("Hover");
    			});
@@ -139,15 +143,15 @@ Scoped.define("module:Interactions.DroplistStates.Hover", ["module:Interactions.
 			_start: function () {
 				this.trigger("hover");
 				this.on(this.element(), "drag-hover", function (event) {
-					this._drag_source = event.originalEvent.detail;
+					this._drag_source = event.detail;
 					this.parent().__update_floater(this._drag_source);
 				});
 				this.on(this.element(), "drag-stop drag-leave", function (event) {
-					this._drag_source = event.originalEvent.detail;
+					this._drag_source = event.detail;
 					this.next("Idle");
 				});
 				this.on(this.element(), "drag-drop", function (event) {
-					this._drag_source = event.originalEvent.detail;
+					this._drag_source = event.detail;
 					this.parent().__update_floater(this._drag_source);
 					this.next(this.parent()._floater.css("display") == "none" ? "Idle" : "Dropping");
 				});

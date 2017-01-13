@@ -1,10 +1,11 @@
 Scoped.define("module:Interactions.Pinch", [
     "module:Interactions.ElementInteraction",
-    "module:Interactions.PinchStates"
+    "module:Interactions.PinchStates",
+    "jquery:"
 ], [
 	"module:Interactions.PinchStates.Idle",
 	"module:Interactions.PinchStates.Pinching"
-], function (ElemInter, PinchStates, scoped) {
+], function (ElemInter, PinchStates, $, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -14,6 +15,10 @@ Scoped.define("module:Interactions.Pinch", [
 				this.data = data;
 			},
 			
+			element: function () {
+				return $(this._element);
+			},
+
 			_disable: function () {
 				this.stop();
 			},
@@ -61,7 +66,7 @@ Scoped.define("module:Interactions.PinchStates.Idle", ["module:Interactions.Stat
 			this.on(this.element(), "touchstart", function (event) {
 				if (!this.parent()._enabled)
 					return;
-				if (!event.originalEvent.touches || event.originalEvent.touches.length != 2)
+				if (!event.touches || event.touches.length != 2)
 					return;
 				this.next("Pinching", {
 					initial_coords: MouseEvents.clientCoords(event, true)
@@ -88,7 +93,7 @@ Scoped.define("module:Interactions.PinchStates.Pinching", ["module:Interactions.
 				this._current_coords = this._initial_coords;
 				this.trigger("pinchstart");
 				this.on(this.element(), "touchmove", function (event) {
-					if (!event.originalEvent.touches || event.originalEvent.touches.length != 2) {
+					if (!event.touches || event.touches.length != 2) {
 						this.next("Idle");
 						return;
 					}

@@ -36,7 +36,11 @@ Scoped.define("module:Interactions.Scroll", [
 				});
 		    },
 		    
-		    _whitespaceType: function () {
+			element: function () {
+				return $(this._element);
+			},
+
+			_whitespaceType: function () {
 		        if (this.options().display_type)
 		            return this.options().display_type;
 		        return this.element().css("display").indexOf('flex') >= 0 ? "flex" : "default";

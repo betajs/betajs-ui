@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.26 - 2017-01-12
+betajs-ui - v1.0.28 - 2017-01-13
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.26 - 2017-01-12
+betajs-ui - v1.0.28 - 2017-01-13
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1019,7 +1019,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "82.1484224106377"
+    "version": "83.1484341501359"
 };
 });
 Scoped.assumeVersion('base:version', 474);
@@ -1393,7 +1393,6 @@ Scoped.define("module:Events.Mouse", ["browser:Info"], function (Info) {
 		},
 				
 		customCoords: function (event, type, multi) {
-			event = event.originalEvent ? event.originalEvent : event;
 			if (event.touches && event.touches.length) {
 				var touches = event.touches;
 				if (multi) {
@@ -1973,12 +1972,13 @@ Scoped.define("module:Interactions.Drag", [
 	    "base:Ids",
 	    "base:Objs",
 	    "base:Functions",
-	    "module:Interactions.DragStates"
+	    "module:Interactions.DragStates",
+	    "jquery:"
 	], [
 	    "module:Interactions.DragStates.Idle",
 	    "module:Interactions.DragStates.Dragging",
 	    "module:Interactions.DragStates.Stopping"
-	], function (ElemInter, ElemMod, Dom, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, Functions, DragStates, scoped) {
+	], function (ElemInter, ElemMod, Dom, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, Functions, DragStates, $, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -1999,7 +1999,7 @@ Scoped.define("module:Interactions.Drag", [
 				}, options);
 				inherited.constructor.call(this, element, options, DragStates);
 				this._host.initialize("Idle");
-				this._modifier = new ElemMod(this._element);
+				this._modifier = new ElemMod(this.element());
 				this.data = data;
 			},
 			
@@ -2011,11 +2011,11 @@ Scoped.define("module:Interactions.Drag", [
 			
 			_enable: function () {
 				if (this._options.start_event)
-					this._element.on(this._options.start_event + "." + Ids.objectId(this), Functions.as_method(this.start, this));
+					this.element().on(this._options.start_event + "." + Ids.objectId(this), Functions.as_method(this.start, this));
 			},
 			
 			_disable: function () {
-				this._element.off("." + Ids.objectId(this));
+				this.element().off("." + Ids.objectId(this));
 				this.stop();
 			},
 			
@@ -2047,9 +2047,13 @@ Scoped.define("module:Interactions.Drag", [
 				}
 			},
 			
+			element: function () {
+				return $(this._element);
+			},
+			
 			actionable_element: function () {
 				var c = this._host.state()._cloned_element;
-				return c ? c : this._element;
+				return c ? c : this.element();
 			},
 			
 			modifier: function () {
@@ -2180,9 +2184,9 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
 				}
 			}
 			this.trigger("start");
-			this.on("body", MouseEvents.moveEvent(), this.__dragging);
+			this.on(document.body, MouseEvents.moveEvent(), this.__dragging);
 			if (opts.stop_event) {
-				this.on("body", opts.stop_event, function () {
+				this.on(document.body, opts.stop_event, function () {
 					if (opts.droppable)
 						this.triggerDom("drop");
 					if ("next" in this)
@@ -2283,14 +2287,15 @@ Scoped.define("module:Interactions.Drop", [
 	    "base:Objs",
 	    "module:Elements.ElementModifier",
 	    "module:Interactions.DropStates",
-	    "browser:Dom"
+	    "browser:Dom",
+	    "jquery:"
 	], [
 	    "module:Interactions.DropStates.Disabled",
 	    "module:Interactions.DropStates.Idle",
 	    "module:Interactions.DropStates.Hover",
 	    "module:Interactions.DropStates.InvalidHover",
 	    "module:Interactions.DropStates.Dropping"
-	], function (ElemInter, Objs, ElemMod, DropStates, Dom, scoped) {
+	], function (ElemInter, Objs, ElemMod, DropStates, Dom, $, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -2306,7 +2311,7 @@ Scoped.define("module:Interactions.Drop", [
 				}, options);
 				inherited.constructor.call(this, element, options, DropStates);
 				this._host.initialize("Idle");
-				this._modifier = new ElemMod(this._element);
+				this._modifier = new ElemMod(this.element());
 				this.data = data;
 			},
 			
@@ -2316,6 +2321,10 @@ Scoped.define("module:Interactions.Drop", [
 				inherited.destroy.call(this);
 			},
 			
+			element: function () {
+				return $(this._element);
+			},
+
 			_enable: function () {
 				this._host.state().next("Idle");
 			},
@@ -2382,7 +2391,7 @@ Scoped.define("module:Interactions.DropStates.Idle", ["module:Interactions.DropS
 			this.on(this.element(), "drag-hover", function (event) {
 				if (!this.parent()._enabled)
 					return;
-				var drag_source = event.originalEvent.detail;
+				var drag_source = event.detail;
 				if (this.parent()._is_hovering(drag_source))
 					this.next(this.parent().droppable(drag_source) ? "Hover" : "InvalidHover", {drag_source: drag_source});
 			});
@@ -2404,16 +2413,16 @@ Scoped.define("module:Interactions.DropStates.Hover", ["module:Interactions.Drop
 				if (this.options().classes && this.options().classes["hover.modifier"])
 					this.parent().modifier().csscls(this.options().classes["hover.modifier"], true);
 				this.on(this.element(), "drag-hover", function (event) {
-					this._drag_source = event.originalEvent.detail;
+					this._drag_source = event.detail;
 					if (!this.parent()._is_hovering(this._drag_source))
 						this.next("Idle");
 				});
 				this.on(this.element(), "drag-stop drag-leave", function (event) {
-					this._drag_source = event.originalEvent.detail;
+					this._drag_source = event.detail;
 					this.next("Idle");
 				});
 				this.on(this.element(), "drag-drop", function (event) {
-					this._drag_source = event.originalEvent.detail;
+					this._drag_source = event.detail;
 					this.next("Dropping");
 				});
 			},
@@ -2439,12 +2448,12 @@ Scoped.define("module:Interactions.DropStates.InvalidHover", ["module:Interactio
 			_start: function () {
 				this.trigger("hover-invalid");
 				this.on(this.element(), "drag-hover", function (event) {
-					this._drag_source = event.originalEvent.detail;
+					this._drag_source = event.detail;
 					if (!this.parent()._is_hovering(this._drag_source))
 						this.next("Idle");
 				});
 				this.on(this.element(), "drag-drop drag-stop drag-leave", function (event) {
-					this._drag_source = event.originalEvent.detail;
+					this._drag_source = event.detail;
 					this.next("Idle");
 				});
 			},
@@ -2513,6 +2522,10 @@ Scoped.define("module:Interactions.Droplist", [
 				inherited.destroy.call(this);
 			},
 			
+			element: function () {
+				return $(this._element);
+			},
+
 			_enable: function () {
 				this._host.state().next("Idle");
 			},
@@ -2596,7 +2609,7 @@ Scoped.define("module:Interactions.DroplistStates.Idle", ["module:Interactions.D
 
    		_start: function () {
    			this.on(this.element(), "drag-hover", function (event) {
-   				var drag_source = event.originalEvent.detail;
+   				var drag_source = event.detail;
    				if (this.parent().droppable(drag_source))
    					this.next("Hover");
    			});
@@ -2616,15 +2629,15 @@ Scoped.define("module:Interactions.DroplistStates.Hover", ["module:Interactions.
 			_start: function () {
 				this.trigger("hover");
 				this.on(this.element(), "drag-hover", function (event) {
-					this._drag_source = event.originalEvent.detail;
+					this._drag_source = event.detail;
 					this.parent().__update_floater(this._drag_source);
 				});
 				this.on(this.element(), "drag-stop drag-leave", function (event) {
-					this._drag_source = event.originalEvent.detail;
+					this._drag_source = event.detail;
 					this.next("Idle");
 				});
 				this.on(this.element(), "drag-drop", function (event) {
-					this._drag_source = event.originalEvent.detail;
+					this._drag_source = event.detail;
 					this.parent().__update_floater(this._drag_source);
 					this.next(this.parent()._floater.css("display") == "none" ? "Idle" : "Dropping");
 				});
@@ -2825,15 +2838,18 @@ Scoped.define("module:Interactions.ElementInteraction", [
 	    "base:States.Host",
 	    "base:Ids",
 	    "base:Objs",
-	    "base:Classes.ClassRegistry"
-	], function (Class, EventsMixin, MouseCoords, $, Async, StateHost, Ids, Objs, ClassRegistry, scoped) {
+	    "base:Classes.ClassRegistry",
+	    "browser:Dom",
+	    "browser:Events"
+	], function (Class, EventsMixin, MouseCoords, $, Async, StateHost, Ids, Objs, ClassRegistry, Dom, DomEvents, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 
 			constructor: function (element, options, stateNS) {
 				inherited.constructor.call(this);
+				this._domEvents = new DomEvents();
 				MouseCoords.require();
-				this._element = $($(element).get(0));
+				this._element = Dom.unbox(element);
 				this._enabled = false;
 				this._options = options || {};
 				if ("enabled" in this._options) {
@@ -2849,17 +2865,11 @@ Scoped.define("module:Interactions.ElementInteraction", [
 			},
 			
 			__on: function (element, event, callback, context) {
-				var self = this;
-				var events = event.split(" ");
-		        Objs.iter(events, function (eventName) {
-					$(element).on(eventName + "." + Ids.objectId(this), function () {
-						callback.apply(context || self, arguments);
-					});
-		        }, this);
+				this._domEvents.on(Dom.unbox(element), event, callback, context || this);
 			},
 			
 			destroy: function () {
-				this.element().off("." + Ids.objectId(this));
+				this._domEvents.destroy();
 				this.disable();
 				this._host.destroy();
 				MouseCoords.unrequire();
@@ -2896,13 +2906,12 @@ Scoped.define("module:Interactions.ElementInteraction", [
 
 	}], {
 			
-		multiple: function (element, options, callback, context) {
-			var self = this;
-			$(element).each(function () {
-				var obj = new self(this, options);
+		multiple: function (elements, options, callback, context) {
+			for (var i = 0; i < elements.length; ++i) {
+				var obj = new this(elements[i], options);
 				if (callback)
 					callback.call(context || obj, obj);
-			});
+			}
 		}
 		
 	});
@@ -2911,42 +2920,44 @@ Scoped.define("module:Interactions.ElementInteraction", [
 
 
 Scoped.define("module:Interactions.State", [
- 	    "base:States.State",
- 	    "jquery:",
- 	    "base:Ids",
- 	    "base:Objs"
- 	], function (State, $, Ids, Objs, scoped) {
- 	return State.extend({scoped: scoped}, {
-		
-		parent: function () {
-			return this.host.parent;
-		},
-		
-		element: function () {
-			return this.parent().element();
-		},
-		
-		options: function () {
-			return this.parent().options();
-		},
-		
-		on: function (element, event, callback, context) {
-			var self = this;
-			var events = event.split(" ");
-	        Objs.iter(events, function (eventName) {
-				$(element).on(eventName + "." + Ids.objectId(this), function () {
-					if (self.destroyed())
-						return;
-					callback.apply(context || self, arguments);
-				});
-	        }, this);
-		},
-		
-		_end: function () {
-			this.element().off("." + Ids.objectId(this));			
-			$("body").off("." + Ids.objectId(this));
-		}	
-	
+    "base:States.State",
+    "browser:Events",
+    "browser:Dom",
+    "base:Ids",
+    "base:Objs"
+], function (State, DomEvents, Dom, Ids, Objs, scoped) {
+ 	return State.extend({scoped: scoped}, function (inherited) {
+		return {
+			
+			constructor: function () {
+				inherited.constructor.apply(this, arguments);
+				this._domEvents = this.auto_destroy(new DomEvents());
+			},
+			
+			parent: function () {
+				return this.host.parent;
+			},
+			
+			element: function () {
+				return this.parent().element();
+			},
+			
+			options: function () {
+				return this.parent().options();
+			},
+			
+			on: function (element, event, callback, context) {
+				this._domEvents.on(Dom.unbox(element), event, function () {
+					if (!this.destroyed())
+						callback.apply(context || this, arguments);
+				}, this);
+			},
+			
+			_end: function () {
+				this._domEvents.clear();
+			}
+			
+		};
  	});
 });
 
@@ -3060,11 +3071,12 @@ Scoped.define("module:Interactions.LoopscrollStates.ScrollingTo", ["module:Inter
 
 Scoped.define("module:Interactions.Pinch", [
     "module:Interactions.ElementInteraction",
-    "module:Interactions.PinchStates"
+    "module:Interactions.PinchStates",
+    "jquery:"
 ], [
 	"module:Interactions.PinchStates.Idle",
 	"module:Interactions.PinchStates.Pinching"
-], function (ElemInter, PinchStates, scoped) {
+], function (ElemInter, PinchStates, $, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -3074,6 +3086,10 @@ Scoped.define("module:Interactions.Pinch", [
 				this.data = data;
 			},
 			
+			element: function () {
+				return $(this._element);
+			},
+
 			_disable: function () {
 				this.stop();
 			},
@@ -3121,7 +3137,7 @@ Scoped.define("module:Interactions.PinchStates.Idle", ["module:Interactions.Stat
 			this.on(this.element(), "touchstart", function (event) {
 				if (!this.parent()._enabled)
 					return;
-				if (!event.originalEvent.touches || event.originalEvent.touches.length != 2)
+				if (!event.touches || event.touches.length != 2)
 					return;
 				this.next("Pinching", {
 					initial_coords: MouseEvents.clientCoords(event, true)
@@ -3148,7 +3164,7 @@ Scoped.define("module:Interactions.PinchStates.Pinching", ["module:Interactions.
 				this._current_coords = this._initial_coords;
 				this.trigger("pinchstart");
 				this.on(this.element(), "touchmove", function (event) {
-					if (!event.originalEvent.touches || event.originalEvent.touches.length != 2) {
+					if (!event.touches || event.touches.length != 2) {
 						this.next("Idle");
 						return;
 					}
@@ -3226,7 +3242,11 @@ Scoped.define("module:Interactions.Scroll", [
 				});
 		    },
 		    
-		    _whitespaceType: function () {
+			element: function () {
+				return $(this._element);
+			},
+
+			_whitespaceType: function () {
 		        if (this.options().display_type)
 		            return this.options().display_type;
 		        return this.element().css("display").indexOf('flex') >= 0 ? "flex" : "default";
