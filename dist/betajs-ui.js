@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.29 - 2017-01-15
+betajs-ui - v1.0.30 - 2017-01-15
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.29 - 2017-01-15
+betajs-ui - v1.0.30 - 2017-01-15
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1019,11 +1019,11 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.29"
+    "version": "1.0.30"
 };
 });
-Scoped.assumeVersion('base:version', '^1.0.96');
-Scoped.assumeVersion('browser:version', '^1.0.61');
+Scoped.assumeVersion('base:version', '~1.0.96');
+Scoped.assumeVersion('browser:version', '~1.0.61');
 Scoped.define("module:Dynamics.GesturePartial", [
     "dynamics:Handlers.Partial",
     "module:Gestures.Gesture",
