@@ -7,14 +7,12 @@ Scoped.define("module:Interactions.Drag", [
 	    "module:Hardware.MouseCoords",
 	    "base:Ids",
 	    "base:Objs",
-	    "base:Functions",
-	    "module:Interactions.DragStates",
-	    "jquery:"
+	    "module:Interactions.DragStates"
 	], [
 	    "module:Interactions.DragStates.Idle",
 	    "module:Interactions.DragStates.Dragging",
 	    "module:Interactions.DragStates.Stopping"
-	], function (ElemInter, ElemMod, Dom, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, Functions, DragStates, $, scoped) {
+	], function (ElemInter, ElemMod, Dom, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, DragStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -47,11 +45,11 @@ Scoped.define("module:Interactions.Drag", [
 			
 			_enable: function () {
 				if (this._options.start_event)
-					this.element().on(this._options.start_event + "." + Ids.objectId(this), Functions.as_method(this.start, this));
+					this.__on(this.element(), this._options.start_event, this.start, this);
 			},
 			
 			_disable: function () {
-				this.element().off("." + Ids.objectId(this));
+				this._domEvents.clear();
 				this.stop();
 			},
 			
@@ -78,18 +76,13 @@ Scoped.define("module:Interactions.Drag", [
 				this.trigger("dropped", drop);
 				this._host.state().next("Stopping", {immediately: true});
 				if (this._options.remove_element_on_drop) {
-					this.element().remove();
+					this.element().parentNode.removeChild(this.element());
 					this.destroy();
 				}
 			},
 			
-			element: function () {
-				return $(this._element);
-			},
-			
 			actionable_element: function () {
-				var c = this._host.state()._cloned_element;
-				return c ? c : this.element();
+				return this._host.state()._cloned_element || this.element();
 			},
 			
 			modifier: function () {
@@ -170,8 +163,8 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
 	    "module:Hardware.MouseCoords",
 	    "module:Elements.ElementModifier",
 	    "module:Events.Mouse",
-	    "jquery:"
-	], function (State, MouseCoords, ElementMod, MouseEvents, $, scoped) {
+	    "browser:Dom"
+	], function (State, MouseCoords, ElementMod, MouseEvents, Dom, scoped) {
 	return State.extend({scoped: scoped}, {
 		
 		_white_list: ["Stopping"],
@@ -181,18 +174,21 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
 			var opts = this.parent().options();
 			this._page_coords = MouseCoords.coords;
 			if (opts.clone_element) {
+				var offset = Dom.elementOffset(this.element());
+				var dimensions = Dom.elementDimensions(this.element());
 				this._initial_element_coords = {
-					x: this.element().offset().left,
-					y: this.element().offset().top
+					x: offset.left,
+					y: offset.top
 				};
-				var zindex = this.element().css("z-index");
-				var width = this.element().width();
-				var height = this.element().height();
+				var zindex = this.element().style.zIndex;
+				var width = dimensions.width;
+				var height = dimensions.height;
 				if (opts.drag_original_element) {
-					this._placeholder_cloned_element = this.element().clone();
-					this._cloned_element = this.element().replaceWith(this._placeholder_cloned_element);
+					this._placeholder_cloned_element = this.element().cloneNode(true);
+					this.element().replaceWith(this._placeholder_cloned_element);
+					this._cloned_element = this._placeholder_cloned_element;
 				} else {
-					this._cloned_element = this.element().clone();
+					this._cloned_element = this.element().cloneNode(true);
 				}
 				this._cloned_modifier = new ElementMod(this._cloned_element); 
 				this._cloned_modifier.css("position", "absolute");
@@ -201,7 +197,7 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
 				this._cloned_modifier.css("zIndex", zindex + 1);
 				this._cloned_modifier.css("left", this._initial_element_coords.x + "px");
 				this._cloned_modifier.css("top", this._initial_element_coords.y + "px");
-				$("body").append(this._cloned_element);
+				document.body.appendChild(this._cloned_element);
 			} else {
 				var modifier = this.parent().modifier();
 				modifier.css("position", "relative");
@@ -305,10 +301,9 @@ Scoped.define("module:Interactions.DragStates.Stopping", [
 					this._cloned_modifier.destroy();
 				}
 				if (this._cloned_element) {
-					if (this._placeholder_cloned_element) {
-						this._cloned_element = this._placeholder_cloned_element.replaceWith(this._cloned_element);
-					}
-					this._cloned_element.remove();
+					if (this._placeholder_cloned_element)
+						this._placeholder_cloned_element.replaceWith(this._cloned_element);
+					this._cloned_element.parentNode.removeChild(this._cloned_element);
 				}
 				this.parent().modifier().revert();
 				this.trigger("stop");

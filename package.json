@@ -15,7 +15,7 @@
         "url": "https://github.com/betajs/betajs-ui/issues"
     },
     "name": "betajs-ui",
-    "version": "1.0.28",
+    "version": "1.0.29",
     "description": "BetaJS-UI is a library for enabling gestures and interactions such as drag and drop.",
     "contributors": [
         "Victor Lingenthal",
@@ -29,18 +29,20 @@
         "grunt-contrib-uglify": "",
         "grunt-contrib-clean": "",
         "grunt-preprocess": "",
-        "grunt-git-revision-count": "",
         "grunt-closure-tools": "",
         "grunt-node-qunit": "",
         "qunit": "",
-        "grunt-wget": "",
         "grunt-jsdoc": "",
         "grunt-shell": "",
         "grunt-template": "",
         "jsdom": "",
-        "betajs-scoped": "",
-        "betajs-compile": "betajs/betajs-compile"
+        "betajs-scoped": "^0.0.13",
+        "betajs-compile": "^0.0.28",
+        "betajs": "^1.0.96",
+        "betajs-browser": "^1.0.61",
+        "betajs-dynamics": "^0.0.83"
     },
+    "main": "dist/betajs-ui.js",
     "repository": {
         "type": "git",
         "url": "git://github.com/betajs/betajs-ui.git"

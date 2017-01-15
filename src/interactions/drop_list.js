@@ -1,7 +1,6 @@
 Scoped.define("module:Interactions.Droplist", [
         "module:Interactions.ElementInteraction",
 	    "base:Objs",
-	    "jquery:",
 	    "module:Interactions.DroplistStates",
 	    "browser:Dom"
 	], [
@@ -9,7 +8,7 @@ Scoped.define("module:Interactions.Droplist", [
 	    "module:Interactions.DroplistStates.Idle",
 	    "module:Interactions.DroplistStates.Hover",
 	    "module:Interactions.DroplistStates.Dropping"
-	], function (ElemInter, Objs, $, DroplistStates, Dom, scoped) {
+	], function (ElemInter, Objs, DroplistStates, Dom, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -27,8 +26,8 @@ Scoped.define("module:Interactions.Droplist", [
 				inherited.constructor.call(this, element, options, DroplistStates);
 				this._host.initialize("Idle");
 				this.data = data;
-				this._floater = $(this._options.floater);
-				this._floater.css("display", "none");
+				this._floater = Dom.unbox(this._options.floater);
+				this._floater.style.display = "none";
 			},
 			
 			destroy: function () {
@@ -36,10 +35,6 @@ Scoped.define("module:Interactions.Droplist", [
 				inherited.destroy.call(this);
 			},
 			
-			element: function () {
-				return $(this._element);
-			},
-
 			_enable: function () {
 				this._host.state().next("Idle");
 			},
@@ -50,7 +45,7 @@ Scoped.define("module:Interactions.Droplist", [
 			
 			__eventData: function () {
 				return {
-					index: this._floater.index(),
+					index: Dom.elementIndex(this._floater),
 					element: this.element(),
 					target: this,
 					data: this.data,
@@ -67,34 +62,28 @@ Scoped.define("module:Interactions.Droplist", [
 			},
 			
 			__update_floater: function (data) {
-			    this._floater.css("display", "none");
+			    this._floater.style.display = "none";
 			    var coords = data.page_coords;
 			    var child = Dom.childContainingElement(this.element(), data.underneath);
 			    if (!child)
 			        return;
-			    child = $(child);
-			    if (child.get(0) == this._floater.get(0)) {
-			        this._floater.css("display", "");
+			    if (child === this._floater) {
+			        this._floater.style.display = "";
 			        return;
 			    }
 			    var bb = Dom.elementBoundingBox(child);
 			    bb = this._options.bounding_box.call(this._options.context, bb);
 			    if (bb.top <= coords.y && coords.y <= bb.bottom)
 			    	return;
-		        this._floater.css("display", "");
+		        this._floater.style.display = "";
 		        if (coords.y < bb.top)
-		        	this._floater.insertBefore(child);
+		        	Dom.elementInsertBefore(this._floater, child);
 		        else
-		        	this._floater.insertAfter(child);
+		        	Dom.elementInsertAfter(this._floater, child);
 			},
 			
 			insertAt: function (element, index) {
-				var lastIndex = this.element().children().size();
-				if (index < 0)
-					index = Math.max(0, lastIndex + 1 + index);
-				this.element().append(element);
-				if (index < lastIndex) 
-					this.element().children().eq(index).before(this.element().children().last());
+				Dom.elementInsertAt(element, this.element(), index);
 			}
 			
 		};
@@ -153,13 +142,13 @@ Scoped.define("module:Interactions.DroplistStates.Hover", ["module:Interactions.
 				this.on(this.element(), "drag-drop", function (event) {
 					this._drag_source = event.detail;
 					this.parent().__update_floater(this._drag_source);
-					this.next(this.parent()._floater.css("display") == "none" ? "Idle" : "Dropping");
+					this.next(this.parent()._floater.style.display == "none" ? "Idle" : "Dropping");
 				});
 			},
 			
 			_end: function () {
 				this.trigger("unhover");
-				this.parent()._floater.css("display", "none");
+				this.parent()._floater.style.display = "none";
 				inherited._end.call(this);
 			}
 		

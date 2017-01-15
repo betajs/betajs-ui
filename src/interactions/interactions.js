@@ -2,7 +2,6 @@ Scoped.define("module:Interactions.ElementInteraction", [
 	    "base:Class",
 	    "base:Events.EventsMixin",
 	    "module:Hardware.MouseCoords",
-	    "jquery:",
 	    "base:Async",
 	    "base:States.Host",
 	    "base:Ids",
@@ -10,7 +9,7 @@ Scoped.define("module:Interactions.ElementInteraction", [
 	    "base:Classes.ClassRegistry",
 	    "browser:Dom",
 	    "browser:Events"
-	], function (Class, EventsMixin, MouseCoords, $, Async, StateHost, Ids, Objs, ClassRegistry, Dom, DomEvents, scoped) {
+	], function (Class, EventsMixin, MouseCoords, Async, StateHost, Ids, Objs, ClassRegistry, Dom, DomEvents, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 

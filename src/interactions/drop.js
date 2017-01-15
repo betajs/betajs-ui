@@ -3,15 +3,14 @@ Scoped.define("module:Interactions.Drop", [
 	    "base:Objs",
 	    "module:Elements.ElementModifier",
 	    "module:Interactions.DropStates",
-	    "browser:Dom",
-	    "jquery:"
+	    "browser:Dom"
 	], [
 	    "module:Interactions.DropStates.Disabled",
 	    "module:Interactions.DropStates.Idle",
 	    "module:Interactions.DropStates.Hover",
 	    "module:Interactions.DropStates.InvalidHover",
 	    "module:Interactions.DropStates.Dropping"
-	], function (ElemInter, Objs, ElemMod, DropStates, Dom, $, scoped) {
+	], function (ElemInter, Objs, ElemMod, DropStates, Dom, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -37,10 +36,6 @@ Scoped.define("module:Interactions.Drop", [
 				inherited.destroy.call(this);
 			},
 			
-			element: function () {
-				return $(this._element);
-			},
-
 			_enable: function () {
 				this._host.state().next("Idle");
 			},

@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.28 - 2017-01-13
+betajs-ui - v1.0.29 - 2017-01-15
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -14,11 +14,11 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "83.1484341501359"
+    "version": "1.0.29"
 };
 });
-Scoped.assumeVersion('base:version', 474);
-Scoped.assumeVersion('browser:version', 70);
+Scoped.assumeVersion('base:version', '^1.0.96');
+Scoped.assumeVersion('browser:version', '^1.0.61');
 Scoped.define("module:Dynamics.GesturePartial", [
     "dynamics:Handlers.Partial",
     "module:Gestures.Gesture",
@@ -966,14 +966,12 @@ Scoped.define("module:Interactions.Drag", [
 	    "module:Hardware.MouseCoords",
 	    "base:Ids",
 	    "base:Objs",
-	    "base:Functions",
-	    "module:Interactions.DragStates",
-	    "jquery:"
+	    "module:Interactions.DragStates"
 	], [
 	    "module:Interactions.DragStates.Idle",
 	    "module:Interactions.DragStates.Dragging",
 	    "module:Interactions.DragStates.Stopping"
-	], function (ElemInter, ElemMod, Dom, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, Functions, DragStates, $, scoped) {
+	], function (ElemInter, ElemMod, Dom, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, DragStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -1006,11 +1004,11 @@ Scoped.define("module:Interactions.Drag", [
 			
 			_enable: function () {
 				if (this._options.start_event)
-					this.element().on(this._options.start_event + "." + Ids.objectId(this), Functions.as_method(this.start, this));
+					this.__on(this.element(), this._options.start_event, this.start, this);
 			},
 			
 			_disable: function () {
-				this.element().off("." + Ids.objectId(this));
+				this._domEvents.clear();
 				this.stop();
 			},
 			
@@ -1037,18 +1035,13 @@ Scoped.define("module:Interactions.Drag", [
 				this.trigger("dropped", drop);
 				this._host.state().next("Stopping", {immediately: true});
 				if (this._options.remove_element_on_drop) {
-					this.element().remove();
+					this.element().parentNode.removeChild(this.element());
 					this.destroy();
 				}
 			},
 			
-			element: function () {
-				return $(this._element);
-			},
-			
 			actionable_element: function () {
-				var c = this._host.state()._cloned_element;
-				return c ? c : this.element();
+				return this._host.state()._cloned_element || this.element();
 			},
 			
 			modifier: function () {
@@ -1129,8 +1122,8 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
 	    "module:Hardware.MouseCoords",
 	    "module:Elements.ElementModifier",
 	    "module:Events.Mouse",
-	    "jquery:"
-	], function (State, MouseCoords, ElementMod, MouseEvents, $, scoped) {
+	    "browser:Dom"
+	], function (State, MouseCoords, ElementMod, MouseEvents, Dom, scoped) {
 	return State.extend({scoped: scoped}, {
 		
 		_white_list: ["Stopping"],
@@ -1140,18 +1133,21 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
 			var opts = this.parent().options();
 			this._page_coords = MouseCoords.coords;
 			if (opts.clone_element) {
+				var offset = Dom.elementOffset(this.element());
+				var dimensions = Dom.elementDimensions(this.element());
 				this._initial_element_coords = {
-					x: this.element().offset().left,
-					y: this.element().offset().top
+					x: offset.left,
+					y: offset.top
 				};
-				var zindex = this.element().css("z-index");
-				var width = this.element().width();
-				var height = this.element().height();
+				var zindex = this.element().style.zIndex;
+				var width = dimensions.width;
+				var height = dimensions.height;
 				if (opts.drag_original_element) {
-					this._placeholder_cloned_element = this.element().clone();
-					this._cloned_element = this.element().replaceWith(this._placeholder_cloned_element);
+					this._placeholder_cloned_element = this.element().cloneNode(true);
+					this.element().replaceWith(this._placeholder_cloned_element);
+					this._cloned_element = this._placeholder_cloned_element;
 				} else {
-					this._cloned_element = this.element().clone();
+					this._cloned_element = this.element().cloneNode(true);
 				}
 				this._cloned_modifier = new ElementMod(this._cloned_element); 
 				this._cloned_modifier.css("position", "absolute");
@@ -1160,7 +1156,7 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
 				this._cloned_modifier.css("zIndex", zindex + 1);
 				this._cloned_modifier.css("left", this._initial_element_coords.x + "px");
 				this._cloned_modifier.css("top", this._initial_element_coords.y + "px");
-				$("body").append(this._cloned_element);
+				document.body.appendChild(this._cloned_element);
 			} else {
 				var modifier = this.parent().modifier();
 				modifier.css("position", "relative");
@@ -1264,10 +1260,9 @@ Scoped.define("module:Interactions.DragStates.Stopping", [
 					this._cloned_modifier.destroy();
 				}
 				if (this._cloned_element) {
-					if (this._placeholder_cloned_element) {
-						this._cloned_element = this._placeholder_cloned_element.replaceWith(this._cloned_element);
-					}
-					this._cloned_element.remove();
+					if (this._placeholder_cloned_element)
+						this._placeholder_cloned_element.replaceWith(this._cloned_element);
+					this._cloned_element.parentNode.removeChild(this._cloned_element);
 				}
 				this.parent().modifier().revert();
 				this.trigger("stop");
@@ -1282,15 +1277,14 @@ Scoped.define("module:Interactions.Drop", [
 	    "base:Objs",
 	    "module:Elements.ElementModifier",
 	    "module:Interactions.DropStates",
-	    "browser:Dom",
-	    "jquery:"
+	    "browser:Dom"
 	], [
 	    "module:Interactions.DropStates.Disabled",
 	    "module:Interactions.DropStates.Idle",
 	    "module:Interactions.DropStates.Hover",
 	    "module:Interactions.DropStates.InvalidHover",
 	    "module:Interactions.DropStates.Dropping"
-	], function (ElemInter, Objs, ElemMod, DropStates, Dom, $, scoped) {
+	], function (ElemInter, Objs, ElemMod, DropStates, Dom, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -1316,10 +1310,6 @@ Scoped.define("module:Interactions.Drop", [
 				inherited.destroy.call(this);
 			},
 			
-			element: function () {
-				return $(this._element);
-			},
-
 			_enable: function () {
 				this._host.state().next("Idle");
 			},
@@ -1482,7 +1472,6 @@ Scoped.define("module:Interactions.DropStates.Dropping", ["module:Interactions.D
 Scoped.define("module:Interactions.Droplist", [
         "module:Interactions.ElementInteraction",
 	    "base:Objs",
-	    "jquery:",
 	    "module:Interactions.DroplistStates",
 	    "browser:Dom"
 	], [
@@ -1490,7 +1479,7 @@ Scoped.define("module:Interactions.Droplist", [
 	    "module:Interactions.DroplistStates.Idle",
 	    "module:Interactions.DroplistStates.Hover",
 	    "module:Interactions.DroplistStates.Dropping"
-	], function (ElemInter, Objs, $, DroplistStates, Dom, scoped) {
+	], function (ElemInter, Objs, DroplistStates, Dom, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -1508,8 +1497,8 @@ Scoped.define("module:Interactions.Droplist", [
 				inherited.constructor.call(this, element, options, DroplistStates);
 				this._host.initialize("Idle");
 				this.data = data;
-				this._floater = $(this._options.floater);
-				this._floater.css("display", "none");
+				this._floater = Dom.unbox(this._options.floater);
+				this._floater.style.display = "none";
 			},
 			
 			destroy: function () {
@@ -1517,10 +1506,6 @@ Scoped.define("module:Interactions.Droplist", [
 				inherited.destroy.call(this);
 			},
 			
-			element: function () {
-				return $(this._element);
-			},
-
 			_enable: function () {
 				this._host.state().next("Idle");
 			},
@@ -1531,7 +1516,7 @@ Scoped.define("module:Interactions.Droplist", [
 			
 			__eventData: function () {
 				return {
-					index: this._floater.index(),
+					index: Dom.elementIndex(this._floater),
 					element: this.element(),
 					target: this,
 					data: this.data,
@@ -1548,34 +1533,28 @@ Scoped.define("module:Interactions.Droplist", [
 			},
 			
 			__update_floater: function (data) {
-			    this._floater.css("display", "none");
+			    this._floater.style.display = "none";
 			    var coords = data.page_coords;
 			    var child = Dom.childContainingElement(this.element(), data.underneath);
 			    if (!child)
 			        return;
-			    child = $(child);
-			    if (child.get(0) == this._floater.get(0)) {
-			        this._floater.css("display", "");
+			    if (child === this._floater) {
+			        this._floater.style.display = "";
 			        return;
 			    }
 			    var bb = Dom.elementBoundingBox(child);
 			    bb = this._options.bounding_box.call(this._options.context, bb);
 			    if (bb.top <= coords.y && coords.y <= bb.bottom)
 			    	return;
-		        this._floater.css("display", "");
+		        this._floater.style.display = "";
 		        if (coords.y < bb.top)
-		        	this._floater.insertBefore(child);
+		        	Dom.elementInsertBefore(this._floater, child);
 		        else
-		        	this._floater.insertAfter(child);
+		        	Dom.elementInsertAfter(this._floater, child);
 			},
 			
 			insertAt: function (element, index) {
-				var lastIndex = this.element().children().size();
-				if (index < 0)
-					index = Math.max(0, lastIndex + 1 + index);
-				this.element().append(element);
-				if (index < lastIndex) 
-					this.element().children().eq(index).before(this.element().children().last());
+				Dom.elementInsertAt(element, this.element(), index);
 			}
 			
 		};
@@ -1634,13 +1613,13 @@ Scoped.define("module:Interactions.DroplistStates.Hover", ["module:Interactions.
 				this.on(this.element(), "drag-drop", function (event) {
 					this._drag_source = event.detail;
 					this.parent().__update_floater(this._drag_source);
-					this.next(this.parent()._floater.css("display") == "none" ? "Idle" : "Dropping");
+					this.next(this.parent()._floater.style.display == "none" ? "Idle" : "Dropping");
 				});
 			},
 			
 			_end: function () {
 				this.trigger("unhover");
-				this.parent()._floater.css("display", "none");
+				this.parent()._floater.style.display = "none";
 				inherited._end.call(this);
 			}
 		
@@ -1828,7 +1807,6 @@ Scoped.define("module:Interactions.ElementInteraction", [
 	    "base:Class",
 	    "base:Events.EventsMixin",
 	    "module:Hardware.MouseCoords",
-	    "jquery:",
 	    "base:Async",
 	    "base:States.Host",
 	    "base:Ids",
@@ -1836,7 +1814,7 @@ Scoped.define("module:Interactions.ElementInteraction", [
 	    "base:Classes.ClassRegistry",
 	    "browser:Dom",
 	    "browser:Events"
-	], function (Class, EventsMixin, MouseCoords, $, Async, StateHost, Ids, Objs, ClassRegistry, Dom, DomEvents, scoped) {
+	], function (Class, EventsMixin, MouseCoords, Async, StateHost, Ids, Objs, ClassRegistry, Dom, DomEvents, scoped) {
 	return Class.extend({scoped: scoped}, [EventsMixin, function (inherited) {
 		return {
 
@@ -2066,12 +2044,11 @@ Scoped.define("module:Interactions.LoopscrollStates.ScrollingTo", ["module:Inter
 
 Scoped.define("module:Interactions.Pinch", [
     "module:Interactions.ElementInteraction",
-    "module:Interactions.PinchStates",
-    "jquery:"
+    "module:Interactions.PinchStates"
 ], [
 	"module:Interactions.PinchStates.Idle",
 	"module:Interactions.PinchStates.Pinching"
-], function (ElemInter, PinchStates, $, scoped) {
+], function (ElemInter, PinchStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -2081,10 +2058,6 @@ Scoped.define("module:Interactions.Pinch", [
 				this.data = data;
 			},
 			
-			element: function () {
-				return $(this._element);
-			},
-
 			_disable: function () {
 				this.stop();
 			},

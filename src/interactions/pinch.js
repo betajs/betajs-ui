@@ -1,11 +1,10 @@
 Scoped.define("module:Interactions.Pinch", [
     "module:Interactions.ElementInteraction",
-    "module:Interactions.PinchStates",
-    "jquery:"
+    "module:Interactions.PinchStates"
 ], [
 	"module:Interactions.PinchStates.Idle",
 	"module:Interactions.PinchStates.Pinching"
-], function (ElemInter, PinchStates, $, scoped) {
+], function (ElemInter, PinchStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -15,10 +14,6 @@ Scoped.define("module:Interactions.Pinch", [
 				this.data = data;
 			},
 			
-			element: function () {
-				return $(this._element);
-			},
-
 			_disable: function () {
 				this.stop();
 			},
