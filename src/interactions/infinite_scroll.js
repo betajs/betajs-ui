@@ -1,12 +1,14 @@
 Scoped.define("module:Interactions.Infinitescroll", [
-        "module:Interactions.Scroll",
-	    "base:Objs",
-	    "module:Interactions.InfinitescrollStates"
-	], [
-	    "module:Interactions.InfinitescrollStates.Idle",
-	    "module:Interactions.InfinitescrollStates.Scrolling",
-	    "module:Interactions.InfinitescrollStates.ScrollingTo"
-	], function (Scroll, Objs, InfinitescrollStates, scoped) {
+    "module:Interactions.Scroll",
+    "base:Objs",
+    "module:Interactions.InfinitescrollStates",
+    "browser:Dom",
+    "jquery:"
+], [
+    "module:Interactions.InfinitescrollStates.Idle",
+    "module:Interactions.InfinitescrollStates.Scrolling",
+    "module:Interactions.InfinitescrollStates.ScrollingTo"
+], function (Scroll, Objs, InfinitescrollStates, Dom, $, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -26,11 +28,11 @@ Scoped.define("module:Interactions.Infinitescroll", [
 				this._extending = false;
 				if (options.prepend && this.options().whitespace) {
 					this.__top_white_space = this._whitespaceCreate();
-					this.itemsElement().prepend(this.__top_white_space);
+					Dom.elementPrependChild(this.itemsElement(), this.__top_white_space);
 				}
 				if (this.options().whitespace_bottom) {
 					this.__bottom_white_space = this._whitespaceCreate();
-					this.itemsElement().append(this.__bottom_white_space);
+					this.itemsElement().appendChild(this.__bottom_white_space);
 				}
 				this.reset(true);
 		    },
@@ -42,7 +44,7 @@ Scoped.define("module:Interactions.Infinitescroll", [
 		    		var self = this;
 		    		opts.append.call(opts.context, count || opts.append_count, function (added, done) {
 		    			if (self.__bottom_white_space)
-		    				self.itemsElement().append(self.__bottom_white_space);
+		    				self.itemsElement().appendChild(self.__bottom_white_space);
 		    			self._extending = false;
 		    			self._can_append = done;
 		    			self.appended(added);
@@ -51,17 +53,17 @@ Scoped.define("module:Interactions.Infinitescroll", [
 		    },
 		    
 		    appendNeeded: function () {
-		    	var total_height = this.element().get(0).scrollHeight;
-		    	var element_height = this.element().innerHeight();
-		    	var hidden_height = total_height - (this.element().scrollTop() + element_height) - this._whitespaceGetHeight(this.__bottom_white_space);
+		    	var total_height = this.element().scrollHeight;
+		    	var element_height = $(this.element()).innerHeight();
+		    	var hidden_height = total_height - (this.element().scrollTop + element_height) - this._whitespaceGetHeight(this.__bottom_white_space);
 		    	return hidden_height < this.options().height_factor * element_height;
 		    },
 		    
 		    prependNeeded: function () {
 		    	if (!this.options().prepend)
 		    		return false;
-		    	var element_height = this.element().innerHeight();
-		    	var hidden_height = this.element().scrollTop() - this._whitespaceGetHeight(this.__top_white_space);
+		    	var element_height = $(this.element()).innerHeight();
+		    	var hidden_height = this.element().scrollTop - this._whitespaceGetHeight(this.__top_white_space);
 		    	return hidden_height < this.options().height_factor * element_height;
 		    },
 		    
@@ -72,7 +74,7 @@ Scoped.define("module:Interactions.Infinitescroll", [
 		    		var self = this;
 		    		opts.prepend.call(opts.context, count || opts.prepend_count, function (added, done) {
 		    			if (self.__top_white_space)
-		    				self.itemsElement().prepend(self.__top_white_space);
+		    				Dom.elementPrependChild(self.itemsElement(), self.__top_white_space);
 		    			self._extending = false;
 		    			self._can_prepend = done;
 		    			self.prepended(added);
@@ -85,13 +87,13 @@ Scoped.define("module:Interactions.Infinitescroll", [
 		    },
 		    
 		    prepended: function (count) {
-		    	var first = this.itemsElement().find(":nth-child(2)");
-		    	var last = this.itemsElement().find(":nth-child(" + (1 + count) + ")");
-		    	var h = last.offset().top - first.offset().top + last.outerHeight();
+		    	var first = this.itemsElement().children[1];
+		    	var last = this.itemsElement().children[count];
+		    	var h = Dom.elementOffset(last).top - Dom.elementOffset(first).top + $(last).outerHeight();
 		    	if (this.scrolling()) {
 		    		this._whitespaceSetHeight(this.__top_white_space, this._whitespaceGetHeight(this.__top_white_space) - h);
 		    	} else
-		    		this.element().scrollTop(this.element().scrollTop() - h);
+		    		this.element().scrollTop = this.element().scrollTop - h;
 		    },
 		    
 		    extendFix: function () {
@@ -109,14 +111,14 @@ Scoped.define("module:Interactions.Infinitescroll", [
 		    		return;
 				var h = this._whitespaceGetHeight(this.__top_white_space);
 		        this._whitespaceSetHeight(this.__top_white_space, this.options().whitespace);
-				this.element().scrollTop(this.element().scrollTop() + this.options().whitespace - h);
+		        this.element().scrollTop = this.element().scrollTop + this.options().whitespace - h;
 		    },
 		
 		    reset: function (increment) {
 		        this._whitespaceSetHeight(this.__bottom_white_space, this.options().whitespace);
 		        if (this.options().prepend) {
 			        this._whitespaceSetHeight(this.__top_white_space, this.options().whitespace);
-			        this.element().scrollTop(this.options().whitespace + (increment ? this.element().scrollTop() : 0));
+			        this.element().scrollTop = this.options().whitespace + (increment ? this.element().scrollTop : 0);
 		        }
 		    }
 		    		

@@ -10,7 +10,6 @@ Scoped.define("module:Interactions.Scroll", [
 		return {
 			
 		    constructor: function (element, options, data, stateNS) {
-		    	element = $(element);
 		    	stateNS = stateNS || ScrollStates;
 		    	options = Objs.extend({
 		    		discrete: false,
@@ -23,45 +22,41 @@ Scoped.define("module:Interactions.Scroll", [
 					enable_scroll_modifier: "scroll"
 				}, options);
 				inherited.constructor.call(this, element, options, stateNS);
-				this._itemsElement = options.itemsElement || element;
+				this._itemsElement = Dom.unbox(options.itemsElement || element);
 				this._disableScrollCounter = 0;
 				this._host.initialize("Idle");
 				this._scrollingDirection = true;
 				this._lastScrollTop = null;
 				this.__on(this.element(), "scroll", function () {
-					var scrollTop = this.element().scrollTop();
+					var scrollTop = this.element().scrollTop;
 					if (this._lastScrollTop !== null)
 						this._scrollingDirection = scrollTop >= this._lastScrollTop;
 					this._lastScrollTop = scrollTop;
 				});
 		    },
 		    
-			element: function () {
-				return $(this._element);
-			},
-
 			_whitespaceType: function () {
 		        if (this.options().display_type)
 		            return this.options().display_type;
-		        return this.element().css("display").indexOf('flex') >= 0 ? "flex" : "default";
+		        return (this.element().style.display || "").toLowerCase().indexOf('flex') >= 0 ? "flex" : "default";
 		    },
 		
 		    _whitespaceCreate: function () {
-		        var whitespace = $("<whitespace></whitespace>");
+		        var whitespace = document.createElement("whitespace");
 		        var type = this._whitespaceType();
 		
 		        if (type == "flex") {
-		            whitespace.css("display", "-ms-flexbox");
-		            whitespace.css("display", "-webkit-flex");
-		            whitespace.css("display", "flex");
+		            whitespace.style.display = "-ms-flexbox";
+		            whitespace.style.display = "-webkit-flex";
+		            whitespace.style.display = "flex";
 		        } else
-		            whitespace.css("display", "block");
+		            whitespace.style.display = "block";
 		
 		        return whitespace;
 		    },
 		
 		    _whitespaceGetHeight: function (whitespace) {
-		        return whitespace ? parseInt(whitespace.css("height"), 10) : 0;
+		        return whitespace ? parseInt($(whitespace).css("height"), 10) : 0;
 		    },
 		
 		    _whitespaceSetHeight: function (whitespace, height) {
@@ -70,11 +65,11 @@ Scoped.define("module:Interactions.Scroll", [
 		        var type = this._whitespaceType();
 		
 		        if (type == "flex") {
-		            whitespace.css("-webkit-flex", "0 0 " + height + "px");
-		            whitespace.css("-ms-flex", "0 0 " + height + "px");
-		            whitespace.css("flex", "0 0 " + height + "px");
+		            whitespace.style["-webkit-flex"] = "0 0 " + height + "px";
+		            whitespace.style["-ms-flex"] = "0 0 " + height + "px";
+		            whitespace.style.flex = "0 0 " + height + "px";
 		        } else
-		            whitespace.css("height", height + "px");
+		            whitespace.style.height = height + "px";
 		    },
 		
 		    itemsElement: function () {
@@ -86,50 +81,51 @@ Scoped.define("module:Interactions.Scroll", [
 		    },
 		    
 		    currentElement: function () {
-		    	var offset = this.element().offset();
-		    	var h = this._options.currentTop ? this._options.elementMargin : (this.element().innerHeight() - 1 - this._options.elementMargin);
-		    	var w = this.element().innerWidth() / 2;
-		    	var current = $(Dom.elementFromPoint(offset.left + w, offset.top + h));
-		    	while (current && current.get(0) && current.parent().get(0) != this.itemsElement().get(0))
-		    		current = current.parent();
-		    	if (!current || !current.get(0))
+		    	var offset = Dom.elementOffset(this.element());
+		    	var h = this._options.currentTop ? this._options.elementMargin : ($(this.element()).innerHeight() - 1 - this._options.elementMargin);
+		    	var w = $(this.element()).innerWidth() / 2;
+		    	var current = Dom.elementFromPoint(offset.left + w, offset.top + h);
+		    	while (current && current.parentNode != this.itemsElement())
+		    		current = current.parentNode;
+		    	if (!current)
 		    		return null;
 		    	if (!this._options.currentCenter)
 		    		return current;    	
 		    	if (this._options.currentTop) {
-		    		var delta_top = this.element().offset().top - current.offset().top;
-		    		if (delta_top > current.outerHeight() / 2)
-		    			current = current.next();
+		    		var delta_top = offset.top - Dom.elementOffset(current).top;
+		    		if (delta_top > $(current).outerHeight() / 2)
+		    			current = current.nextElementSibling;
 		    	} else {
-		    		var delta_bottom = this.element().offset().top + h - current.offset().top;
-		    		if (delta_bottom < current.outerHeight() / 2)
-		    			current = current.prev();
+		    		var delta_bottom = offset.top + h - Dom.elementOffset(current).top;
+		    		if (delta_bottom < $(current).outerHeight() / 2)
+		    			current = current.previousElementSibling;
 		    	}
 		    	return current;
 		    },
 		    
 		    scrollTo: function (position, options) {
-		    	var scroll_top = position - (this._options.currentTop ? 0 : (this.element().innerHeight() - 1));
+		    	var scroll_top = position - (this._options.currentTop ? 0 : ($(this.element()).innerHeight() - 1));
 		    	options = options || {};
 		    	options.scroll_top = scroll_top;
 		    	this._host.state().next("ScrollingTo", options);
 		    },
 		    
 		    scrollToElement: function (element, options) {
-		    	var top = element.offset().top - this.element().offset().top + this.element().scrollTop();
-				this.scrollTo(top + (this._options.currentTop ? 0 : (element.outerHeight() - 1)), options);
+		    	element = Dom.unbox(element);
+		    	var top = Dom.elementOffset(element).top - Dom.elementOffset(this.element()).top + this.element().scrollTop;
+				this.scrollTo(top + (this._options.currentTop ? 0 : ($(element).outerHeight() - 1)), options);
 		    },
 		    
 		    disableScroll: function () {
 		    	if (this._disableScrollCounter === 0)
-		        	this.element().css("overflow", "hidden");
+		        	this.element().style.overflow = "hidden";
 		    	this._disableScrollCounter++;
 		    },
 		    
 		    enableScroll: function () {
 		    	this._disableScrollCounter--;
 		    	if (this._disableScrollCounter === 0)
-		    		this.element().css("overflow", this._options.enable_scroll_modifier);
+		    		this.element().style.overflow = this._options.enable_scroll_modifier;
 		    },
 		    
 		    scrolling: function () {
@@ -239,7 +235,7 @@ Scoped.define("module:Interactions.ScrollStates.ScrollingTo", ["module:Interacti
 						this);
 					this._animation.start();
 				} else {
-					this.element().scrollTop(this._scroll_top);
+					this.element().scrollTop = this._scroll_top;
 					this._scroll();
 					this._finished();
 				}

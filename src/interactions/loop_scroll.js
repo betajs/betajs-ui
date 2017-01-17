@@ -1,48 +1,51 @@
 
 Scoped.define("module:Interactions.Loopscroll", [
     "module:Interactions.Scroll",
-    "module:Interactions.LoopscrollStates"
+    "module:Interactions.LoopscrollStates",
+    "browser:Dom",
+    "jquery:"
 ], [
 	"module:Interactions.LoopscrollStates.Idle",
 	"module:Interactions.LoopscrollStates.Scrolling",
 	"module:Interactions.LoopscrollStates.ScrollingTo"
-], function (Scroll, LoopscrollStates, scoped) {
+], function (Scroll, LoopscrollStates, Dom, $, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
 
 		    constructor: function (element, options, data) {
 		    	inherited.constructor.call(this, element, options, data, LoopscrollStates);
 				this.__top_white_space = this._whitespaceCreate();
-				this.itemsElement().prepend(this.__top_white_space);
+				Dom.elementPrependChild(this.itemsElement(), this.__top_white_space);
 				this.__bottom_white_space = this._whitespaceCreate();
-				this.itemsElement().append(this.__bottom_white_space);
+				this.itemsElement().appendChild(this.__bottom_white_space);
 		        this.reset(true);
 		    },
 		
 		    _rotateFix: function () {
+		    	var itemsElementChildren = this.itemsElement().children;
 		    	var top_ws_height = this._whitespaceGetHeight(this.__top_white_space);
 		    	var bottom_ws_height = this._whitespaceGetHeight(this.__bottom_white_space);
-		    	var full_height = this.element().get(0).scrollHeight;
-		    	var visible_height = this.element().innerHeight();
+		    	var full_height = this.element().scrollHeight;
+		    	var visible_height = $(this.element()).innerHeight();
 		    	var elements_height = full_height - top_ws_height - bottom_ws_height;
-		    	var scroll_top = this.element().scrollTop();
-		    	var count = this.itemsElement().children().length - 2;
+		    	var scroll_top = this.element().scrollTop;
+		    	var count = itemsElementChildren.length - 2;
 		    	var top_elements = (scroll_top - top_ws_height) / elements_height * count; 
 		    	var bottom_elements = (elements_height - (scroll_top - top_ws_height) - visible_height) / elements_height * count;
 		    	if (top_elements < bottom_elements - 1) {
 			    	while (top_elements < bottom_elements - 1) {
-						var item = this.itemsElement().find(":nth-last-child(2)");
-						item.insertAfter(this.__top_white_space);
-						top_ws_height -= item.outerHeight();
+						var item = itemsElementChildren[itemsElementChildren.length - 2];
+						Dom.elementInsertAfter(item, this.__top_white_space);
+						top_ws_height -= $(item).outerHeight();
 		                this._whitespaceSetHeight(this.__top_white_space, top_ws_height);
 						bottom_elements--;
 						top_elements++;
 			    	}
 				} else if (bottom_elements < top_elements - 1) {
 			    	while (bottom_elements < top_elements - 1) {
-						var item2 = this.itemsElement().find(":nth-child(2)");
-						item2.insertBefore(this.__bottom_white_space);
-						top_ws_height += item2.outerHeight();
+						var item2 = itemsElementChildren[1];
+						Dom.elementInsertBefore(item2, this.__bottom_white_space);
+						top_ws_height += $(item2).outerHeight();
 		                this._whitespaceSetHeight(this.__top_white_space, top_ws_height);
 						bottom_elements++;
 						top_elements--;
@@ -54,7 +57,7 @@ Scoped.define("module:Interactions.Loopscroll", [
 		        this._whitespaceSetHeight(this.__bottom_white_space, this.options().whitespace);
 				var h = this._whitespaceGetHeight(this.__top_white_space);
 		        this._whitespaceSetHeight(this.__top_white_space, this.options().whitespace);
-				this.element().scrollTop(this.element().scrollTop() + this.options().whitespace - h);
+		        this.element().scrollTop = this.element().scrollTop + this.options().whitespace - h;
 		    },
 
 			scrollToElement: function (element, options) {
@@ -64,7 +67,7 @@ Scoped.define("module:Interactions.Loopscroll", [
 		    reset: function (increment) {
 		        this._whitespaceSetHeight(this.__bottom_white_space, this.options().whitespace);
 		        this._whitespaceSetHeight(this.__top_white_space, this.options().whitespace);
-		        this.element().scrollTop(this.options().whitespace + (increment ? this.element().scrollTop() : 0));
+		        this.element().scrollTop = this.options().whitespace + (increment ? this.element().scrollTop : 0);
 		    }
 		
 		};
