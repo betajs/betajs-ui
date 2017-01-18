@@ -1,10 +1,10 @@
 test("test loop scroll", function() {
 	stop();
-	var element = $("#qunit-fixture");
-	$("#qunit-fixture").css("height", "400px");
+	var element = document.getElementById("qunit-fixture");
+	element.style.height = "400px";
 
 	for (var i = 0; i < 20; ++i)
-		element.append("<div style='height:40px'>Item " + i + "</div>");
+		element.appendChild(BetaJS.Browser.Dom.elementByTemplate("<div style='height:40px'>Item " + i + "</div>"));
 	
 	var scroll = new BetaJS.UI.Interactions.Loopscroll(element, {
 		enabled: true,
@@ -16,7 +16,7 @@ test("test loop scroll", function() {
 	
 	
 	setTimeout(function () {
-		var ele = $(element.children().get(1));
+		var ele = element.children[1];
 		scroll.scrollToElement(ele, {
 			animate: true
 		});

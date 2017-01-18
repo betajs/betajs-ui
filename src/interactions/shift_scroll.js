@@ -1,8 +1,8 @@
 Scoped.define("module:Interactions.Shiftscroll", [
 	"module:Interactions.Scroll",
 	"base:Async",
-	"jquery:"
-], function (Scroll, Async, $, scoped) {
+	"browser:Dom"
+], function (Scroll, Async, Dom, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -15,8 +15,8 @@ Scoped.define("module:Interactions.Shiftscroll", [
 		    },
 		    
 		    _whitespaceFix: function () {
-		    	var boxHeight = $(this.element()).innerHeight();
-		    	var itemHeight = $(this.itemsElement().firstElementChild).outerHeight();
+		    	var boxHeight = this.element().clientHeight;
+		    	var itemHeight = Dom.elementDimensions(this.itemsElement().firstElementChild).height;
 				this._whitespaceSetHeight(this.__bottom_white_space, boxHeight - itemHeight);
 		    }
 		    		

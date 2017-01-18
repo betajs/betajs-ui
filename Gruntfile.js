@@ -12,7 +12,6 @@ module.exports = function(grunt) {
 		"module": "global:BetaJS.UI",
 		"base": "global:BetaJS",
 		"browser": "global:BetaJS.Browser",
-		"jquery": "global:jQuery",
 		// optional
 		"dynamics": "global:BetaJS.Dynamics"
     }, {
@@ -29,7 +28,7 @@ module.exports = function(grunt) {
     .qunitTask(null, './dist/' + dist + '-noscoped.js',
     		         grunt.file.expand(["./tests/fragments/test-jsdom.js", "./tests/tests/*.js"]),
     		         ['./tests/fragments/init-jsdom.js', require.resolve("betajs-scoped"), require.resolve("betajs"), require.resolve("betajs-browser")])
-    .closureTask(null, [require.resolve("betajs-scoped"), require.resolve("betajs"), require.resolve("betajs-browser"), "./dist/betajs-ui-noscoped.js"], null, { jquery: true })
+    .closureTask(null, [require.resolve("betajs-scoped"), require.resolve("betajs"), require.resolve("betajs-browser"), "./dist/betajs-ui-noscoped.js"], null, { })
     .browserstackTask(null, 'tests/tests.html', {desktop: true, mobile: true})
     .lintTask(null, ['./src/**/*.js', './dist/' + dist + '-noscoped.js', './dist/' + dist + '.js', './Gruntfile.js', './tests/**/*.js'])
     

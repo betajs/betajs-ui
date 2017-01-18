@@ -2,13 +2,12 @@ Scoped.define("module:Interactions.Infinitescroll", [
     "module:Interactions.Scroll",
     "base:Objs",
     "module:Interactions.InfinitescrollStates",
-    "browser:Dom",
-    "jquery:"
+    "browser:Dom"
 ], [
     "module:Interactions.InfinitescrollStates.Idle",
     "module:Interactions.InfinitescrollStates.Scrolling",
     "module:Interactions.InfinitescrollStates.ScrollingTo"
-], function (Scroll, Objs, InfinitescrollStates, Dom, $, scoped) {
+], function (Scroll, Objs, InfinitescrollStates, Dom, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -54,7 +53,7 @@ Scoped.define("module:Interactions.Infinitescroll", [
 		    
 		    appendNeeded: function () {
 		    	var total_height = this.element().scrollHeight;
-		    	var element_height = $(this.element()).innerHeight();
+		    	var element_height = this.element().clientHeight;
 		    	var hidden_height = total_height - (this.element().scrollTop + element_height) - this._whitespaceGetHeight(this.__bottom_white_space);
 		    	return hidden_height < this.options().height_factor * element_height;
 		    },
@@ -62,7 +61,7 @@ Scoped.define("module:Interactions.Infinitescroll", [
 		    prependNeeded: function () {
 		    	if (!this.options().prepend)
 		    		return false;
-		    	var element_height = $(this.element()).innerHeight();
+		    	var element_height = this.element().clientHeight;
 		    	var hidden_height = this.element().scrollTop - this._whitespaceGetHeight(this.__top_white_space);
 		    	return hidden_height < this.options().height_factor * element_height;
 		    },
@@ -89,7 +88,7 @@ Scoped.define("module:Interactions.Infinitescroll", [
 		    prepended: function (count) {
 		    	var first = this.itemsElement().children[1];
 		    	var last = this.itemsElement().children[count];
-		    	var h = Dom.elementOffset(last).top - Dom.elementOffset(first).top + $(last).outerHeight();
+		    	var h = Dom.elementOffset(last).top - Dom.elementOffset(first).top + Dom.elementDimensions(last).height;
 		    	if (this.scrolling()) {
 		    		this._whitespaceSetHeight(this.__top_white_space, this._whitespaceGetHeight(this.__top_white_space) - h);
 		    	} else

@@ -1,11 +1,10 @@
 
 Scoped.define("module:Interactions.Scroll", [
-        "module:Interactions.ElementInteraction",
-	    "base:Objs",
-	    "jquery:",
-	    "browser:Dom",
-	    "module:Interactions.ScrollStates"
-	], function (ElemInter, Objs, $, Dom, ScrollStates, scoped) {
+    "module:Interactions.ElementInteraction",
+    "base:Objs",
+    "browser:Dom",
+    "module:Interactions.ScrollStates"
+], function (ElemInter, Objs, Dom, ScrollStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -56,7 +55,7 @@ Scoped.define("module:Interactions.Scroll", [
 		    },
 		
 		    _whitespaceGetHeight: function (whitespace) {
-		        return whitespace ? parseInt($(whitespace).css("height"), 10) : 0;
+		        return whitespace ? Dom.elementDimensions(whitespace).height : 0;
 		    },
 		
 		    _whitespaceSetHeight: function (whitespace, height) {
@@ -82,8 +81,8 @@ Scoped.define("module:Interactions.Scroll", [
 		    
 		    currentElement: function () {
 		    	var offset = Dom.elementOffset(this.element());
-		    	var h = this._options.currentTop ? this._options.elementMargin : ($(this.element()).innerHeight() - 1 - this._options.elementMargin);
-		    	var w = $(this.element()).innerWidth() / 2;
+		    	var h = this._options.currentTop ? this._options.elementMargin : (this.element().clientHeight - 1 - this._options.elementMargin);
+		    	var w = this.element().clientWidth / 2;
 		    	var current = Dom.elementFromPoint(offset.left + w, offset.top + h);
 		    	while (current && current.parentNode != this.itemsElement())
 		    		current = current.parentNode;
@@ -93,18 +92,18 @@ Scoped.define("module:Interactions.Scroll", [
 		    		return current;    	
 		    	if (this._options.currentTop) {
 		    		var delta_top = offset.top - Dom.elementOffset(current).top;
-		    		if (delta_top > $(current).outerHeight() / 2)
+		    		if (delta_top > Dom.elementDimensions(current).height / 2)
 		    			current = current.nextElementSibling;
 		    	} else {
 		    		var delta_bottom = offset.top + h - Dom.elementOffset(current).top;
-		    		if (delta_bottom < $(current).outerHeight() / 2)
+		    		if (delta_bottom < Dom.elementDimensions(current).height / 2)
 		    			current = current.previousElementSibling;
 		    	}
 		    	return current;
 		    },
 		    
 		    scrollTo: function (position, options) {
-		    	var scroll_top = position - (this._options.currentTop ? 0 : ($(this.element()).innerHeight() - 1));
+		    	var scroll_top = position - (this._options.currentTop ? 0 : (this.element().clientHeight - 1));
 		    	options = options || {};
 		    	options.scroll_top = scroll_top;
 		    	this._host.state().next("ScrollingTo", options);
@@ -113,7 +112,7 @@ Scoped.define("module:Interactions.Scroll", [
 		    scrollToElement: function (element, options) {
 		    	element = Dom.unbox(element);
 		    	var top = Dom.elementOffset(element).top - Dom.elementOffset(this.element()).top + this.element().scrollTop;
-				this.scrollTo(top + (this._options.currentTop ? 0 : ($(element).outerHeight() - 1)), options);
+				this.scrollTo(top + (this._options.currentTop ? 0 : (Dom.elementDimensions(element).height - 1)), options);
 		    },
 		    
 		    disableScroll: function () {

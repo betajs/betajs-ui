@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.31 - 2017-01-17
+betajs-ui - v1.0.32 - 2017-01-18
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1004,7 +1004,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.31 - 2017-01-17
+betajs-ui - v1.0.32 - 2017-01-18
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1014,12 +1014,11 @@ var Scoped = this.subScope();
 Scoped.binding('module', 'global:BetaJS.UI');
 Scoped.binding('base', 'global:BetaJS');
 Scoped.binding('browser', 'global:BetaJS.Browser');
-Scoped.binding('jquery', 'global:jQuery');
 Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.31"
+    "version": "1.0.32"
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -2652,13 +2651,12 @@ Scoped.define("module:Interactions.Infinitescroll", [
     "module:Interactions.Scroll",
     "base:Objs",
     "module:Interactions.InfinitescrollStates",
-    "browser:Dom",
-    "jquery:"
+    "browser:Dom"
 ], [
     "module:Interactions.InfinitescrollStates.Idle",
     "module:Interactions.InfinitescrollStates.Scrolling",
     "module:Interactions.InfinitescrollStates.ScrollingTo"
-], function (Scroll, Objs, InfinitescrollStates, Dom, $, scoped) {
+], function (Scroll, Objs, InfinitescrollStates, Dom, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -2704,7 +2702,7 @@ Scoped.define("module:Interactions.Infinitescroll", [
 		    
 		    appendNeeded: function () {
 		    	var total_height = this.element().scrollHeight;
-		    	var element_height = $(this.element()).innerHeight();
+		    	var element_height = this.element().clientHeight;
 		    	var hidden_height = total_height - (this.element().scrollTop + element_height) - this._whitespaceGetHeight(this.__bottom_white_space);
 		    	return hidden_height < this.options().height_factor * element_height;
 		    },
@@ -2712,7 +2710,7 @@ Scoped.define("module:Interactions.Infinitescroll", [
 		    prependNeeded: function () {
 		    	if (!this.options().prepend)
 		    		return false;
-		    	var element_height = $(this.element()).innerHeight();
+		    	var element_height = this.element().clientHeight;
 		    	var hidden_height = this.element().scrollTop - this._whitespaceGetHeight(this.__top_white_space);
 		    	return hidden_height < this.options().height_factor * element_height;
 		    },
@@ -2739,7 +2737,7 @@ Scoped.define("module:Interactions.Infinitescroll", [
 		    prepended: function (count) {
 		    	var first = this.itemsElement().children[1];
 		    	var last = this.itemsElement().children[count];
-		    	var h = Dom.elementOffset(last).top - Dom.elementOffset(first).top + $(last).outerHeight();
+		    	var h = Dom.elementOffset(last).top - Dom.elementOffset(first).top + Dom.elementDimensions(last).height;
 		    	if (this.scrolling()) {
 		    		this._whitespaceSetHeight(this.__top_white_space, this._whitespaceGetHeight(this.__top_white_space) - h);
 		    	} else
@@ -2945,13 +2943,12 @@ Scoped.define("module:Interactions.State", [
 Scoped.define("module:Interactions.Loopscroll", [
     "module:Interactions.Scroll",
     "module:Interactions.LoopscrollStates",
-    "browser:Dom",
-    "jquery:"
+    "browser:Dom"
 ], [
 	"module:Interactions.LoopscrollStates.Idle",
 	"module:Interactions.LoopscrollStates.Scrolling",
 	"module:Interactions.LoopscrollStates.ScrollingTo"
-], function (Scroll, LoopscrollStates, Dom, $, scoped) {
+], function (Scroll, LoopscrollStates, Dom, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -2969,7 +2966,7 @@ Scoped.define("module:Interactions.Loopscroll", [
 		    	var top_ws_height = this._whitespaceGetHeight(this.__top_white_space);
 		    	var bottom_ws_height = this._whitespaceGetHeight(this.__bottom_white_space);
 		    	var full_height = this.element().scrollHeight;
-		    	var visible_height = $(this.element()).innerHeight();
+		    	var visible_height = this.element().clientHeight;
 		    	var elements_height = full_height - top_ws_height - bottom_ws_height;
 		    	var scroll_top = this.element().scrollTop;
 		    	var count = itemsElementChildren.length - 2;
@@ -2979,7 +2976,7 @@ Scoped.define("module:Interactions.Loopscroll", [
 			    	while (top_elements < bottom_elements - 1) {
 						var item = itemsElementChildren[itemsElementChildren.length - 2];
 						Dom.elementInsertAfter(item, this.__top_white_space);
-						top_ws_height -= $(item).outerHeight();
+						top_ws_height -= Dom.elementDimensions(item).height;
 		                this._whitespaceSetHeight(this.__top_white_space, top_ws_height);
 						bottom_elements--;
 						top_elements++;
@@ -2988,7 +2985,7 @@ Scoped.define("module:Interactions.Loopscroll", [
 			    	while (bottom_elements < top_elements - 1) {
 						var item2 = itemsElementChildren[1];
 						Dom.elementInsertBefore(item2, this.__bottom_white_space);
-						top_ws_height += $(item2).outerHeight();
+						top_ws_height += Dom.elementDimensions(item2).height;
 		                this._whitespaceSetHeight(this.__top_white_space, top_ws_height);
 						bottom_elements++;
 						top_elements--;
@@ -3184,12 +3181,11 @@ Scoped.define("module:Interactions.PinchStates.Pinching", ["module:Interactions.
 });
 
 Scoped.define("module:Interactions.Scroll", [
-        "module:Interactions.ElementInteraction",
-	    "base:Objs",
-	    "jquery:",
-	    "browser:Dom",
-	    "module:Interactions.ScrollStates"
-	], function (ElemInter, Objs, $, Dom, ScrollStates, scoped) {
+    "module:Interactions.ElementInteraction",
+    "base:Objs",
+    "browser:Dom",
+    "module:Interactions.ScrollStates"
+], function (ElemInter, Objs, Dom, ScrollStates, scoped) {
 	return ElemInter.extend({scoped: scoped}, function (inherited) {
 		return {
 			
@@ -3240,7 +3236,7 @@ Scoped.define("module:Interactions.Scroll", [
 		    },
 		
 		    _whitespaceGetHeight: function (whitespace) {
-		        return whitespace ? parseInt($(whitespace).css("height"), 10) : 0;
+		        return whitespace ? Dom.elementDimensions(whitespace).height : 0;
 		    },
 		
 		    _whitespaceSetHeight: function (whitespace, height) {
@@ -3266,8 +3262,8 @@ Scoped.define("module:Interactions.Scroll", [
 		    
 		    currentElement: function () {
 		    	var offset = Dom.elementOffset(this.element());
-		    	var h = this._options.currentTop ? this._options.elementMargin : ($(this.element()).innerHeight() - 1 - this._options.elementMargin);
-		    	var w = $(this.element()).innerWidth() / 2;
+		    	var h = this._options.currentTop ? this._options.elementMargin : (this.element().clientHeight - 1 - this._options.elementMargin);
+		    	var w = this.element().clientWidth / 2;
 		    	var current = Dom.elementFromPoint(offset.left + w, offset.top + h);
 		    	while (current && current.parentNode != this.itemsElement())
 		    		current = current.parentNode;
@@ -3277,18 +3273,18 @@ Scoped.define("module:Interactions.Scroll", [
 		    		return current;    	
 		    	if (this._options.currentTop) {
 		    		var delta_top = offset.top - Dom.elementOffset(current).top;
-		    		if (delta_top > $(current).outerHeight() / 2)
+		    		if (delta_top > Dom.elementDimensions(current).height / 2)
 		    			current = current.nextElementSibling;
 		    	} else {
 		    		var delta_bottom = offset.top + h - Dom.elementOffset(current).top;
-		    		if (delta_bottom < $(current).outerHeight() / 2)
+		    		if (delta_bottom < Dom.elementDimensions(current).height / 2)
 		    			current = current.previousElementSibling;
 		    	}
 		    	return current;
 		    },
 		    
 		    scrollTo: function (position, options) {
-		    	var scroll_top = position - (this._options.currentTop ? 0 : ($(this.element()).innerHeight() - 1));
+		    	var scroll_top = position - (this._options.currentTop ? 0 : (this.element().clientHeight - 1));
 		    	options = options || {};
 		    	options.scroll_top = scroll_top;
 		    	this._host.state().next("ScrollingTo", options);
@@ -3297,7 +3293,7 @@ Scoped.define("module:Interactions.Scroll", [
 		    scrollToElement: function (element, options) {
 		    	element = Dom.unbox(element);
 		    	var top = Dom.elementOffset(element).top - Dom.elementOffset(this.element()).top + this.element().scrollTop;
-				this.scrollTo(top + (this._options.currentTop ? 0 : ($(element).outerHeight() - 1)), options);
+				this.scrollTo(top + (this._options.currentTop ? 0 : (Dom.elementDimensions(element).height - 1)), options);
 		    },
 		    
 		    disableScroll: function () {
@@ -3474,8 +3470,8 @@ Scoped.define("module:Interactions.ScrollStates.ScrollingTo", ["module:Interacti
 Scoped.define("module:Interactions.Shiftscroll", [
 	"module:Interactions.Scroll",
 	"base:Async",
-	"jquery:"
-], function (Scroll, Async, $, scoped) {
+	"browser:Dom"
+], function (Scroll, Async, Dom, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -3488,8 +3484,8 @@ Scoped.define("module:Interactions.Shiftscroll", [
 		    },
 		    
 		    _whitespaceFix: function () {
-		    	var boxHeight = $(this.element()).innerHeight();
-		    	var itemHeight = $(this.itemsElement().firstElementChild).outerHeight();
+		    	var boxHeight = this.element().clientHeight;
+		    	var itemHeight = Dom.elementDimensions(this.itemsElement().firstElementChild).height;
 				this._whitespaceSetHeight(this.__bottom_white_space, boxHeight - itemHeight);
 		    }
 		    		

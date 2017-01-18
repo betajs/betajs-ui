@@ -2,13 +2,12 @@
 Scoped.define("module:Interactions.Loopscroll", [
     "module:Interactions.Scroll",
     "module:Interactions.LoopscrollStates",
-    "browser:Dom",
-    "jquery:"
+    "browser:Dom"
 ], [
 	"module:Interactions.LoopscrollStates.Idle",
 	"module:Interactions.LoopscrollStates.Scrolling",
 	"module:Interactions.LoopscrollStates.ScrollingTo"
-], function (Scroll, LoopscrollStates, Dom, $, scoped) {
+], function (Scroll, LoopscrollStates, Dom, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -26,7 +25,7 @@ Scoped.define("module:Interactions.Loopscroll", [
 		    	var top_ws_height = this._whitespaceGetHeight(this.__top_white_space);
 		    	var bottom_ws_height = this._whitespaceGetHeight(this.__bottom_white_space);
 		    	var full_height = this.element().scrollHeight;
-		    	var visible_height = $(this.element()).innerHeight();
+		    	var visible_height = this.element().clientHeight;
 		    	var elements_height = full_height - top_ws_height - bottom_ws_height;
 		    	var scroll_top = this.element().scrollTop;
 		    	var count = itemsElementChildren.length - 2;
@@ -36,7 +35,7 @@ Scoped.define("module:Interactions.Loopscroll", [
 			    	while (top_elements < bottom_elements - 1) {
 						var item = itemsElementChildren[itemsElementChildren.length - 2];
 						Dom.elementInsertAfter(item, this.__top_white_space);
-						top_ws_height -= $(item).outerHeight();
+						top_ws_height -= Dom.elementDimensions(item).height;
 		                this._whitespaceSetHeight(this.__top_white_space, top_ws_height);
 						bottom_elements--;
 						top_elements++;
@@ -45,7 +44,7 @@ Scoped.define("module:Interactions.Loopscroll", [
 			    	while (bottom_elements < top_elements - 1) {
 						var item2 = itemsElementChildren[1];
 						Dom.elementInsertBefore(item2, this.__bottom_white_space);
-						top_ws_height += $(item2).outerHeight();
+						top_ws_height += Dom.elementDimensions(item2).height;
 		                this._whitespaceSetHeight(this.__top_white_space, top_ws_height);
 						bottom_elements++;
 						top_elements--;

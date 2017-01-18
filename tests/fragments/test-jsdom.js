@@ -1,15 +1,10 @@
 test("jsdom", function () {
 	stop();
-	require('jsdom').env("<div><div id='qunit-fixture'></div></div>", ["./vendors/jquery.min.js"], function (err, window) {
+	require('jsdom').env("<div><div id='qunit-fixture'></div></div>", [], function (err, window) {
 		global.window = window;
 		global.navigator = window.navigator;
 		global.document = window.document;
-		global.jQuery = window.$;
-		global.$ = window.$;
 		window.BetaJS = global.BetaJS;
-		Scoped.define("global:jQuery", function () {
-			return window.$;
-		});
 		ok(true);
 		start();
 	});		
