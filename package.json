@@ -63,7 +63,8 @@
         "badges": {
             "codeclimate": true,
             "travis": true,
-            "npm": true
+            "npm": true,
+            "gitter": true
         },
         "weakDependencies": {
             "betajs-scoped": "https://github.com/betajs/betajs-scoped"
