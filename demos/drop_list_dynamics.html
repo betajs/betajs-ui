@@ -62,13 +62,13 @@
 						},
 						events: {
 							"dropped": function (dummy, event) {
-								var doodad = event.source.data;
-								this.get("source").remove(doodad);
-								var before = this.get("target").getByIndex(event.index - 1);
-								var after = this.get("target").getByIndex(event.index);
-								doodad.set("i", before ? (after ? (before.get("i") + after.get("i"))/2 : before.get("i")+1) : (after ? after.get("i") - 1 : 0));
-								this.get("target").add(doodad);
-							}
+                                var doodad = event.source.data;
+                                this.get("source").remove(doodad);
+                                var before = this.get("target").getByIndex(event.index - 1);
+                                var after = this.get("target").getByIndex(event.index);
+                                doodad.set("i", before ? (after ? (before.get("i") + after.get("i"))/2 : before.get("i")+1) : (after ? after.get("i") - 1 : 0));
+                                this.get("target").add(doodad);
+                            }
 						}
 					}
 				}

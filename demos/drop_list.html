@@ -54,7 +54,11 @@
                 }                
             });
             drop.on("dropped", function(event) {
-            	event.target.insertAt($("<div class='doodad'>" + event.source.element.html() + "</div>").get(0), event.index);
+                console.log(event);
+                console.log("<div class='doodad'>" + event.source.element + "</div>");
+				window.test = event;
+//            	event.target.insertAt(event.source.element, event.index);
+            	event.target.insertAt($(event.source.element.outerHTML).get(0), event.index);
             });
         </script>    
     </body>
