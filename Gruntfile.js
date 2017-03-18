@@ -39,7 +39,7 @@ module.exports = function(grunt) {
     /* Markdown Files */
 	.readmeTask()
     .licenseTask()
-	.githookTask(null, "pre-commit", "check")
+	.githookTask(null, "pre-commit", "check-node")
     
     /* Documentation */
     .docsTask();
