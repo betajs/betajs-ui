@@ -1,6 +1,6 @@
 {
 	"name": "betajs-ui",
-	"version": "1.0.32",
+	"version": "1.0.33",
 	"description": "BetaJS-UI is a library for enabling gestures and interactions such as drag and drop.",
 	"contributors": ["Victor Lingenthal", "Oliver Friedmann"],
 	"devDependencies": {
@@ -13,6 +13,7 @@
 		"grunt-preprocess": "",
 		"grunt-closure-tools": "",
 		"grunt-node-qunit": "",
+		"grunt-githooks": "",
 		"qunit": "",
 		"grunt-jsdoc": "",
 		"grunt-shell": "",

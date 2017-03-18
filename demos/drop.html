@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html>
     <head>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 		<script src="../node_modules/betajs-scoped/dist/scoped.js"></script>
 		<script src="../node_modules/betajs/dist/beta-noscoped.js"></script>
 		<script src="../node_modules/betajs-browser/dist/betajs-browser-noscoped.js"></script>
         <script src="../dist/betajs-ui-noscoped.js"></script>
-        <link rel="stylesheet" href="styles.css" /> 
+        <link rel="stylesheet" href="styles.css" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     </head>
     <body>
@@ -26,7 +25,7 @@
 	        <div class="doodad"><div class="inner">Doodad 10</div></div>
     	</div>
         <script>
-        	BetaJS.UI.Interactions.Drag.multiple($("#drag .doodad"), {
+        	BetaJS.UI.Interactions.Drag.multiple(document.querySelectorAll("#drag .doodad"), {
         		droppable: true,
                 enabled : true,
                 clone_element: true,
@@ -37,15 +36,18 @@
 	            	event.modifier.csscls("unfocus", true);
 	            });
 	        });
-	        var drop = new BetaJS.UI.Interactions.Drop($("#drop"), {
+	        var drop = new BetaJS.UI.Interactions.Drop(document.querySelector("#drop"), {
                 enabled : true
             });
             drop.on("hover", function(dr) {
                 dr.modifier.css("border", "4px solid green");
             });
             drop.on("dropped", function(event) {
-            	$("#drop").append("<div class='doodad'>" + event.source.element.html() + "</div>");
+                var dropped = document.createElement("div");
+                dropped.className = "doodad";
+                dropped.innerHTML = event.source.element.innerHTML;
+            	document.querySelector("#drop").appendChild(dropped);
             });
-        </script>    
+		</script>
     </body>
 </html>

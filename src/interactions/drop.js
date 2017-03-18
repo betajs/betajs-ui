@@ -187,8 +187,8 @@ Scoped.define("module:Interactions.DropStates.Dropping", ["module:Interactions.D
 		_persistents: ["drag_source"],
 	
 		_start: function () {
-			this.trigger("dropped");
 			this._drag_source.source.dropped(this.parent());
+            this.trigger("dropped");
 			this.next("Idle");
 		}
 	

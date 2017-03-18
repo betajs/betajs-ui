@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
     <head>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 		<script src="../node_modules/betajs-scoped/dist/scoped.js"></script>
 		<script src="../node_modules/betajs/dist/beta-noscoped.js"></script>
 		<script src="../node_modules/betajs-browser/dist/betajs-browser-noscoped.js"></script>
@@ -49,8 +48,8 @@
 							},
 							"dropped": function (dummy, event) {
 								var doodad = event.source.data;
-								this.get("source").remove(doodad);
 								this.get("target").add(doodad);
+								this.get("source").remove(doodad);
 							}
 						}
 					}

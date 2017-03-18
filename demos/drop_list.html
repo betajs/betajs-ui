@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
     <head>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 		<script src="../node_modules/betajs-scoped/dist/scoped.js"></script>
 		<script src="../node_modules/betajs/dist/beta-noscoped.js"></script>
 		<script src="../node_modules/betajs-browser/dist/betajs-browser-noscoped.js"></script>
@@ -31,7 +30,7 @@
 	        <div class="doodad"><div class="inner">Doodad 10</div></div>
     	</div>
         <script>
-        	BetaJS.UI.Interactions.Drag.multiple($("#drag .doodad"), {
+        	BetaJS.UI.Interactions.Drag.multiple(document.querySelectorAll("#drag .doodad"), {
         		droppable: true,
                 enabled : true,
                 clone_element: true,
@@ -42,9 +41,9 @@
 	            	event.modifier.csscls("unfocus", true);
 	            });
 	        });
-	        var drop = new BetaJS.UI.Interactions.Droplist($("#drop"), {
+	        var drop = new BetaJS.UI.Interactions.Droplist(document.querySelector("#drop"), {
                 enabled : true,
-                floater: $("#floater"),
+                floater: document.querySelector("#floater"),
                 bounding_box : function(bb) {
                     var height = bb.bottom - bb.top + 1;
                     var margin = Math.floor(height * 0.2);
@@ -54,11 +53,9 @@
                 }                
             });
             drop.on("dropped", function(event) {
-                console.log(event);
-                console.log("<div class='doodad'>" + event.source.element + "</div>");
-				window.test = event;
-//            	event.target.insertAt(event.source.element, event.index);
-            	event.target.insertAt($(event.source.element.outerHTML).get(0), event.index);
+                var cloned = event.source.element.cloneNode(true);
+                cloned.className = "doodad";
+                BetaJS.Browser.Dom.elementInsertAt(cloned, event.target.element(), event.index);
             });
         </script>    
     </body>

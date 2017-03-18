@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
     <head>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 		<script src="../node_modules/betajs-scoped/dist/scoped.js"></script>
 		<script src="../node_modules/betajs/dist/beta-noscoped.js"></script>
 		<script src="../node_modules/betajs-browser/dist/betajs-browser-noscoped.js"></script>
@@ -33,7 +32,7 @@
 	        <div class="doodad"><div class="inner">Doodad 20</div></div>
     	</div>
         <script>
-        	BetaJS.UI.Interactions.Drag.multiple($(".doodad"), {
+        	BetaJS.UI.Interactions.Drag.multiple(document.querySelectorAll(".doodad"), {
                 enabled : true,
                 clone_element: true
             }, function (drag) {
