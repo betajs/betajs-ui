@@ -1,13 +1,14 @@
 Scoped.define("module:Interactions.Infinitescroll", [
     "module:Interactions.Scroll",
     "base:Objs",
+	"base:Async",
     "module:Interactions.InfinitescrollStates",
     "browser:Dom"
 ], [
     "module:Interactions.InfinitescrollStates.Idle",
     "module:Interactions.InfinitescrollStates.Scrolling",
     "module:Interactions.InfinitescrollStates.ScrollingTo"
-], function (Scroll, Objs, InfinitescrollStates, Dom, scoped) {
+], function (Scroll, Objs, Async, InfinitescrollStates, Dom, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -33,7 +34,9 @@ Scoped.define("module:Interactions.Infinitescroll", [
 					this.__bottom_white_space = this._whitespaceCreate();
 					this.itemsElement().appendChild(this.__bottom_white_space);
 				}
-				this.reset(true);
+				Async.eventually(function () {
+                    this.reset(true);
+				}, this);
 		    },
 		    
 		    append: function (count) {

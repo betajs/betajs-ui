@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.33 - 2017-03-17
+betajs-ui - v1.0.34 - 2017-03-19
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -13,7 +13,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.33"
+    "version": "1.0.34"
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -1698,13 +1698,14 @@ Scoped.define("module:Interactions.DroplistStates.Dropping", ["module:Interactio
 Scoped.define("module:Interactions.Infinitescroll", [
     "module:Interactions.Scroll",
     "base:Objs",
+	"base:Async",
     "module:Interactions.InfinitescrollStates",
     "browser:Dom"
 ], [
     "module:Interactions.InfinitescrollStates.Idle",
     "module:Interactions.InfinitescrollStates.Scrolling",
     "module:Interactions.InfinitescrollStates.ScrollingTo"
-], function (Scroll, Objs, InfinitescrollStates, Dom, scoped) {
+], function (Scroll, Objs, Async, InfinitescrollStates, Dom, scoped) {
 	return Scroll.extend({scoped: scoped}, function (inherited) {
 		return {
 
@@ -1730,7 +1731,9 @@ Scoped.define("module:Interactions.Infinitescroll", [
 					this.__bottom_white_space = this._whitespaceCreate();
 					this.itemsElement().appendChild(this.__bottom_white_space);
 				}
-				this.reset(true);
+				Async.eventually(function () {
+                    this.reset(true);
+				}, this);
 		    },
 		    
 		    append: function (count) {

@@ -1,4 +1,4 @@
-# betajs-ui 1.0.33
+# betajs-ui 1.0.34
 [![Build Status](https://api.travis-ci.org/betajs/betajs-ui.svg?branch=master)](https://travis-ci.org/betajs/betajs-ui)
 [![Code Climate](https://codeclimate.com/github/betajs/betajs-ui/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs-ui)
 [![NPM](https://img.shields.io/npm/v/betajs-ui.svg?style=flat)](https://www.npmjs.com/package/betajs-ui)
