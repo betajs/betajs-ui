@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.34 - 2017-03-19
+betajs-ui - v1.0.35 - 2017-03-20
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -13,7 +13,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.34"
+    "version": "1.0.35"
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -101,9 +101,11 @@ Scoped.define("module:Dynamics.InteractionPartial", [
 				value = Objs.extend(value, value.options);
 				var InteractionClass = Interactions[Strings.capitalize(value.type)];
 				var elem = value.sub ? this._node.element().querySelector(value.sub) : this._node.element();
+				var itemsElem = value.items ? this._node.element().querySelector(value.items) : undefined;
 				var interaction = new InteractionClass(elem, Objs.extend({
 					enabled: true,
-					context: handler
+					context: handler,
+					itemsElement: itemsElem
 				}, value), value.data);
 				node.interactions[this._postfix] = interaction;
 				Objs.iter(value.events, function (callee, event) {
@@ -1810,7 +1812,7 @@ Scoped.define("module:Interactions.Infinitescroll", [
 		    		return;
 				var h = this._whitespaceGetHeight(this.__top_white_space);
 		        this._whitespaceSetHeight(this.__top_white_space, this.options().whitespace);
-		        this.element().scrollTop = this.element().scrollTop + this.options().whitespace - h;
+		        this.element().scrollTop = Math.max(this.options().whitespace, this.element().scrollTop + this.options().whitespace - h);
 		    },
 		
 		    reset: function (increment) {

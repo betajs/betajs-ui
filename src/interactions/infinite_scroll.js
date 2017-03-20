@@ -113,7 +113,7 @@ Scoped.define("module:Interactions.Infinitescroll", [
 		    		return;
 				var h = this._whitespaceGetHeight(this.__top_white_space);
 		        this._whitespaceSetHeight(this.__top_white_space, this.options().whitespace);
-		        this.element().scrollTop = this.element().scrollTop + this.options().whitespace - h;
+		        this.element().scrollTop = Math.max(this.options().whitespace, this.element().scrollTop + this.options().whitespace - h);
 		    },
 		
 		    reset: function (increment) {

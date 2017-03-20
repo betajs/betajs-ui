@@ -19,9 +19,11 @@ Scoped.define("module:Dynamics.InteractionPartial", [
 				value = Objs.extend(value, value.options);
 				var InteractionClass = Interactions[Strings.capitalize(value.type)];
 				var elem = value.sub ? this._node.element().querySelector(value.sub) : this._node.element();
+				var itemsElem = value.items ? this._node.element().querySelector(value.items) : undefined;
 				var interaction = new InteractionClass(elem, Objs.extend({
 					enabled: true,
-					context: handler
+					context: handler,
+					itemsElement: itemsElem
 				}, value), value.data);
 				node.interactions[this._postfix] = interaction;
 				Objs.iter(value.events, function (callee, event) {
