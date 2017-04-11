@@ -15,7 +15,7 @@
         "url": "https://github.com/betajs/betajs-ui/issues"
     },
     "name": "betajs-ui",
-    "version": "1.0.35",
+    "version": "1.0.36",
     "description": "BetaJS-UI is a library for enabling gestures and interactions such as drag and drop.",
     "contributors": [
         "Victor Lingenthal",
@@ -41,7 +41,8 @@
         "betajs-compile": "~0.0.28",
         "betajs": "~1.0.96",
         "betajs-browser": "~1.0.62",
-        "betajs-dynamics": "~0.0.83"
+        "betajs-dynamics": "~0.0.83",
+        "js-beautify": ""
     },
     "main": "dist/betajs-ui.js",
     "repository": {
