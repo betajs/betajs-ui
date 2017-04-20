@@ -11,7 +11,7 @@
     </head>
     <body>
     	<div class="doodads" ba-repeat="{{doodad::source}}">
-	        <div class="doodad" ba-interaction:drag="{{{data: doodad, options: drag_interaction_options}}}">
+	        <div class="doodad"ba-interaction:drag="{{{data: doodad, options: drag_interaction_options}}}">
 				<div class="inner">Doodad {{doodad.v}}</div>
 			</div>
 	    </div>
@@ -40,7 +40,7 @@
 					drop_interaction_options: {
 						enabled: true,
 						type: "drop",
-						snapableY: 20,
+						snapableY: 52,
 						classes: {
 							"hover.modifier": "green-style"
 						},
