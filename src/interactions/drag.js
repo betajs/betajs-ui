@@ -31,6 +31,12 @@ Scoped.define("module:Interactions.Drag", [
                     revertable: true,
                     draggable: function() {
                         return true;
+                    },
+                    snappable: function(left, top) {
+                        return {
+                            left: left,
+                            top: top
+                        };
                     }
                 }, options);
                 inherited.constructor.call(this, element, options, DragStates);
@@ -235,6 +241,11 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
                         });
                 });
             }
+            var base = this.parent().actionable_modifier();
+            this._drag_coords = {
+                left: parseInt(base.css("left"), 10),
+                top: parseInt(base.css("top"), 10)
+            };
         },
 
         __dragging: function(event) {
@@ -246,10 +257,13 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
             };
             this._page_coords = page_coords;
             var base = this.parent().actionable_modifier();
+            this._drag_coords.left += delta_coords.x;
+            this._drag_coords.top += delta_coords.y;
+            var drag_coords = this.options().snappable(this._drag_coords.left, this._drag_coords.top);
             if (this.options().draggable_x)
-                base.css("left", (parseInt(base.css("left"), 10) + delta_coords.x) + "px");
+                base.css("left", drag_coords.left + "px");
             if (this.options().draggable_y)
-                base.css("top", (parseInt(base.css("top"), 10) + delta_coords.y) + "px");
+                base.css("top", drag_coords.top + "px");
             this.trigger("move");
             if (this.options().classes && this.options().classes["move.actionable_modifier"])
                 this.parent().actionable_modifier().csscls(this.options().classes["move.actionable_modifier"], true);

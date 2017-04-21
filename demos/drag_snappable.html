@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+    <head>
+		<script src="../node_modules/betajs-scoped/dist/scoped.js"></script>
+		<script src="../node_modules/betajs/dist/beta-noscoped.js"></script>
+		<script src="../node_modules/betajs-browser/dist/betajs-browser-noscoped.js"></script>
+        <script src="../dist/betajs-ui-noscoped.js"></script>
+        <link rel="stylesheet" href="styles.css" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    </head>
+    <body>
+    	<div class="doodads">
+	        <div class="doodad"><div class="inner">Doodad 1</div></div>
+	        <div class="doodad"><div class="inner">Doodad 2</div></div>
+	        <div class="doodad"><div class="inner">Doodad 3</div></div>
+	        <div class="doodad"><div class="inner">Doodad 4</div></div>
+	        <div class="doodad"><div class="inner">Doodad 5</div></div>
+	        <div class="doodad"><div class="inner">Doodad 6</div></div>
+	        <div class="doodad"><div class="inner">Doodad 7</div></div>
+	        <div class="doodad"><div class="inner">Doodad 8</div></div>
+	        <div class="doodad"><div class="inner">Doodad 9</div></div>
+	        <div class="doodad"><div class="inner">Doodad 10</div></div>
+	        <div class="doodad"><div class="inner">Doodad 11</div></div>
+	        <div class="doodad"><div class="inner">Doodad 12</div></div>
+	        <div class="doodad"><div class="inner">Doodad 13</div></div>
+	        <div class="doodad"><div class="inner">Doodad 14</div></div>
+	        <div class="doodad"><div class="inner">Doodad 15</div></div>
+	        <div class="doodad"><div class="inner">Doodad 16</div></div>
+	        <div class="doodad"><div class="inner">Doodad 17</div></div>
+	        <div class="doodad"><div class="inner">Doodad 18</div></div>
+	        <div class="doodad"><div class="inner">Doodad 19</div></div>
+	        <div class="doodad"><div class="inner">Doodad 20</div></div>
+    	</div>
+        <script>
+        	BetaJS.UI.Interactions.Drag.multiple(document.querySelectorAll(".doodad"), {
+                enabled : true,
+                clone_element: true,
+				snappable: function (left, top) {
+                    return {
+                        left: left,
+						top: Math.round(top / 25) * 25
+					};
+				}
+            }, function (drag) {
+	            drag.on("move", function (event) {
+	            	event.actionable_modifier.csscls("focus", true);
+	            	event.modifier.csscls("unfocus", true);
+	            });
+	        });
+        </script>    
+    </body>
+</html>
