@@ -17,20 +17,20 @@
 		</div>
 
     	<div class="doodads"
-			 ba-repeat="{{doodad::source}}"
-			 ba-interaction:droplist="{{droplist_interaction_options}}">
+			 ba-repeat="{{doodad::list1}}"
+			 ba-interaction:droplist="{{{data: {list: list1}, options: droplist_interaction_options}}}">
 	        <div class="doodad"
-				 ba-interaction:drag="{{{data: doodad, options: drag_interaction_options}}}">
+				 ba-interaction:drag="{{{data: {list: list1, doodad: doodad}, options: drag_interaction_options}}}">
 				<div class="inner">Doodad {{doodad.v}}</div>
 			</div>
 	    </div>
 	    <hr />
 
 	    <div class="doodads"
-			 ba-repeat="{{doodad::target}}"
-			 ba-interaction:droplist="{{droplist_interaction_options}}">
+			 ba-repeat="{{doodad::list2}}"
+			 ba-interaction:droplist="{{{data: {list: list2}, options: droplist_interaction_options}}}">
 			<div class="doodad"
-				 ba-interaction:drag="{{{data: doodad, options: drag_interaction_options}}}">
+				 ba-interaction:drag="{{{data: {list: list2, doodad: doodad}, options: drag_interaction_options}}}">
 				<div class="inner">Doodad {{doodad.v}}</div>
 			</div>
     	</div>
@@ -39,11 +39,11 @@
 			BetaJS.Dynamics.Dynamic.activate({
 				element: document.body,
 				attrs: {
-					source: new BetaJS.Collections.Collection({
+					list1: new BetaJS.Collections.Collection({
 						objects: [{v: 1, i: 1}, {v: 2, i: 2}, {v: 3, i: 3}, {v: 4, i: 4}, {v: 5, i: 5}],
 						compare: function (x, y) { return x.get("i")-y.get("i"); }
 					}),
-					target: new BetaJS.Collections.Collection({
+					list2: new BetaJS.Collections.Collection({
 						objects: [{v:6, i:6},{v:7, i:7},{v:8, i:8},{v:9, i:9},{v:10, i:10}],
 						compare: function (x, y) { return x.get("i")-y.get("i"); }
 					}),
@@ -72,36 +72,16 @@
 						},
 						events: {
 							"dropped": function (dummy, event) {
-                                var doodad = event.source.data;
-                                this.get("source").remove(doodad);
-                                var before = this.get("target").getByIndex(event.index - 1);
-                                var after = this.get("target").getByIndex(event.index);
+                                var doodad = event.source.data.doodad;
+                                var source = event.source.data.list;
+                                var target = event.target.data.list;
+                                source.remove(doodad);
+                                var before = target.getByIndex(event.index - 1);
+                                var after = target.getByIndex(event.index);
                                 doodad.set("i", before ? (after ? (before.get("i") + after.get("i"))/2 : before.get("i")+1) : (after ? after.get("i") - 1 : 0));
-                                this.get("target").add(doodad);
+                                target.add(doodad);
                             }
 						}
-					},
-                    droplist_interaction_options2: {
-                        enabled: true,
-                        type: "droplist",
-                        floater: document.querySelector("#floater"),
-                        bounding_box : function(bb) {
-                            var height = bb.bottom - bb.top + 1;
-                            var margin = Math.floor(height * 0.2);
-                            bb.top += margin;
-                            bb.bottom -= margin;
-                            return bb;
-                        },
-                        events: {
-                            "dropped": function (dummy, event) {
-                                var doodad = event.source.data;
-                                this.get("source").remove(doodad);
-                                var before = this.get("target").getByIndex(event.index - 1);
-                                var after = this.get("target").getByIndex(event.index);
-                                doodad.set("i", before ? (after ? (before.get("i") + after.get("i"))/2 : before.get("i")+1) : (after ? after.get("i") - 1 : 0));
-                                this.get("target").add(doodad);
-                            }
-                        }
                     }
 				}
 			});
