@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.37 - 2017-04-21
+betajs-ui - v1.0.38 - 2017-05-05
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -13,7 +13,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.37"
+    "version": "1.0.38"
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -104,6 +104,10 @@ Scoped.define("module:Dynamics.InteractionPartial", [
                 }
                 value = Objs.extend(value, value.options);
                 var InteractionClass = Interactions[Strings.capitalize(value.type)];
+                if (!InteractionClass) {
+                    console.log("Could not find interaction: " + Strings.capitalize(value.type));
+                    return;
+                }
                 var elem = value.sub ? this._node.element().querySelector(value.sub) : this._node.element();
                 var itemsElem = value.items ? this._node.element().querySelector(value.items) : undefined;
                 var interaction = new InteractionClass(elem, Objs.extend({
