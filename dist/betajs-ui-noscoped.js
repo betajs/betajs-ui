@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.38 - 2017-05-05
+betajs-ui - v1.0.39 - 2017-08-06
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -13,7 +13,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.38"
+    "version": "1.0.39"
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -447,20 +447,20 @@ Scoped.define("module:Events.Support", [
     return {
 
         dispatchElementEvent: function(element, label, data, options) {
-            element.dispatchEvent(new CustomEvent(label, Objs.extend({
+            Dom.triggerDomEvent(element, label, {}, Objs.extend({
                 bubbles: true,
                 cancelable: true,
                 detail: data
-            }, options)));
+            }, options));
         },
 
         dispatchElementsEvent: function(elements, label, data, options) {
             for (var i = 0; i < elements.length; ++i) {
-                elements[i].dispatchEvent(new CustomEvent(label, Objs.extend({
+                Dom.triggerDomEvent(elements[i], label, {}, Objs.extend({
                     bubbles: false,
                     cancelable: true,
                     detail: data
-                }, options)));
+                }, options));
             }
         },
 
@@ -1022,8 +1022,9 @@ Scoped.define("module:Helpers.Interactor", [
     "base:Types",
     "base:Promise",
     "base:Async",
+    "browser:Info",
     "browser:Dom"
-], function(Class, Objs, Types, Promise, Async, Dom, scoped) {
+], function(Class, Objs, Types, Promise, Async, Info, Dom, scoped) {
     return Class.extend({
         scoped: scoped
     }, function(inherited) {
@@ -1041,18 +1042,18 @@ Scoped.define("module:Helpers.Interactor", [
             },
 
             mousedown: function(element) {
-                return this._event(element, "mousedown");
+                return this._event(element, Info.isMobile() ? "touchstart" : "mousedown");
             },
 
             mouseup: function(element) {
-                return this._event(element, "mouseup");
+                return this._event(element, Info.isMobile() ? "touchend" : "mouseup");
             },
 
             mousemoveToElement: function(targetElement, element) {
                 targetElement = this._element(targetElement);
                 var offset = Dom.elementOffset(targetElement);
                 var dims = Dom.elementDimensions(targetElement);
-                return this._event(element, "mousemove", {
+                return this._event(element, Info.isMobile() ? "touchmove" : "mousemove", {
                     pageX: offset.left + dims.width / 2,
                     pageY: offset.top + dims.height / 2
                 });

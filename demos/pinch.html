@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
     <head>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 		<script src="../node_modules/betajs-scoped/dist/scoped.js"></script>
 		<script src="../node_modules/betajs/dist/beta-noscoped.js"></script>
 		<script src="../node_modules/betajs-browser/dist/betajs-browser-noscoped.js"></script>
@@ -14,12 +13,13 @@
 			Pinch Me
 		</div>
 		<script>
-			var pinch = new BetaJS.UI.Interactions.Pinch($(".pinch"), {
+			var element = document.querySelector(".pinch");
+			var pinch = new BetaJS.UI.Interactions.Pinch(element, {
 				enabled: true
 			});
 			pinch.on("pinch", function (details) {
-				$(".pinch").css("width", (parseInt($(".pinch").css("width"), 10) + details.delta_last.x) + "px");
-				$(".pinch").css("height", (parseInt($(".pinch").css("height"), 10) + details.delta_last.y) + "px");
+			    element.style.width = (parseInt(element.style.width, 10) + details.delta_last.x) + "px";
+                element.style.height = (parseInt(element.style.height, 10) + details.delta_last.x) + "px";
 			});
 		</script>
     </body>

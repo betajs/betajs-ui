@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
     <head>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 		<script src="../node_modules/betajs-scoped/dist/scoped.js"></script>
 		<script src="../node_modules/betajs/dist/beta-noscoped.js"></script>
 		<script src="../node_modules/betajs-browser/dist/betajs-browser-noscoped.js"></script>
@@ -27,10 +26,10 @@
 		<input>
 		<button>Scroll To</button>
 		<script>
-			var element = $("#scrollbox");
+			var element = document.querySelector("#scrollbox");
 
 			for (var i = 0; i < 100; ++i)
-				element.append("<div id='" + i + "' class='item'>Item " + i + "</div>");
+				element.appendChild(BetaJS.Browser.Dom.elementByTemplate("<div id='" + i + "' class='item'>Item " + i + "</div>"));
 
 			var scroll = new BetaJS.UI.Interactions.Scroll(element, {
 				enabled: true,
@@ -39,19 +38,13 @@
 				//scrollEndTimeout: 200
 			});
 
-			$("button").on("click", function () {
-				var value =$('input').val() || 1;
-				value = isNaN(value) ? 1 : value;
-				scroll.scrollToElement($('#' + value%100), {
-					animate: false
-				});
-			});
-//			$("button").on("click", function () {
-//				var ele = $($("#scrollbox").children().get(20));
-//				scroll.scrollToElement(ele, {
-//					animate: true
-//				});
-//			});
+            document.querySelector("button").onclick = function () {
+                var value = document.querySelector('input').value || 1;
+                value = isNaN(value) ? 1 : value;
+                scroll.scrollToElement(document.getElementById(value%100), {
+                    animate: false
+                });
+            };
 		</script>
     </body>
 </html>

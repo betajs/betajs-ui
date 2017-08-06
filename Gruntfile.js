@@ -26,9 +26,7 @@ module.exports = function(grunt) {
 
     /* Testing */
     .browserqunitTask(null, "tests/tests.html")
-    .qunitTask(null, './dist/' + dist + '-noscoped.js',
-    		         grunt.file.expand(["./tests/fragments/test-jsdom.js", "./tests/tests/*.js"]),
-    		         ['./tests/fragments/init-jsdom.js', require.resolve("betajs-scoped"), require.resolve("betajs"), require.resolve("betajs-browser")])
+	.qunitjsTask(null, ["tests/qunitjs-node.js"])
     .closureTask(null, [require.resolve("betajs-scoped"), require.resolve("betajs"), require.resolve("betajs-browser"), "./dist/betajs-ui-noscoped.js"], null, { })
     .browserstackTask(null, 'tests/tests.html', {desktop: true, mobile: true})
     .lintTask(null, ['./src/**/*.js', './dist/' + dist + '-noscoped.js', './dist/' + dist + '.js', './Gruntfile.js', './tests/**/*.js'])
@@ -48,7 +46,7 @@ module.exports = function(grunt) {
 	grunt.initConfig(gruntHelper.config);	
 
 	grunt.registerTask('default', ['package', 'readme', 'githook', 'license', 'codeclimate', 'travis', 'jsbeautify', 'scopedclosurerevision', 'concat-scoped', 'uglify-noscoped', 'uglify-scoped']);
-	grunt.registerTask('check-node', [ 'lint', 'qunit' ]);
+	grunt.registerTask('check-node', [ 'lint', 'qunitjs' ]);
 	grunt.registerTask('check', ['check-node', 'browserqunit']);
 
 };

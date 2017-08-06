@@ -1,4 +1,4 @@
-# betajs-ui 1.0.38
+# betajs-ui 1.0.39
 [![Build Status](https://api.travis-ci.org/betajs/betajs-ui.svg?branch=master)](https://travis-ci.org/betajs/betajs-ui)
 [![Code Climate](https://codeclimate.com/github/betajs/betajs-ui/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs-ui)
 [![NPM](https://img.shields.io/npm/v/betajs-ui.svg?style=flat)](https://www.npmjs.com/package/betajs-ui)
@@ -77,13 +77,14 @@ You can use the library in the browser and compile it as well.
 | Target | Versions |
 | :----- | -------: |
 | Firefox | 6 - Latest |
-| Chrome | 15 - Latest |
-| Safari | 4 - Latest |
+| Chrome | 18 - Latest |
+| Safari | 5 - Latest |
 | Opera | 12 - Latest |
 | Internet Explorer | 8 - Latest |
 | Edge | 12 - Latest |
-| iOS | 3.0 - Latest |
-| Android | 2.2 - Latest |
+| Yandex | Latest |
+| iOS | 5.0 - Latest |
+| Android | 2.3 - Latest |
 
 
 ## CDN
@@ -112,6 +113,7 @@ You can use the library in the browser and compile it as well.
 | Name | URL |
 | :----- | -------: |
 | betajs-scoped | [Open](https://github.com/betajs/betajs-scoped) |
+| betajs-shims | [Open](https://github.com/betajs/betajs-shims) |
 
 
 ## Main Contributors

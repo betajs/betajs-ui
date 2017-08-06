@@ -1,5 +1,5 @@
-test("test drop", function() {
-    stop();
+QUnit.test("test drop", function(assert) {
+    var done = assert.async();
     var element = document.createElement("div");
     document.body.appendChild(element);
     var innerHTML = '<div class="doodads" id="drag">';
@@ -39,9 +39,9 @@ test("test drop", function() {
     interactor.mousedown("#drag .doodad").success(function () {
         interactor.mousemoveToElement("#drop .doodad").success(function () {
             interactor.mouseup().success(function () {
-                QUnit.equal(document.querySelectorAll("#drag .doodad").length, 4);
-                QUnit.equal(document.querySelectorAll("#drop .doodad").length, 6);
-                start();
+                assert.equal(document.querySelectorAll("#drag .doodad").length, 4);
+                assert.equal(document.querySelectorAll("#drop .doodad").length, 6);
+                done();
                 document.body.removeChild(element);
             });
         });

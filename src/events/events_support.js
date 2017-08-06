@@ -6,20 +6,20 @@ Scoped.define("module:Events.Support", [
     return {
 
         dispatchElementEvent: function(element, label, data, options) {
-            element.dispatchEvent(new CustomEvent(label, Objs.extend({
+            Dom.triggerDomEvent(element, label, {}, Objs.extend({
                 bubbles: true,
                 cancelable: true,
                 detail: data
-            }, options)));
+            }, options));
         },
 
         dispatchElementsEvent: function(elements, label, data, options) {
             for (var i = 0; i < elements.length; ++i) {
-                elements[i].dispatchEvent(new CustomEvent(label, Objs.extend({
+                Dom.triggerDomEvent(elements[i], label, {}, Objs.extend({
                     bubbles: false,
                     cancelable: true,
                     detail: data
-                }, options)));
+                }, options));
             }
         },
 

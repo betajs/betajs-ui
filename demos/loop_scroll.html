@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+		<script src="http://cdnjs.cloudflare.com/ajax/libs/es5-shim/4.1.1/es5-shim.js"></script>
+		<script src="http://cdnjs.cloudflare.com/ajax/libs/json2/20140204/json2.js"></script>
 		<script src="../node_modules/betajs-scoped/dist/scoped.js"></script>
 		<script src="../node_modules/betajs/dist/beta-noscoped.js"></script>
 		<script src="../node_modules/betajs-browser/dist/betajs-browser-noscoped.js"></script>
@@ -65,14 +66,14 @@
 		<input>
 		<button>ScrollTo</button>
 		<script>
-			var element = $("#scrollbox");
-			var element2 = $("#scrollbox2");
+			var element = document.querySelector("#scrollbox");
+			var element2 = document.querySelector("#scrollbox2");
 
 			var no_elements = 29;
 
 			for (var i = 0; i < no_elements; ++i) {
-				element.append("<element id='" + i + "' class='item'>Item " + i + "</element>");
-				element2.append("<element id='2" + i + "' class='item'>Item 2" + i + "</element>");
+				element.appendChild(BetaJS.Browser.Dom.elementByTemplate("<element id='" + i + "' class='item'>Item " + i + "</element>"));
+				element2.appendChild(BetaJS.Browser.Dom.elementByTemplate("<element id='2" + i + "' class='item'>Item 2" + i + "</element>"));
 			}
 
 			var scroll = new BetaJS.UI.Interactions.Loopscroll(element, {
@@ -92,13 +93,13 @@
 //			scroll._host.on("start", function (s) {
 //				console.log(s);
 //			});
-			$("button").on("click", function () {
-				var value =$('input').val() || 1;
-				value = isNaN(value) ? 1 : value;
-				scroll.scrollToElement($('#' + value%no_elements), {
-					animate: false
-				});
-			});
+            document.querySelector("button").onclick = function () {
+                var value = document.querySelector('input').value || 1;
+                value = isNaN(value) ? 1 : value;
+                scroll.scrollToElement(document.getElementById(value%no_elements), {
+                    animate: false
+                });
+            };
 //            scroll.on("scrollend scrolltoend", function () {
 //               console.log(scroll.currentElement().html());
 //            });

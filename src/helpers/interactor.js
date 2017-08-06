@@ -4,8 +4,9 @@ Scoped.define("module:Helpers.Interactor", [
     "base:Types",
     "base:Promise",
     "base:Async",
+    "browser:Info",
     "browser:Dom"
-], function(Class, Objs, Types, Promise, Async, Dom, scoped) {
+], function(Class, Objs, Types, Promise, Async, Info, Dom, scoped) {
     return Class.extend({
         scoped: scoped
     }, function(inherited) {
@@ -23,18 +24,18 @@ Scoped.define("module:Helpers.Interactor", [
             },
 
             mousedown: function(element) {
-                return this._event(element, "mousedown");
+                return this._event(element, Info.isMobile() ? "touchstart" : "mousedown");
             },
 
             mouseup: function(element) {
-                return this._event(element, "mouseup");
+                return this._event(element, Info.isMobile() ? "touchend" : "mouseup");
             },
 
             mousemoveToElement: function(targetElement, element) {
                 targetElement = this._element(targetElement);
                 var offset = Dom.elementOffset(targetElement);
                 var dims = Dom.elementDimensions(targetElement);
-                return this._event(element, "mousemove", {
+                return this._event(element, Info.isMobile() ? "touchmove" : "mousemove", {
                     pageX: offset.left + dims.width / 2,
                     pageY: offset.top + dims.height / 2
                 });

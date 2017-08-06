@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
     <head>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 		<script src="../node_modules/betajs-scoped/dist/scoped.js"></script>
 		<script src="../node_modules/betajs/dist/beta-noscoped.js"></script>
 		<script src="../node_modules/betajs-browser/dist/betajs-browser-noscoped.js"></script>
@@ -26,36 +25,36 @@
 		</div>
 		<button>ScrollTo</button>
 		<script>
-			var element = $("#scrollbox");
+			var element = document.querySelector("#scrollbox");
 			var low = 0;
 			var high = 19;
 
 			for (var i = 0; i <= high; ++i)
-				element.append("<div class='item' id='it" + i + "'>Item " + i + "</div>");
+				element.appendChild(BetaJS.Browser.Dom.elementByTemplate("<div class='item' id='it" + i + "'>Item " + i + "</div>"));
 
 			var scroll = new BetaJS.UI.Interactions.Infinitescroll(element, {
 				enabled: true,
 	    		append: function (count, callback) {
 					for (var i = high+1; i <= high+1 + count; ++i)
-						element.append("<div class='item' id='it" + i + "'>Item " + i + "</div>");
+						element.appendChild(BetaJS.Browser.Dom.elementByTemplate("<div class='item' id='it" + i + "'>Item " + i + "</div>"));
 					high += count;
 					document.title = low + " - " + high;
 					callback(count, true);
 	    		},
 	    		prepend: function (count, callback) {
 					for (var i = low-1; i >= low-1-count; --i)
-						element.prepend("<div class='item' id='it" + i + "'>Item " + i + "</div>");
+					    BetaJS.Browser.Dom.elementPrependChild(element, BetaJS.Browser.Dom.elementByTemplate("<div class='item' id='it" + i + "'>Item " + i + "</div>"));
 					low -= count;
 					document.title = low + " - " + high;
 					callback(count, true);
 	    		}
 			});
-			$("button").on("click", function () {
-				var ele = $($("#scrollbox").children().get(1));
+			document.querySelector("button").onclick = function () {
+				var ele = document.querySelector("#scrollbox").children[1];
 				scroll.scrollToElement(ele, {
 					animate: false
 				});
-			});
+			};
 		</script>
     </body>
 </html>

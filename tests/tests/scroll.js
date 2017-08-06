@@ -1,5 +1,5 @@
-test("test loop scroll", function() {
-	stop();
+QUnit.test("test loop scroll", function(assert) {
+	var done = assert.async();
 	var element = document.getElementById("qunit-fixture");
 	element.style.height = "400px";
 
@@ -29,9 +29,9 @@ test("test loop scroll", function() {
        try {
     	   scroll.destroy();
        } catch (e) {
-    	   ok(false);
+    	   assert.ok(false);
        }
-       ok(true);
-       start();
+       assert.ok(true);
+       done();
     });
 });

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
     <head>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 		<script src="../node_modules/betajs-scoped/dist/scoped.js"></script>
 		<script src="../node_modules/betajs/dist/beta-noscoped.js"></script>
 		<script src="../node_modules/betajs-browser/dist/betajs-browser-noscoped.js"></script>
@@ -38,38 +37,39 @@
         		"archive": {greater: 1/4, less: 1/3},
         		"delete": {greater: 1/3}
         	};
-        	BetaJS.UI.Interactions.Drag.multiple($(".inner"), {
+        	BetaJS.UI.Interactions.Drag.multiple(document.querySelectorAll(".inner"), {
                 enabled : true,
                 draggable_y: false
             }, function (drag) {
 	            drag.on("move", function (event) {
-	            	var element = $(event.element);
-	            	var parent = element.parent();
-	                var x = parseInt(element.css("left"), 10);
-	                var w = parseInt(element.css("width"), 10);
-	                var a = {};
-	                for (var cls in actions) {
-	                	a = actions[cls];
-	                	if ((!a.less || x <= w * a.less) && (!a.greater || x >= w * a.greater))
-	                		parent.addClass(cls);
-	                	else
-	                		parent.removeClass(cls);
-	                }
+                    var element = event.element;
+                    var parent = element.parentNode;
+                    var x = parseInt(element.style.left, 10);
+                    var w = BetaJS.Browser.Dom.elementDimensions(element).width;
+                    var a = {};
+                    for (var cls in actions) {
+                        a = actions[cls];
+                        if ((!a.less || x <= w * a.less) && (!a.greater || x >= w * a.greater))
+                            BetaJS.Browser.Dom.elementAddClass(parent, cls);
+                        else
+                            BetaJS.Browser.Dom.elementRemoveClass(parent, cls);
+                    }
 	            });
 	            drag.on("release", function (event) {
-	            	var element = $(event.element);
-	            	var parent = element.parent();
-	                var x = parseInt(element.css("left"), 10);
-	                var w = parseInt(element.css("width"), 10);
-	                for (var cls in actions) {
-	                	a = actions[cls];
-	                	if ((!a.less || x <= w * a.less) && (!a.greater || x >= w * a.greater)) {
-	                        event.source.abort();
-	                        parent.slideUp();
-	                	}
-	                }
+                    var element = event.element;
+                    var parent = element.parentNode;
+                    var x = parseInt(element.style.left, 10);
+                    var w = BetaJS.Browser.Dom.elementDimensions(element).width;
+                    for (var cls in actions) {
+                        a = actions[cls];
+                        if ((!a.less || x <= w * a.less) && (!a.greater || x >= w * a.greater)) {
+                            event.source.abort();
+                            parent.parentNode.removeChild(parent);
+                        }
+                    }
 	            });
 	        });
         </script>    
     </body>
 </html>
+
