@@ -24,7 +24,10 @@ Scoped.define("module:Dynamics.InteractionPartial", [
                     console.log("Could not find interaction: " + Strings.capitalize(value.type));
                     return;
                 }
-                var elem = value.sub ? this._node.element().querySelector(value.sub) : this._node.element();
+                if (value.disabled)
+                    return;
+                var elem = this._node.element();
+                elem = value.sub ? elem.querySelector(value.sub) : (value.parent_elem ? elem.parentElement : elem);
                 var itemsElem = value.items ? this._node.element().querySelector(value.items) : undefined;
                 var interaction = new InteractionClass(elem, Objs.extend({
                     enabled: true,
