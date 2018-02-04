@@ -73,14 +73,13 @@ Scoped.define("module:Interactions.Infinitescroll", [
 
             prepend: function(count) {
                 var opts = this.options();
-                if (this._can_prepend) {
+                if (this._can_prepend && !this._extending) {
                     this._extending = true;
                     var self = this;
                     opts.prepend.call(opts.context, count || opts.prepend_count, function(added, done) {
                         if (self.__top_white_space)
                             Dom.elementPrependChild(self.itemsElement(), self.__top_white_space);
-                        self._extending = false;
-                        self._can_prepend = done;
+                        self._extending = !done;
                         self.prepended(added);
                     });
                 }

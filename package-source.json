@@ -1,77 +1,83 @@
 {
-	"name": "betajs-ui",
-	"version": "1.0.40",
-	"description": "BetaJS-UI is a library for enabling gestures and interactions such as drag and drop.",
-	"contributors": ["Victor Lingenthal", "Oliver Friedmann"],
-	"devDependencies": {
-    	"lodash": "",
-		"grunt": "",
-		"grunt-contrib-jshint": "",
-		"grunt-contrib-concat": "",
-		"grunt-contrib-uglify": "~2.3.0",
-		"grunt-contrib-clean": "",
-		"grunt-preprocess": "",
-		"grunt-closure-tools": "",
-		"grunt-githooks": "",
-		"qunitjs": "",
-		"grunt-jsdoc": "",
-		"grunt-shell": "",
-		"grunt-template": "",
-		"jsdom": "~9.12.0",
-	    "betajs-scoped": "~0.0.13",
-	    "betajs-compile": "~0.0.28",
-	    "betajs": "~1.0.96",
-		"betajs-shims": "~0.0.12",
-	    "betajs-browser": "~1.0.62",
-	    "betajs-dynamics": "~0.0.83",
-		"js-beautify": ""
-	},
-	"main": "dist/betajs-ui.js",
-	"repository": {
-		"type": "git",
-		"url": "git://github.com/betajs/betajs-ui.git"
-	},
-	"scripts": {
-		"test": "grunt check-node"
-	},
-	"meta": {
-		"sponsors": ["Ziggeo", "Browserstack"],
-		"guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-		"installdoc": "docsrc/common/install.md",
-		"summarydoc": "docsrc/common/summary.md",
-		"badges": {
-			"codeclimate": true,
-			"travis": true,
-			"npm": true,
-			"gitter": true
-		},
-		"weakDependencies": {
-			"betajs-scoped": "https://github.com/betajs/betajs-scoped",
-			"betajs-shims": "https://github.com/betajs/betajs-shims"
-		},
-		"dependencies": {
-			"betajs": "https://github.com/betajs/betajs",
-			"betajs-browser": "https://github.com/betajs/betajs-browser"
-		},
-		"compatability": {
-			"Firefox": "6 - Latest",
-			"Chrome": "18 - Latest",
-			"Safari": "5 - Latest",
-			"Opera": "12 - Latest",
-			"Internet Explorer": "8 - Latest",
-			"Edge": "12 - Latest",
-			"Yandex": "Latest",
-			"iOS": "5.0 - Latest",
-			"Android": "2.3 - Latest"
-		},
-		"tests": {
-			"Test Suite": "http://rawgit.com/betajs/betajs-ui/master/tests/tests.html"
-		},
-		"cdn": {
-			"beta-ui.js": "http://cdn.rawgit.com/betajs/betajs-ui/master/dist/betajs-ui.js",
-			"beta-ui.min.js": "http://cdn.rawgit.com/betajs/betajs-ui/master/dist/betajs-ui.min.js",
-			"beta-ui-noscoped.js": "http://cdn.rawgit.com/betajs/betajs-ui/master/dist/betajs-ui-noscoped.js",
-			"beta-ui-noscoped.min.js": "http://cdn.rawgit.com/betajs/betajs-ui/master/dist/betajs-ui-noscoped.min.js"
-		}
-	}
+    "name": "betajs-ui",
+    "version": "1.0.41",
+    "description": "BetaJS-UI is a library for enabling gestures and interactions such as drag and drop.",
+    "contributors": [
+        "Victor Lingenthal",
+        "Oliver Friedmann"
+    ],
+    "devDependencies": {
+        "lodash": "",
+        "grunt": "",
+        "grunt-contrib-jshint": "",
+        "grunt-contrib-concat": "",
+        "grunt-contrib-uglify": "~2.3.0",
+        "grunt-contrib-clean": "",
+        "grunt-preprocess": "",
+        "grunt-closure-tools": "",
+        "grunt-githooks": "",
+        "qunitjs": "",
+        "grunt-jsdoc": "",
+        "grunt-shell": "",
+        "grunt-template": "",
+        "jsdom": "~9.12.0",
+        "betajs-scoped": "~0.0.13",
+        "betajs-compile": "~0.0.28",
+        "betajs": "~1.0.96",
+        "betajs-shims": "~0.0.12",
+        "betajs-browser": "~1.0.62",
+        "betajs-dynamics": "~0.0.83",
+        "js-beautify": ""
+    },
+    "main": "dist/betajs-ui.js",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/betajs/betajs-ui.git"
+    },
+    "scripts": {
+        "test": "grunt check-node"
+    },
+    "meta": {
+        "sponsors": [
+            "Ziggeo",
+            "Browserstack"
+        ],
+        "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
+        "installdoc": "docsrc/common/install.md",
+        "summarydoc": "docsrc/common/summary.md",
+        "badges": {
+            "codeclimate": true,
+            "travis": true,
+            "npm": true,
+            "gitter": true
+        },
+        "weakDependencies": {
+            "betajs-scoped": "https://github.com/betajs/betajs-scoped",
+            "betajs-shims": "https://github.com/betajs/betajs-shims"
+        },
+        "dependencies": {
+            "betajs": "https://github.com/betajs/betajs",
+            "betajs-browser": "https://github.com/betajs/betajs-browser"
+        },
+        "compatability": {
+            "Firefox": "6 - Latest",
+            "Chrome": "18 - Latest",
+            "Safari": "5 - Latest",
+            "Opera": "12 - Latest",
+            "Internet Explorer": "8 - Latest",
+            "Edge": "12 - Latest",
+            "Yandex": "Latest",
+            "iOS": "5.0 - Latest",
+            "Android": "2.3 - Latest"
+        },
+        "tests": {
+            "Test Suite": "http://rawgit.com/betajs/betajs-ui/master/tests/tests.html"
+        },
+        "cdn": {
+            "beta-ui.js": "http://cdn.rawgit.com/betajs/betajs-ui/master/dist/betajs-ui.js",
+            "beta-ui.min.js": "http://cdn.rawgit.com/betajs/betajs-ui/master/dist/betajs-ui.min.js",
+            "beta-ui-noscoped.js": "http://cdn.rawgit.com/betajs/betajs-ui/master/dist/betajs-ui-noscoped.js",
+            "beta-ui-noscoped.min.js": "http://cdn.rawgit.com/betajs/betajs-ui/master/dist/betajs-ui-noscoped.min.js"
+        }
+    }
 }

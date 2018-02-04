@@ -1,10 +1,10 @@
 /*!
-betajs-ui - v1.0.40 - 2017-09-04
+betajs-ui - v1.0.41 - 2018-02-04
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
 /** @flow **//*!
-betajs-scoped - v0.0.16 - 2017-07-23
+betajs-scoped - v0.0.17 - 2017-10-22
 Copyright (c) Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -16,7 +16,7 @@ var Globals = (function () {
  * @module Globals
  * @access private
  */
-return { 
+return {
 		
 	/**
 	 * Returns the value of a global variable.
@@ -26,11 +26,11 @@ return {
 	 */
 	get : function(key/* : string */) {
 		if (typeof window !== "undefined")
-			return window[key];
+			return key ? window[key] : window;
 		if (typeof global !== "undefined")
-			return global[key];
+			return key ? global[key] : global;
 		if (typeof self !== "undefined")
-			return self[key];
+			return key ? self[key] : self;
 		return undefined;
 	},
 
@@ -64,6 +64,8 @@ return {
 	 * Globals.getPath("foo.bar")
 	 */
 	getPath: function (path/* : string */) {
+		if (!path)
+			return this.get();
 		var args = path.split(".");
 		if (args.length == 1)
 			return this.get(path);		
@@ -965,7 +967,7 @@ var Public = Helper.extend(rootScope, (function () {
 return {
 		
 	guid: "4b6878ee-cb6a-46b3-94ac-27d91f58d666",
-	version: '0.0.16',
+	version: '0.0.17',
 		
 	upgrade: Attach.upgrade,
 	attach: Attach.attach,
@@ -1007,7 +1009,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.40 - 2017-09-04
+betajs-ui - v1.0.41 - 2018-02-04
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1021,7 +1023,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.40"
+    "version": "1.0.41"
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -2921,14 +2923,13 @@ Scoped.define("module:Interactions.Infinitescroll", [
 
             prepend: function(count) {
                 var opts = this.options();
-                if (this._can_prepend) {
+                if (this._can_prepend && !this._extending) {
                     this._extending = true;
                     var self = this;
                     opts.prepend.call(opts.context, count || opts.prepend_count, function(added, done) {
                         if (self.__top_white_space)
                             Dom.elementPrependChild(self.itemsElement(), self.__top_white_space);
-                        self._extending = false;
-                        self._can_prepend = done;
+                        self._extending = !done;
                         self.prepended(added);
                     });
                 }
@@ -3454,10 +3455,10 @@ Scoped.define("module:Interactions.Scroll", [
                 var whitespace = document.createElement("whitespace");
                 var type = this._whitespaceType();
 
-                if (type == "flex") {
-                    whitespace.style.display = "-ms-flexbox";
-                    whitespace.style.display = "-webkit-flex";
-                    whitespace.style.display = "flex";
+                if (type === "flex") {
+                    ["-ms-flexbox", "-webkit-flex", "flex"].forEach(function(flex) {
+                        whitespace.style.display = flex;
+                    });
                 } else
                     whitespace.style.display = "block";
 
@@ -3473,10 +3474,10 @@ Scoped.define("module:Interactions.Scroll", [
                     return;
                 var type = this._whitespaceType();
 
-                if (type == "flex") {
-                    whitespace.style["-webkit-flex"] = "0 0 " + height + "px";
-                    whitespace.style["-ms-flex"] = "0 0 " + height + "px";
-                    whitespace.style.flex = "0 0 " + height + "px";
+                if (type === "flex") {
+                    ["-webkit-flex", "-ms-flex", "flex"].forEach(function(flex) {
+                        whitespace.style[flex] = "0 0 " + height + "px";
+                    });
                 } else
                     whitespace.style.height = height + "px";
             },
@@ -3494,7 +3495,7 @@ Scoped.define("module:Interactions.Scroll", [
                 var h = this._options.currentTop ? this._options.elementMargin : (this.element().clientHeight - 1 - this._options.elementMargin);
                 var w = this.element().clientWidth / 2;
                 var current = Dom.elementFromPoint(offset.left + w, offset.top + h);
-                while (current && current.parentNode != this.itemsElement())
+                while (current && current.parentNode !== this.itemsElement())
                     current = current.parentNode;
                 if (!current)
                     return null;
@@ -3538,7 +3539,7 @@ Scoped.define("module:Interactions.Scroll", [
             },
 
             scrolling: function() {
-                return this._host.state().state_name() != "Idle";
+                return this._host.state().state_name() !== "Idle";
             }
 
         };

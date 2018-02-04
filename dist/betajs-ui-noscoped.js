@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.40 - 2017-09-04
+betajs-ui - v1.0.41 - 2018-02-04
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -13,7 +13,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.40"
+    "version": "1.0.41"
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -1913,14 +1913,13 @@ Scoped.define("module:Interactions.Infinitescroll", [
 
             prepend: function(count) {
                 var opts = this.options();
-                if (this._can_prepend) {
+                if (this._can_prepend && !this._extending) {
                     this._extending = true;
                     var self = this;
                     opts.prepend.call(opts.context, count || opts.prepend_count, function(added, done) {
                         if (self.__top_white_space)
                             Dom.elementPrependChild(self.itemsElement(), self.__top_white_space);
-                        self._extending = false;
-                        self._can_prepend = done;
+                        self._extending = !done;
                         self.prepended(added);
                     });
                 }
@@ -2446,10 +2445,10 @@ Scoped.define("module:Interactions.Scroll", [
                 var whitespace = document.createElement("whitespace");
                 var type = this._whitespaceType();
 
-                if (type == "flex") {
-                    whitespace.style.display = "-ms-flexbox";
-                    whitespace.style.display = "-webkit-flex";
-                    whitespace.style.display = "flex";
+                if (type === "flex") {
+                    ["-ms-flexbox", "-webkit-flex", "flex"].forEach(function(flex) {
+                        whitespace.style.display = flex;
+                    });
                 } else
                     whitespace.style.display = "block";
 
@@ -2465,10 +2464,10 @@ Scoped.define("module:Interactions.Scroll", [
                     return;
                 var type = this._whitespaceType();
 
-                if (type == "flex") {
-                    whitespace.style["-webkit-flex"] = "0 0 " + height + "px";
-                    whitespace.style["-ms-flex"] = "0 0 " + height + "px";
-                    whitespace.style.flex = "0 0 " + height + "px";
+                if (type === "flex") {
+                    ["-webkit-flex", "-ms-flex", "flex"].forEach(function(flex) {
+                        whitespace.style[flex] = "0 0 " + height + "px";
+                    });
                 } else
                     whitespace.style.height = height + "px";
             },
@@ -2486,7 +2485,7 @@ Scoped.define("module:Interactions.Scroll", [
                 var h = this._options.currentTop ? this._options.elementMargin : (this.element().clientHeight - 1 - this._options.elementMargin);
                 var w = this.element().clientWidth / 2;
                 var current = Dom.elementFromPoint(offset.left + w, offset.top + h);
-                while (current && current.parentNode != this.itemsElement())
+                while (current && current.parentNode !== this.itemsElement())
                     current = current.parentNode;
                 if (!current)
                     return null;
@@ -2530,7 +2529,7 @@ Scoped.define("module:Interactions.Scroll", [
             },
 
             scrolling: function() {
-                return this._host.state().state_name() != "Idle";
+                return this._host.state().state_name() !== "Idle";
             }
 
         };

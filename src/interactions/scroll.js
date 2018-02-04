@@ -45,10 +45,10 @@ Scoped.define("module:Interactions.Scroll", [
                 var whitespace = document.createElement("whitespace");
                 var type = this._whitespaceType();
 
-                if (type == "flex") {
-                    whitespace.style.display = "-ms-flexbox";
-                    whitespace.style.display = "-webkit-flex";
-                    whitespace.style.display = "flex";
+                if (type === "flex") {
+                    ["-ms-flexbox", "-webkit-flex", "flex"].forEach(function(flex) {
+                        whitespace.style.display = flex;
+                    });
                 } else
                     whitespace.style.display = "block";
 
@@ -64,10 +64,10 @@ Scoped.define("module:Interactions.Scroll", [
                     return;
                 var type = this._whitespaceType();
 
-                if (type == "flex") {
-                    whitespace.style["-webkit-flex"] = "0 0 " + height + "px";
-                    whitespace.style["-ms-flex"] = "0 0 " + height + "px";
-                    whitespace.style.flex = "0 0 " + height + "px";
+                if (type === "flex") {
+                    ["-webkit-flex", "-ms-flex", "flex"].forEach(function(flex) {
+                        whitespace.style[flex] = "0 0 " + height + "px";
+                    });
                 } else
                     whitespace.style.height = height + "px";
             },
@@ -85,7 +85,7 @@ Scoped.define("module:Interactions.Scroll", [
                 var h = this._options.currentTop ? this._options.elementMargin : (this.element().clientHeight - 1 - this._options.elementMargin);
                 var w = this.element().clientWidth / 2;
                 var current = Dom.elementFromPoint(offset.left + w, offset.top + h);
-                while (current && current.parentNode != this.itemsElement())
+                while (current && current.parentNode !== this.itemsElement())
                     current = current.parentNode;
                 if (!current)
                     return null;
@@ -129,7 +129,7 @@ Scoped.define("module:Interactions.Scroll", [
             },
 
             scrolling: function() {
-                return this._host.state().state_name() != "Idle";
+                return this._host.state().state_name() !== "Idle";
             }
 
         };
