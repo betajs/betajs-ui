@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+    <head>
+		<script src="../node_modules/betajs-scoped/dist/scoped.js"></script>
+		<script src="../node_modules/betajs/dist/beta-noscoped.js"></script>
+		<script src="../node_modules/betajs-browser/dist/betajs-browser-noscoped.js"></script>
+        <script src="../dist/betajs-ui-noscoped.js"></script>
+        <link rel="stylesheet" href="styles.css" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    </head>
+    <style>
+        bordertest
+    </style>
+    <body>
+    	<div class="doodads">
+	        <div class="doodad"><div class="inner">Doodad 1</div></div>
+	        <div class="doodad"><div class="inner">Doodad 2</div></div>
+    	</div>
+        <script>
+        	BetaJS.UI.Interactions.Drag.multiple(document.querySelectorAll(".doodad"), {
+                enabled : true,
+                clone_element: false,
+				revertable: false,
+                draggable_x: false,
+				snappable: function (left, top) {
+                    return {
+                        left: left,
+						top: Math.round(top / 25) * 25
+
+					};
+				}
+            }, function (drag) {
+	            drag.on("move", function (event) {
+	            	event.actionable_modifier.csscls("focus", true);
+	            	event.modifier.csscls("unfocus", true);
+	            });
+                drag.on("release", function (event) {
+                    event.element.style.top = event.page_coords.y + 'px';
+                });
+                drag.on("stop", function (event) {
+//                    event.element.style.top = event.page_coords.y + 'px';
+                });
+	        });
+        </script>    
+    </body>
+</html>
