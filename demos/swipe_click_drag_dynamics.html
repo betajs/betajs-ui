@@ -87,30 +87,30 @@
                     events: {
                     	"move": function (doodad, event) {
                             var element = event.element;
-                            var parent = element.parent();
-                            var x = parseInt(element.css("left"), 10);
-                            var w = parseInt(element.css("width"), 10);
+                            var parent = element.parentElement;
+                            var x = parseInt(getComputedStyle(element).left, 10);
+                            var w = parseInt(getComputedStyle(element).width, 10);
                             var a = {};
                             var actions = this.get("swipe_actions");
                             for (var cls in actions) {
                                 a = actions[cls];
                                 if ((!a.less || x <= w * a.less) && (!a.greater || x >= w * a.greater))
-                                    parent.addClass(cls);
+                                    BetaJS.Browser.Dom.elementAddClass(parent, cls);
                                 else
-                                    parent.removeClass(cls);
+                                    BetaJS.Browser.Dom.elementRemoveClass(parent, cls);
                             }
                         },
                         "release": function (doodad, event) {
                             var element = event.element;
-                            var parent = element.parent();
-                            var x = parseInt(element.css("left"), 10);
-                            var w = parseInt(element.css("width"), 10);
+                            var parent = element.parentElement;
+                            var x = parseInt(getComputedStyle(element).left, 10);
+                            var w = parseInt(getComputedStyle(element).width, 10);
                             var actions = this.get("swipe_actions");
                             for (var cls in actions) {
                                 a = actions[cls];
                                 if ((!a.less || x <= w * a.less) && (!a.greater || x >= w * a.greater)) {
                                     event.source.abort();
-                                    parent.slideUp();
+                                    parent.parentElement.removeChild(parent);
                                 }
                             }
                         }

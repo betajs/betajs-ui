@@ -1,10 +1,10 @@
 /*!
-betajs-ui - v1.0.41 - 2018-02-04
+betajs-ui - v1.0.42 - 2018-06-18
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
 /** @flow **//*!
-betajs-scoped - v0.0.17 - 2017-10-22
+betajs-scoped - v0.0.19 - 2018-04-07
 Copyright (c) Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -476,7 +476,7 @@ function newNamespace (opts/* : {tree ?: boolean, global ?: boolean, root ?: Obj
 	function nodeUnresolvedWatchers(node/* : Node */, base, result) {
 		node = node || nsRoot;
 		result = result || [];
-		if (!node.ready)
+		if (!node.ready && node.lazy.length === 0 && node.watchers.length > 0)
 			result.push(base);
 		for (var k in node.children) {
 			var c = node.children[k];
@@ -759,10 +759,7 @@ function newScope (parent, parentNS, rootNS, globalNS) {
 		resolve: function (namespaceLocator) {
 			var parts = namespaceLocator.split(":");
 			if (parts.length == 1) {
-				return {
-					namespace: privateNamespace,
-					path: parts[0]
-				};
+                throw ("The locator '" + parts[0] + "' requires a namespace.");
 			} else {
 				var binding = bindings[parts[0]];
 				if (!binding)
@@ -967,7 +964,7 @@ var Public = Helper.extend(rootScope, (function () {
 return {
 		
 	guid: "4b6878ee-cb6a-46b3-94ac-27d91f58d666",
-	version: '0.0.17',
+	version: '0.0.19',
 		
 	upgrade: Attach.upgrade,
 	attach: Attach.attach,
@@ -1009,7 +1006,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.41 - 2018-02-04
+betajs-ui - v1.0.42 - 2018-06-18
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1023,7 +1020,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.41"
+    "version": "1.0.42"
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -1655,7 +1652,10 @@ Scoped.define("module:Gestures.ElementEvent", [
             on: function(event, func, context, element) {
                 element = Dom.unbox(element || this._element);
                 event.split(" ").forEach(function(eventName) {
-                    this._domevents.on(element, eventName, func, context || this);
+                    this._domevents.on(element, eventName, function(ev) {
+                        ev.preventDefault();
+                        return func.apply(this, arguments);
+                    }, context || this);
                 }, this);
             }
 
@@ -3143,9 +3143,11 @@ Scoped.define("module:Interactions.State", [
             },
 
             on: function(element, event, callback, context) {
-                this._domEvents.on(Dom.unbox(element), event, function() {
-                    if (!this.destroyed())
+                this._domEvents.on(Dom.unbox(element), event, function(ev) {
+                    if (!this.destroyed()) {
                         callback.apply(context || this, arguments);
+                        ev.preventDefault();
+                    }
                 }, this);
             },
 

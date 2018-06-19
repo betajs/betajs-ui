@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.41 - 2018-02-04
+betajs-ui - v1.0.42 - 2018-06-18
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -13,7 +13,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.41"
+    "version": "1.0.42"
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -645,7 +645,10 @@ Scoped.define("module:Gestures.ElementEvent", [
             on: function(event, func, context, element) {
                 element = Dom.unbox(element || this._element);
                 event.split(" ").forEach(function(eventName) {
-                    this._domevents.on(element, eventName, func, context || this);
+                    this._domevents.on(element, eventName, function(ev) {
+                        ev.preventDefault();
+                        return func.apply(this, arguments);
+                    }, context || this);
                 }, this);
             }
 
@@ -2133,9 +2136,11 @@ Scoped.define("module:Interactions.State", [
             },
 
             on: function(element, event, callback, context) {
-                this._domEvents.on(Dom.unbox(element), event, function() {
-                    if (!this.destroyed())
+                this._domEvents.on(Dom.unbox(element), event, function(ev) {
+                    if (!this.destroyed()) {
                         callback.apply(context || this, arguments);
+                        ev.preventDefault();
+                    }
                 }, this);
             },
 

@@ -34,7 +34,7 @@ QUnit.test("test drop", function(assert) {
         document.querySelector("#drop").appendChild(dropped);
     });
 
-    var interactor = new BetaJS.UI.Helpers.Interactor({ delay: 1 });
+    var interactor = new BetaJS.UI.Helpers.Interactor({ delay: 100 });
 
     interactor.mousedown("#drag .doodad").success(function () {
         interactor.mousemoveToElement("#drop .doodad").success(function () {

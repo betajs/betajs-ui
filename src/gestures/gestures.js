@@ -147,7 +147,10 @@ Scoped.define("module:Gestures.ElementEvent", [
             on: function(event, func, context, element) {
                 element = Dom.unbox(element || this._element);
                 event.split(" ").forEach(function(eventName) {
-                    this._domevents.on(element, eventName, func, context || this);
+                    this._domevents.on(element, eventName, function(ev) {
+                        ev.preventDefault();
+                        return func.apply(this, arguments);
+                    }, context || this);
                 }, this);
             }
 

@@ -1,5 +1,5 @@
 {
-    "homepage": "http://betajs.com",
+    "homepage": "https://betajs.com",
     "license": "Apache-2.0",
     "licenses": [
         {
@@ -15,7 +15,7 @@
         "url": "https://github.com/betajs/betajs-ui/issues"
     },
     "name": "betajs-ui",
-    "version": "1.0.41",
+    "version": "1.0.42",
     "description": "BetaJS-UI is a library for enabling gestures and interactions such as drag and drop.",
     "contributors": [
         "Victor Lingenthal",
@@ -53,8 +53,8 @@
         "test": "grunt check-node"
     },
     "meta": {
-        "blog": "http://blog.betajs.com",
-        "twitter": "http://twitter.com/thebetajs",
+        "blog": "https://blog.betajs.com",
+        "twitter": "https://twitter.com/thebetajs",
         "sponsors": [
             "Ziggeo",
             "Browserstack"

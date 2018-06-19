@@ -119,9 +119,11 @@ Scoped.define("module:Interactions.State", [
             },
 
             on: function(element, event, callback, context) {
-                this._domEvents.on(Dom.unbox(element), event, function() {
-                    if (!this.destroyed())
+                this._domEvents.on(Dom.unbox(element), event, function(ev) {
+                    if (!this.destroyed()) {
                         callback.apply(context || this, arguments);
+                        ev.preventDefault();
+                    }
                 }, this);
             },
 

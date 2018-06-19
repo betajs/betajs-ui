@@ -76,28 +76,28 @@
 	            drag_gesture.on("deactivate", drag.stop, drag);
 	            drag.on("move", function (event) {
 	            	var element = event.element;
-	            	var parent = element.parent();
-	            	var x = parseInt(element.css("left"), 10);
-	                var w = parseInt(element.css("width"), 10);
+	            	var parent = element.parentElement;
+	            	var x = parseInt(getComputedStyle(element).left, 10);
+	                var w = parseInt(getComputedStyle(element).width, 10);
 	                var a = {};
 	                for (var cls in actions) {
 	                	a = actions[cls];
 	                	if ((!a.less || x <= w * a.less) && (!a.greater || x >= w * a.greater))
-	                		parent.addClass(cls);
+	                		BetaJS.Browser.Dom.elementAddClass(parent, cls);
 	                	else
-	                		parent.removeClass(cls);
+                            BetaJS.Browser.Dom.elementRemoveClass(parent, cls);
 	                }
 	            });
 	            drag.on("release", function (event) {
 	            	var element = event.element;
-	            	var parent = element.parent();
-	                var x = parseInt(element.css("left"), 10);
-	                var w = parseInt(element.css("width"), 10);
+	            	var parent = element.parentElement;
+                    var x = parseInt(getComputedStyle(element).left, 10);
+                    var w = parseInt(getComputedStyle(element).width, 10);
 	                for (var cls in actions) {
 	                	a = actions[cls];
 	                	if ((!a.less || x <= w * a.less) && (!a.greater || x >= w * a.greater)) {
 	                        event.source.abort();
-	                        parent.slideUp();
+	                        parent.parentElement.removeChild(parent);
 	                	}
 	                }
 	            });
