@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.42 - 2018-06-18
+betajs-ui - v1.0.43 - 2018-07-07
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1006,7 +1006,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.42 - 2018-06-18
+betajs-ui - v1.0.43 - 2018-07-07
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.42"
+    "version": "1.0.43"
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -1653,7 +1653,12 @@ Scoped.define("module:Gestures.ElementEvent", [
                 element = Dom.unbox(element || this._element);
                 event.split(" ").forEach(function(eventName) {
                     this._domevents.on(element, eventName, function(ev) {
-                        ev.preventDefault();
+
+                        // The following line was added in a previous commit to prevent click-through issues, but
+                        // introduced a new issue of scrolling being prevented by default which is not desirable.
+
+                        // ev.preventDefault();
+
                         return func.apply(this, arguments);
                     }, context || this);
                 }, this);

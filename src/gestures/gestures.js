@@ -148,7 +148,12 @@ Scoped.define("module:Gestures.ElementEvent", [
                 element = Dom.unbox(element || this._element);
                 event.split(" ").forEach(function(eventName) {
                     this._domevents.on(element, eventName, function(ev) {
-                        ev.preventDefault();
+
+                        // The following line was added in a previous commit to prevent click-through issues, but
+                        // introduced a new issue of scrolling being prevented by default which is not desirable.
+
+                        // ev.preventDefault();
+
                         return func.apply(this, arguments);
                     }, context || this);
                 }, this);
