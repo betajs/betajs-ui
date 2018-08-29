@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.43 - 2018-07-07
+betajs-ui - v1.0.43 - 2018-08-29
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1006,7 +1006,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.43 - 2018-07-07
+betajs-ui - v1.0.43 - 2018-08-29
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1677,8 +1677,8 @@ Scoped.define("module:Gestures.ElementTriggerEvent", ["module:Gestures.ElementEv
 
             constructor: function(ev, element, callback, context) {
                 inherited.constructor.call(this, element, callback, context);
-                this.on(ev, function() {
-                    this.callback();
+                this.on(ev, function(event) {
+                    this.callback(event);
                 });
             }
 
@@ -1695,8 +1695,8 @@ Scoped.define("module:Gestures.BodyTriggerEvent", ["module:Gestures.ElementEvent
 
             constructor: function(ev, element, callback, context) {
                 inherited.constructor.call(this, element, callback, context);
-                this.on(ev, function() {
-                    this.callback();
+                this.on(ev, function(event) {
+                    this.callback(event);
                 }, this, document.body);
             }
 
@@ -1863,7 +1863,11 @@ Scoped.define("module:Gestures.GestureStates.EventDrivenState", [
                     state.start.apply(this);
                 state.events = state.events || [];
                 var helper = function(event) {
-                    this._auto_destroy(new Gestures[event.event](event.args, this.element(), function() {
+                    this._auto_destroy(new Gestures[event.event](event.args, this.element(), function(ev) {
+                        if (event.stop_propagation) {
+                            ev.stopPropagation();
+                            ev.preventDefault();
+                        }
                         this.nextDrivenState(event.target);
                     }, this));
                 };
@@ -1956,7 +1960,8 @@ Scoped.define("module:Gestures.defaultGesture", [
                 events: Objs.filter([options.mouse_up_activate === null ? null : {
                     event: "BodyTriggerEvent",
                     args: MouseEvents.upEvent(),
-                    target: options.mouse_up_activate ? "ActiveState" : "Initial"
+                    target: options.mouse_up_activate ? "ActiveState" : "Initial",
+                    stop_propagation: true
                 }, {
                     event: "ElementMouseMoveOutEvent",
                     args: {
