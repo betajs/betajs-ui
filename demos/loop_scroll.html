@@ -29,6 +29,7 @@
 			}
 			.item {
 				border: 1px solid black;
+				box-sizing: border-box;
 /*				height: 40px;*/
 
                 /*-webkit-flex: 0 0 40px;*/
@@ -44,8 +45,8 @@
 			}
 
 			ba-test element {
-			@include flex(0 0 40px);
-				flex: 0 0 40px;
+			@include flex(0 0 38px);
+				flex: 0 0 38px;
 				color: grey;
 				background: #F4F4F4;
 
@@ -54,7 +55,7 @@
 				text-align: center;
 			}
 
-			ba-test .selected {color: black}
+			ba-test .selected {background-color: purple}
 
 		</style>
 	</head>
@@ -81,14 +82,24 @@
 				currentTop: false,
 				discrete: true,
 				scrollEndTimeout: 200,
-				currentCenter: true
+                elementMargin: 0,
+				currentCenter: true,
+                currentElementClass: "selected",
+                discreteUpperThreshold: 0.25,
+                discreteLowerThreshold: 0.75,
+                scrollToOnClick: true
 			});
 			var scroll2 = new BetaJS.UI.Interactions.Loopscroll(element2, {
 				enabled: true,
 				currentTop: true,
 				discrete: true,
+                elementMargin: 0,
 				scrollEndTimeout: 200,
-				currentCenter: true
+				currentCenter: true,
+                currentElementClass: "selected",
+                discreteUpperThreshold: 0.25,
+                discreteLowerThreshold: 0.75,
+                scrollToOnClick: true
 			});
 //			scroll._host.on("start", function (s) {
 //				console.log(s);

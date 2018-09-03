@@ -60,14 +60,11 @@ Scoped.define("module:Interactions.Loopscroll", [
                 this.element().scrollTop = this.element().scrollTop + this.options().whitespace - h;
             },
 
-            scrollToElement: function(element, options) {
-                inherited.scrollToElement.call(this, element, options);
-            },
-
             reset: function(increment) {
                 this._whitespaceSetHeight(this.__bottom_white_space, this.options().whitespace);
                 this._whitespaceSetHeight(this.__top_white_space, this.options().whitespace);
                 this.element().scrollTop = this.options().whitespace + (increment ? this.element().scrollTop : 0);
+                this._currentElementUpdate();
             }
 
         };

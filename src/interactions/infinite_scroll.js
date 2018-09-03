@@ -37,6 +37,8 @@ Scoped.define("module:Interactions.Infinitescroll", [
                     this.itemsElement().appendChild(this.__bottom_white_space);
                 }
                 Async.eventually(function() {
+                    if (this.destroyed())
+                        return;
                     this.reset(true);
                 }, this);
             },

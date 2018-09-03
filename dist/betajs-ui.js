@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.43 - 2018-08-29
+betajs-ui - v1.0.45 - 2018-09-03
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1006,7 +1006,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.43 - 2018-08-29
+betajs-ui - v1.0.45 - 2018-09-03
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.43"
+    "version": "1.0.45"
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -2897,6 +2897,8 @@ Scoped.define("module:Interactions.Infinitescroll", [
                     this.itemsElement().appendChild(this.__bottom_white_space);
                 }
                 Async.eventually(function() {
+                    if (this.destroyed())
+                        return;
                     this.reset(true);
                 }, this);
             },
@@ -3230,14 +3232,11 @@ Scoped.define("module:Interactions.Loopscroll", [
                 this.element().scrollTop = this.element().scrollTop + this.options().whitespace - h;
             },
 
-            scrollToElement: function(element, options) {
-                inherited.scrollToElement.call(this, element, options);
-            },
-
             reset: function(increment) {
                 this._whitespaceSetHeight(this.__bottom_white_space, this.options().whitespace);
                 this._whitespaceSetHeight(this.__top_white_space, this.options().whitespace);
                 this.element().scrollTop = this.options().whitespace + (increment ? this.element().scrollTop : 0);
+                this._currentElementUpdate();
             }
 
         };
@@ -3423,9 +3422,11 @@ Scoped.define("module:Interactions.PinchStates.Pinching", ["module:Interactions.
 Scoped.define("module:Interactions.Scroll", [
     "module:Interactions.ElementInteraction",
     "base:Objs",
+    "base:Types",
+    "base:Async",
     "browser:Dom",
     "module:Interactions.ScrollStates"
-], function(ElemInter, Objs, Dom, ScrollStates, scoped) {
+], function(ElemInter, Objs, Types, Async, Dom, ScrollStates, scoped) {
     return ElemInter.extend({
         scoped: scoped
     }, function(inherited) {
@@ -3441,7 +3442,11 @@ Scoped.define("module:Interactions.Scroll", [
                     whitespace: 10000,
                     display_type: "",
                     elementMargin: 20,
-                    enable_scroll_modifier: "scroll"
+                    enable_scroll_modifier: "scroll",
+                    currentElementClass: null,
+                    discreteUpperThreshold: 0.5,
+                    discreteLowerThreshold: 0.5,
+                    scrollToOnClick: false
                 }, options);
                 inherited.constructor.call(this, element, options, stateNS);
                 this._itemsElement = Dom.unbox(options.itemsElement || element);
@@ -3449,18 +3454,43 @@ Scoped.define("module:Interactions.Scroll", [
                 this._host.initialize("Idle");
                 this._scrollingDirection = true;
                 this._lastScrollTop = null;
+                this._lastCurrentElement = null;
                 this.__on(this.element(), "scroll", function() {
                     var scrollTop = this.element().scrollTop;
-                    if (this._lastScrollTop !== null)
-                        this._scrollingDirection = scrollTop >= this._lastScrollTop;
+                    if (this._lastScrollTop !== null) {
+                        // do not change scrolling direction when using ScrollingTo
+                        if (!this._host.state().instance_of(stateNS.ScrollingTo))
+                            this._scrollingDirection = scrollTop >= this._lastScrollTop;
+                    }
                     this._lastScrollTop = scrollTop;
+                    this._currentElementUpdate();
                 });
+                if (this._options.scrollToOnClick) {
+                    this.__on(this.element(), "click", function(ev) {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        var current = Dom.elementFromPoint(ev.pageX, ev.pageY, null, this.itemsElement());
+                        this.scrollToElement(current, {
+                            animate: true,
+                            abortable: true
+                        });
+                    });
+                }
+                if (this._options.discrete) {
+                    Async.eventually(function() {
+                        this.scrollToElement(this.currentElement(), {
+                            animate: true,
+                            abortable: true
+                        });
+                    }, this);
+                }
             },
 
             _whitespaceType: function() {
                 if (this.options().display_type)
                     return this.options().display_type;
-                return (this.element().style.display || "").toLowerCase().indexOf('flex') >= 0 ? "flex" : "default";
+                var style = window.getComputedStyle ? window.getComputedStyle(this.element()) : this.element().style;
+                return (style.display || "").toLowerCase().indexOf('flex') >= 0 ? "flex" : "default";
             },
 
             _whitespaceCreate: function() {
@@ -3506,22 +3536,19 @@ Scoped.define("module:Interactions.Scroll", [
                 var offset = Dom.elementOffset(this.element());
                 var h = this._options.currentTop ? this._options.elementMargin : (this.element().clientHeight - 1 - this._options.elementMargin);
                 var w = this.element().clientWidth / 2;
-                var current = Dom.elementFromPoint(offset.left + w, offset.top + h);
-                while (current && current.parentNode !== this.itemsElement())
-                    current = current.parentNode;
+                var current = Dom.elementFromPoint(offset.left + w, offset.top + h, null, this.itemsElement());
                 if (!current)
                     return null;
                 if (!this._options.currentCenter)
                     return current;
-                if (this._options.currentTop) {
-                    var delta_top = offset.top - Dom.elementOffset(current).top;
-                    if (delta_top > Dom.elementDimensions(current).height / 2)
-                        current = current.nextElementSibling;
-                } else {
-                    var delta_bottom = offset.top + h - Dom.elementOffset(current).top;
-                    if (delta_bottom < Dom.elementDimensions(current).height / 2)
-                        current = current.previousElementSibling;
-                }
+                var elOff = Dom.elementOffset(current);
+                var elDim = Dom.elementDimensions(current);
+                var delta_visible = this._options.currentTop ? (elOff.top + elDim.height - offset.top) : (offset.top + h - elOff.top);
+                var percentage_visible = delta_visible / elDim.height;
+                var threshold_kind = this._options.currentTop ? !this.scrollingDirection() : !this.scrollingDirection();
+                var scroll_percentage_required = this._options[threshold_kind ? 'discreteUpperThreshold' : 'discreteLowerThreshold'];
+                if (percentage_visible < scroll_percentage_required)
+                    current = this._options.currentTop ? current.nextElementSibling : current.previousElementSibling;
                 return current;
             },
 
@@ -3534,6 +3561,8 @@ Scoped.define("module:Interactions.Scroll", [
 
             scrollToElement: function(element, options) {
                 element = Dom.unbox(element);
+                if (!element)
+                    return;
                 var top = Dom.elementOffset(element).top - Dom.elementOffset(this.element()).top + this.element().scrollTop;
                 this.scrollTo(top + (this._options.currentTop ? 0 : (Dom.elementDimensions(element).height - 1)), options);
             },
@@ -3552,6 +3581,19 @@ Scoped.define("module:Interactions.Scroll", [
 
             scrolling: function() {
                 return this._host.state().state_name() !== "Idle";
+            },
+
+            _currentElementUpdate: function() {
+                var currentElement = this.currentElement();
+                if (currentElement !== this._lastCurrentElement) {
+                    if (this._options.currentElementClass) {
+                        if (this._lastCurrentElement)
+                            Dom.elementRemoveClass(this._lastCurrentElement, this._options.currentElementClass);
+                        Dom.elementAddClass(currentElement, this._options.currentElementClass);
+                    }
+                    this.trigger("change-current-element", currentElement, this._lastCurrentElement);
+                    this._lastCurrentElement = currentElement;
+                }
             }
 
         };

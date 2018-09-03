@@ -12,5 +12,4 @@ QUnit.test("jsdom", function (assert) {
 require("betajs");
 require("betajs-browser");
 require(__dirname + "/../dist/betajs-ui-noscoped.js");
-require(__dirname + "/tests/scroll.js");
 require(__dirname + "/tests/scoped.js");
