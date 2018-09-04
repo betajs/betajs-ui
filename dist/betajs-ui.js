@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.45 - 2018-09-03
+betajs-ui - v1.0.46 - 2018-09-04
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1006,7 +1006,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.45 - 2018-09-03
+betajs-ui - v1.0.46 - 2018-09-04
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1020,7 +1020,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.45"
+    "version": "1.0.46"
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -2046,8 +2046,9 @@ Scoped.define("module:Helpers.Interactor", [
     "base:Promise",
     "base:Async",
     "browser:Info",
-    "browser:Dom"
-], function(Class, Objs, Types, Promise, Async, Info, Dom, scoped) {
+    "browser:Dom",
+    "module:Events.Mouse"
+], function(Class, Objs, Types, Promise, Async, Info, Dom, Mouse, scoped) {
     return Class.extend({
         scoped: scoped
     }, function(inherited) {
@@ -2064,29 +2065,38 @@ Scoped.define("module:Helpers.Interactor", [
                 return element ? (Types.is_string(element) ? document.querySelector(element) : element) : document.body;
             },
 
-            mousedown: function(element) {
-                return this._event(element, Info.isMobile() ? "touchstart" : "mousedown");
-            },
-
-            mouseup: function(element) {
-                return this._event(element, Info.isMobile() ? "touchend" : "mouseup");
-            },
-
-            mousemoveToElement: function(targetElement, element) {
-                targetElement = this._element(targetElement);
-                var offset = Dom.elementOffset(targetElement);
-                var dims = Dom.elementDimensions(targetElement);
-                return this._event(element, Info.isMobile() ? "touchmove" : "mousemove", {
+            elementPositionEvent: function(element, eventType, positionElement) {
+                if (!positionElement)
+                    return this._event(element, eventType);
+                positionElement = this._element(positionElement);
+                var offset = Dom.elementOffset(positionElement);
+                var dims = Dom.elementDimensions(positionElement);
+                return this._event(element, eventType, {
                     pageX: offset.left + dims.width / 2,
                     pageY: offset.top + dims.height / 2
                 });
             },
 
+            mousedown: function(element, positionElement) {
+                return this.elementPositionEvent(element, Mouse.downEvent(), positionElement);
+            },
+
+            mouseup: function(element, positionElement) {
+                return this.elementPositionEvent(element, Mouse.upEvent(), positionElement);
+            },
+
+            mousemoveToElement: function(targetElement, element) {
+                return this.elementPositionEvent(element, Mouse.moveEvent(), targetElement);
+            },
+
             _event: function(element, event, params) {
                 var promise = Promise.create();
-                element = this._element(element ? (Types.is_string(element) ? document.querySelector(element) : element) : document.body);
+                element = this._element(element);
                 Async.eventually(function() {
-                    Dom.triggerDomEvent(element, event, params);
+                    Dom.triggerDomEvent(element, event, params, {
+                        bubbles: true,
+                        propagates: true
+                    });
                     promise.asyncSuccess(element);
                 }, this._options.delay);
                 return promise;

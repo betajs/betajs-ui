@@ -5,8 +5,9 @@ Scoped.define("module:Helpers.Interactor", [
     "base:Promise",
     "base:Async",
     "browser:Info",
-    "browser:Dom"
-], function(Class, Objs, Types, Promise, Async, Info, Dom, scoped) {
+    "browser:Dom",
+    "module:Events.Mouse"
+], function(Class, Objs, Types, Promise, Async, Info, Dom, Mouse, scoped) {
     return Class.extend({
         scoped: scoped
     }, function(inherited) {
@@ -23,29 +24,38 @@ Scoped.define("module:Helpers.Interactor", [
                 return element ? (Types.is_string(element) ? document.querySelector(element) : element) : document.body;
             },
 
-            mousedown: function(element) {
-                return this._event(element, Info.isMobile() ? "touchstart" : "mousedown");
-            },
-
-            mouseup: function(element) {
-                return this._event(element, Info.isMobile() ? "touchend" : "mouseup");
-            },
-
-            mousemoveToElement: function(targetElement, element) {
-                targetElement = this._element(targetElement);
-                var offset = Dom.elementOffset(targetElement);
-                var dims = Dom.elementDimensions(targetElement);
-                return this._event(element, Info.isMobile() ? "touchmove" : "mousemove", {
+            elementPositionEvent: function(element, eventType, positionElement) {
+                if (!positionElement)
+                    return this._event(element, eventType);
+                positionElement = this._element(positionElement);
+                var offset = Dom.elementOffset(positionElement);
+                var dims = Dom.elementDimensions(positionElement);
+                return this._event(element, eventType, {
                     pageX: offset.left + dims.width / 2,
                     pageY: offset.top + dims.height / 2
                 });
             },
 
+            mousedown: function(element, positionElement) {
+                return this.elementPositionEvent(element, Mouse.downEvent(), positionElement);
+            },
+
+            mouseup: function(element, positionElement) {
+                return this.elementPositionEvent(element, Mouse.upEvent(), positionElement);
+            },
+
+            mousemoveToElement: function(targetElement, element) {
+                return this.elementPositionEvent(element, Mouse.moveEvent(), targetElement);
+            },
+
             _event: function(element, event, params) {
                 var promise = Promise.create();
-                element = this._element(element ? (Types.is_string(element) ? document.querySelector(element) : element) : document.body);
+                element = this._element(element);
                 Async.eventually(function() {
-                    Dom.triggerDomEvent(element, event, params);
+                    Dom.triggerDomEvent(element, event, params, {
+                        bubbles: true,
+                        propagates: true
+                    });
                     promise.asyncSuccess(element);
                 }, this._options.delay);
                 return promise;
