@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.46 - 2018-09-04
+betajs-ui - v1.0.46 - 2018-09-13
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1006,7 +1006,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.46 - 2018-09-04
+betajs-ui - v1.0.46 - 2018-09-13
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -3488,6 +3488,8 @@ Scoped.define("module:Interactions.Scroll", [
                 }
                 if (this._options.discrete) {
                     Async.eventually(function() {
+                        if (this.destroyed())
+                            return;
                         this.scrollToElement(this.currentElement(), {
                             animate: true,
                             abortable: true

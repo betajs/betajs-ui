@@ -57,6 +57,8 @@ Scoped.define("module:Interactions.Scroll", [
                 }
                 if (this._options.discrete) {
                     Async.eventually(function() {
+                        if (this.destroyed())
+                            return;
                         this.scrollToElement(this.currentElement(), {
                             animate: true,
                             abortable: true
