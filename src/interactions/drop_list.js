@@ -1,6 +1,7 @@
 Scoped.define("module:Interactions.Droplist", [
     "module:Interactions.ElementInteraction",
     "base:Objs",
+    "base:Types",
     "module:Interactions.DroplistStates",
     "browser:Dom"
 ], [
@@ -8,7 +9,7 @@ Scoped.define("module:Interactions.Droplist", [
     "module:Interactions.DroplistStates.Idle",
     "module:Interactions.DroplistStates.Hover",
     "module:Interactions.DroplistStates.Dropping"
-], function(ElemInter, Objs, DroplistStates, Dom, scoped) {
+], function(ElemInter, Objs, Types, DroplistStates, Dom, scoped) {
     return ElemInter.extend({
         scoped: scoped
     }, function(inherited) {
@@ -28,7 +29,7 @@ Scoped.define("module:Interactions.Droplist", [
                 inherited.constructor.call(this, element, options, DroplistStates);
                 this._host.initialize("Idle");
                 this.data = data;
-                this._floater = Dom.unbox(this._options.floater);
+                this._floater = Types.is_string(this._options.floater) ? element.parentElement.querySelector(this._options.floater) : Dom.unbox(this._options.floater);
                 this._floater.style.display = "none";
             },
 

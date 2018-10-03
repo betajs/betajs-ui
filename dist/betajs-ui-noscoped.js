@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.46 - 2018-09-13
+betajs-ui - v1.0.48 - 2018-10-02
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -13,7 +13,8 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.46"
+    "version": "1.0.48",
+    "datetime": 1538530193216
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -1681,6 +1682,7 @@ Scoped.define("module:Interactions.DropStates.Dropping", ["module:Interactions.D
 Scoped.define("module:Interactions.Droplist", [
     "module:Interactions.ElementInteraction",
     "base:Objs",
+    "base:Types",
     "module:Interactions.DroplistStates",
     "browser:Dom"
 ], [
@@ -1688,7 +1690,7 @@ Scoped.define("module:Interactions.Droplist", [
     "module:Interactions.DroplistStates.Idle",
     "module:Interactions.DroplistStates.Hover",
     "module:Interactions.DroplistStates.Dropping"
-], function(ElemInter, Objs, DroplistStates, Dom, scoped) {
+], function(ElemInter, Objs, Types, DroplistStates, Dom, scoped) {
     return ElemInter.extend({
         scoped: scoped
     }, function(inherited) {
@@ -1708,7 +1710,7 @@ Scoped.define("module:Interactions.Droplist", [
                 inherited.constructor.call(this, element, options, DroplistStates);
                 this._host.initialize("Idle");
                 this.data = data;
-                this._floater = Dom.unbox(this._options.floater);
+                this._floater = Types.is_string(this._options.floater) ? element.parentElement.querySelector(this._options.floater) : Dom.unbox(this._options.floater);
                 this._floater.style.display = "none";
             },
 
