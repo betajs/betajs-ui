@@ -33,11 +33,6 @@ Scoped.define("module:Interactions.Droplist", [
                 this._floater.style.display = "none";
             },
 
-            destroy: function() {
-                this._host.destroy();
-                inherited.destroy.call(this);
-            },
-
             _enable: function() {
                 this._host.state().next("Idle");
             },

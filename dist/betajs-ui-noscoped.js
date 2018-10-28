@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.48 - 2018-10-02
+betajs-ui - v1.0.49 - 2018-10-28
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -13,8 +13,8 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.48",
-    "datetime": 1538530193216
+    "version": "1.0.49",
+    "datetime": 1540736059928
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -1712,11 +1712,6 @@ Scoped.define("module:Interactions.Droplist", [
                 this.data = data;
                 this._floater = Types.is_string(this._options.floater) ? element.parentElement.querySelector(this._options.floater) : Dom.unbox(this._options.floater);
                 this._floater.style.display = "none";
-            },
-
-            destroy: function() {
-                this._host.destroy();
-                inherited.destroy.call(this);
             },
 
             _enable: function() {
