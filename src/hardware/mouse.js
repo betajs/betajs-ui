@@ -22,7 +22,9 @@ Scoped.define("module:Hardware.MouseCoords", [
                     var result = MouseEvents.pageCoords(event);
                     if (result.x && result.y)
                         this.coords = result;
-                }, this);
+                }, this, {
+                    passive: false
+                });
             }
             this.__required++;
         },

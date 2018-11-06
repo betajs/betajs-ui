@@ -34,8 +34,8 @@ Scoped.define("module:Interactions.ElementInteraction", [
                 this._host.parent = this;
             },
 
-            __on: function(element, event, callback, context) {
-                this._domEvents.on(Dom.unbox(element), event, callback, context || this);
+            __on: function(element, event, callback, context, options) {
+                this._domEvents.on(Dom.unbox(element), event, callback, context || this, options);
             },
 
             destroy: function() {
@@ -118,13 +118,13 @@ Scoped.define("module:Interactions.State", [
                 return this.parent().options();
             },
 
-            on: function(element, event, callback, context) {
+            on: function(element, event, callback, context, options) {
                 this._domEvents.on(Dom.unbox(element), event, function(ev) {
                     if (!this.destroyed()) {
                         callback.apply(context || this, arguments);
                         ev.preventDefault();
                     }
-                }, this);
+                }, this, options);
             },
 
             _end: function() {

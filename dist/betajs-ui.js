@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.49 - 2018-10-28
+betajs-ui - v1.0.50 - 2018-11-06
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1006,7 +1006,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.49 - 2018-10-28
+betajs-ui - v1.0.50 - 2018-11-06
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1020,8 +1020,8 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.49",
-    "datetime": 1540736059928
+    "version": "1.0.50",
+    "datetime": 1541535593084
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -2027,7 +2027,9 @@ Scoped.define("module:Hardware.MouseCoords", [
                     var result = MouseEvents.pageCoords(event);
                     if (result.x && result.y)
                         this.coords = result;
-                }, this);
+                }, this, {
+                    passive: false
+                });
             }
             this.__required++;
         },
@@ -2115,12 +2117,13 @@ Scoped.define("module:Interactions.Drag", [
     "module:Hardware.MouseCoords",
     "base:Ids",
     "base:Objs",
+    "base:Async",
     "module:Interactions.DragStates"
 ], [
     "module:Interactions.DragStates.Idle",
     "module:Interactions.DragStates.Dragging",
     "module:Interactions.DragStates.Stopping"
-], function(ElemInter, ElemMod, Dom, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, DragStates, scoped) {
+], function(ElemInter, ElemMod, Dom, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, Async, DragStates, scoped) {
     return ElemInter.extend({
         scoped: scoped
     }, function(inherited) {
@@ -2160,8 +2163,12 @@ Scoped.define("module:Interactions.Drag", [
             },
 
             _enable: function() {
-                if (this._options.start_event)
-                    this.__on(this.element(), this._options.start_event, this.start, this);
+                if (this._options.start_event) {
+                    this.__on(this.element(), this._options.start_event, function() {
+                        // We need to do this asynchronously so touch coordinate tracking hardware can record these coordinates first
+                        Async.eventually(this.start, this);
+                    });
+                }
             },
 
             _disable: function() {
@@ -2240,7 +2247,7 @@ Scoped.define("module:Interactions.Drag", [
                 var data = this.__eventData();
                 var underneath = Dom.elementFromPoint(data.page_coords.x, data.page_coords.y, this.actionable_element());
                 if (underneath) {
-                    if (this.__old_coords && this.__underneath && this.__underneath != underneath) {
+                    if (this.__old_coords && this.__underneath && this.__underneath !== underneath) {
                         EventsSupp.dispatchPointsSeparatorEvent(underneath, "drag-enter", data.page_coords, this.__old_coords, data);
                         EventsSupp.dispatchPointsSeparatorEvent(this.__underneath, "drag-leave", this.__old_coords, data.page_coords, data);
                     }
@@ -2338,7 +2345,9 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
                 }
             }
             this.trigger("start");
-            this.on(document.body, MouseEvents.moveEvent(), this.__dragging);
+            this.on(document.body, MouseEvents.moveEvent(), this.__dragging, this, {
+                passive: false
+            });
             if (opts.stop_event) {
                 this.on(document.body, opts.stop_event, function() {
                     if (opts.droppable)
@@ -3077,8 +3086,8 @@ Scoped.define("module:Interactions.ElementInteraction", [
                 this._host.parent = this;
             },
 
-            __on: function(element, event, callback, context) {
-                this._domEvents.on(Dom.unbox(element), event, callback, context || this);
+            __on: function(element, event, callback, context, options) {
+                this._domEvents.on(Dom.unbox(element), event, callback, context || this, options);
             },
 
             destroy: function() {
@@ -3161,13 +3170,13 @@ Scoped.define("module:Interactions.State", [
                 return this.parent().options();
             },
 
-            on: function(element, event, callback, context) {
+            on: function(element, event, callback, context, options) {
                 this._domEvents.on(Dom.unbox(element), event, function(ev) {
                     if (!this.destroyed()) {
                         callback.apply(context || this, arguments);
                         ev.preventDefault();
                     }
-                }, this);
+                }, this, options);
             },
 
             _end: function() {

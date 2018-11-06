@@ -7,12 +7,13 @@ Scoped.define("module:Interactions.Drag", [
     "module:Hardware.MouseCoords",
     "base:Ids",
     "base:Objs",
+    "base:Async",
     "module:Interactions.DragStates"
 ], [
     "module:Interactions.DragStates.Idle",
     "module:Interactions.DragStates.Dragging",
     "module:Interactions.DragStates.Stopping"
-], function(ElemInter, ElemMod, Dom, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, DragStates, scoped) {
+], function(ElemInter, ElemMod, Dom, EventsSupp, MouseEvents, MouseCoords, Ids, Objs, Async, DragStates, scoped) {
     return ElemInter.extend({
         scoped: scoped
     }, function(inherited) {
@@ -52,8 +53,12 @@ Scoped.define("module:Interactions.Drag", [
             },
 
             _enable: function() {
-                if (this._options.start_event)
-                    this.__on(this.element(), this._options.start_event, this.start, this);
+                if (this._options.start_event) {
+                    this.__on(this.element(), this._options.start_event, function() {
+                        // We need to do this asynchronously so touch coordinate tracking hardware can record these coordinates first
+                        Async.eventually(this.start, this);
+                    });
+                }
             },
 
             _disable: function() {
@@ -132,7 +137,7 @@ Scoped.define("module:Interactions.Drag", [
                 var data = this.__eventData();
                 var underneath = Dom.elementFromPoint(data.page_coords.x, data.page_coords.y, this.actionable_element());
                 if (underneath) {
-                    if (this.__old_coords && this.__underneath && this.__underneath != underneath) {
+                    if (this.__old_coords && this.__underneath && this.__underneath !== underneath) {
                         EventsSupp.dispatchPointsSeparatorEvent(underneath, "drag-enter", data.page_coords, this.__old_coords, data);
                         EventsSupp.dispatchPointsSeparatorEvent(this.__underneath, "drag-leave", this.__old_coords, data.page_coords, data);
                     }
@@ -230,7 +235,9 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
                 }
             }
             this.trigger("start");
-            this.on(document.body, MouseEvents.moveEvent(), this.__dragging);
+            this.on(document.body, MouseEvents.moveEvent(), this.__dragging, this, {
+                passive: false
+            });
             if (opts.stop_event) {
                 this.on(document.body, opts.stop_event, function() {
                     if (opts.droppable)
