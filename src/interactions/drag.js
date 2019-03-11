@@ -210,7 +210,7 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
                     this._cloned_element = this.element().cloneNode(true);
                 }
                 this._cloned_modifier = new ElementMod(this._cloned_element);
-                this._cloned_modifier.css("position", "absolute");
+                this._cloned_modifier.css("position", "fixed");
                 this._cloned_modifier.css("width", width + "px");
                 this._cloned_modifier.css("height", height + "px");
                 this._cloned_modifier.css("zIndex", zindex + 1);

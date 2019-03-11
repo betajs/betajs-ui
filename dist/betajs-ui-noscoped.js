@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.51 - 2019-03-10
+betajs-ui - v1.0.52 - 2019-03-10
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -13,8 +13,8 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.51",
-    "datetime": 1552273712900
+    "version": "1.0.52",
+    "datetime": 1552275285066
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -1313,7 +1313,7 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
                     this._cloned_element = this.element().cloneNode(true);
                 }
                 this._cloned_modifier = new ElementMod(this._cloned_element);
-                this._cloned_modifier.css("position", "absolute");
+                this._cloned_modifier.css("position", "fixed");
                 this._cloned_modifier.css("width", width + "px");
                 this._cloned_modifier.css("height", height + "px");
                 this._cloned_modifier.css("zIndex", zindex + 1);
