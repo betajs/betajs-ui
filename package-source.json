@@ -1,6 +1,6 @@
 {
     "name": "betajs-ui",
-    "version": "1.0.50",
+    "version": "1.0.51",
     "description": "BetaJS-UI is a library for enabling gestures and interactions such as drag and drop.",
     "contributors": [
         "Victor Lingenthal",
@@ -11,7 +11,7 @@
         "grunt": "",
         "grunt-contrib-jshint": "",
         "grunt-contrib-concat": "",
-        "grunt-contrib-uglify": "~2.3.0",
+        "grunt-contrib-uglify": "^4.0.0",
         "grunt-contrib-clean": "",
         "grunt-preprocess": "",
         "grunt-closure-tools": "",
@@ -36,7 +36,8 @@
     },
     "scripts": {
         "test": "grunt check-node",
-        "relink": "npm link betajs && npm link betajs-compile && npm link betajs-scoped && npm link betajs-shims && npm link betajs-browser && npm link betajs-dynamics"
+        "relink": "npm link betajs && npm link betajs-compile && npm link betajs-scoped && npm link betajs-shims && npm link betajs-browser && npm link betajs-dynamics",
+        "reinstall": "rm -f package-lock.json && rm -rf node_modules && npm i && npm run relink"
     },
     "meta": {
         "sponsors": [
@@ -68,8 +69,8 @@
             "Internet Explorer": "8 - Latest",
             "Edge": "12 - Latest",
             "Yandex": "Latest",
-            "iOS": "5.0 - Latest",
-            "Android": "2.3 - Latest"
+            "iOS": "3.0 - Latest",
+            "Android": "4.4 - Latest"
         },
         "tests": {
             "Test Suite": "http://rawgit.com/betajs/betajs-ui/master/tests/tests.html"

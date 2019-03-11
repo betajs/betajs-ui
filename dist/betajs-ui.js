@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.50 - 2018-11-06
+betajs-ui - v1.0.51 - 2019-03-10
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1006,7 +1006,7 @@ Public.exports();
 	return Public;
 }).call(this);
 /*!
-betajs-ui - v1.0.50 - 2018-11-06
+betajs-ui - v1.0.51 - 2019-03-10
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -1020,8 +1020,8 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.50",
-    "datetime": 1541535593084
+    "version": "1.0.51",
+    "datetime": 1552273712900
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -1962,7 +1962,7 @@ Scoped.define("module:Gestures.defaultGesture", [
                     event: "BodyTriggerEvent",
                     args: MouseEvents.upEvent(),
                     target: options.mouse_up_activate ? "ActiveState" : "Initial",
-                    stop_propagation: true
+                    stop_propagation: !options.up_event_allow_propagation
                 }, {
                     event: "ElementMouseMoveOutEvent",
                     args: {
@@ -2456,6 +2456,185 @@ Scoped.define("module:Interactions.DragStates.Stopping", [
         };
     });
 });
+Scoped.define("module:Interactions.Droplist", [
+    "module:Interactions.ElementInteraction",
+    "base:Objs",
+    "base:Types",
+    "module:Interactions.DroplistStates",
+    "browser:Dom"
+], [
+    "module:Interactions.DroplistStates.Disabled",
+    "module:Interactions.DroplistStates.Idle",
+    "module:Interactions.DroplistStates.Hover",
+    "module:Interactions.DroplistStates.Dropping"
+], function(ElemInter, Objs, Types, DroplistStates, Dom, scoped) {
+    return ElemInter.extend({
+        scoped: scoped
+    }, function(inherited) {
+        return {
+
+            constructor: function(element, options, data) {
+                options = Objs.extend({
+                    droppable: function() {
+                        return true;
+                    },
+                    context: this,
+                    bounding_box: function(bb) {
+                        return bb;
+                    },
+                    floater: null
+                }, options);
+                inherited.constructor.call(this, element, options, DroplistStates);
+                this._host.initialize("Idle");
+                this.data = data;
+                this._floater = Types.is_string(this._options.floater) ? element.parentElement.querySelector(this._options.floater) : Dom.unbox(this._options.floater);
+                this._floater.style.display = "none";
+            },
+
+            _enable: function() {
+                this._host.state().next("Idle");
+            },
+
+            _disable: function() {
+                this._host.state().next("Disabled");
+            },
+
+            __eventData: function() {
+                return {
+                    index: Dom.elementIndex(this._floater),
+                    element: this.element(),
+                    target: this,
+                    data: this.data,
+                    source: this._host.state()._drag_source ? this._host.state()._drag_source : null
+                };
+            },
+
+            __triggerEvent: function(label) {
+                this.trigger(label, this.__eventData());
+            },
+
+            droppable: function(source) {
+                return this._options.droppable.call(this._options.context, source, this);
+            },
+
+            __update_floater: function(data) {
+                this._floater.style.display = "none";
+                var coords = data.page_coords;
+                var child = Dom.childContainingElement(this.element(), data.underneath);
+                if (!child)
+                    return;
+                if (child === this._floater) {
+                    this._floater.style.display = "";
+                    return;
+                }
+                var bb = Dom.elementBoundingBox(child);
+                bb = this._options.bounding_box.call(this._options.context, bb);
+                if (bb.top <= coords.y && coords.y <= bb.bottom)
+                    return;
+                this._floater.style.display = "";
+                if (coords.y < bb.top)
+                    Dom.elementInsertBefore(this._floater, child);
+                else
+                    Dom.elementInsertAfter(this._floater, child);
+            },
+
+            insertAt: function(element, index) {
+                Dom.elementInsertAt(element, this.element(), index);
+            }
+
+        };
+    });
+});
+
+
+
+Scoped.define("module:Interactions.DroplistStates.Disabled", ["module:Interactions.State"], function(State, scoped) {
+    return State.extend({
+        scoped: scoped
+    }, {
+
+        _white_list: ["Idle"],
+
+        trigger: function(label) {
+            this.parent().__triggerEvent(label);
+        }
+
+    });
+});
+
+
+Scoped.define("module:Interactions.DroplistStates.Idle", ["module:Interactions.DroplistStates.Disabled"], function(State, scoped) {
+    return State.extend({
+        scoped: scoped
+    }, {
+
+        _white_list: ["Hover", "Disabled"],
+
+        _start: function() {
+            this.on(this.element(), "drag-hover", function(event) {
+                var drag_source = event.detail;
+                if (this.parent().droppable(drag_source))
+                    this.next("Hover");
+            });
+        }
+
+    });
+});
+
+
+Scoped.define("module:Interactions.DroplistStates.Hover", ["module:Interactions.DroplistStates.Disabled"], function(State, scoped) {
+    return State.extend({
+        scoped: scoped
+    }, function(inherited) {
+        return {
+
+            _white_list: ["Idle", "Disabled", "Dropping"],
+            _persistents: ["drag_source"],
+
+            _start: function() {
+                this.trigger("hover");
+                this.on(this.element(), "drag-hover", function(event) {
+                    this._drag_source = event.detail;
+                    this.parent().__update_floater(this._drag_source);
+                });
+                this.on(this.element(), "drag-stop drag-leave", function(event) {
+                    this._drag_source = event.detail;
+                    this.next("Idle");
+                });
+                this.on(this.element(), "drag-drop", function(event) {
+                    this._drag_source = event.detail;
+                    this.parent().__update_floater(this._drag_source);
+                    this.next(this.parent()._floater.style.display == "none" ? "Idle" : "Dropping");
+                });
+            },
+
+            _end: function() {
+                this.trigger("unhover");
+                this.parent()._floater.style.display = "none";
+                inherited._end.call(this);
+            }
+
+        };
+    });
+});
+
+
+Scoped.define("module:Interactions.DroplistStates.Dropping", ["module:Interactions.DroplistStates.Disabled"], function(State, scoped) {
+    return State.extend({
+        scoped: scoped
+    }, {
+
+        _white_list: ["Idle", "Disabled"],
+        _persistents: ["drag_source"],
+
+        _start: function() {
+            this._drag_source.source.dropped(this.parent());
+            this.trigger("dropped");
+            this.next("Idle");
+        }
+
+    });
+});
 Scoped.define("module:Interactions.Drop", [
     "module:Interactions.ElementInteraction",
     "base:Objs",
@@ -2680,185 +2859,6 @@ Scoped.define("module:Interactions.DropStates.InvalidHover", ["module:Interactio
 
 
 Scoped.define("module:Interactions.DropStates.Dropping", ["module:Interactions.DropStates.Disabled"], function(State, scoped) {
-    return State.extend({
-        scoped: scoped
-    }, {
-
-        _white_list: ["Idle", "Disabled"],
-        _persistents: ["drag_source"],
-
-        _start: function() {
-            this._drag_source.source.dropped(this.parent());
-            this.trigger("dropped");
-            this.next("Idle");
-        }
-
-    });
-});
-Scoped.define("module:Interactions.Droplist", [
-    "module:Interactions.ElementInteraction",
-    "base:Objs",
-    "base:Types",
-    "module:Interactions.DroplistStates",
-    "browser:Dom"
-], [
-    "module:Interactions.DroplistStates.Disabled",
-    "module:Interactions.DroplistStates.Idle",
-    "module:Interactions.DroplistStates.Hover",
-    "module:Interactions.DroplistStates.Dropping"
-], function(ElemInter, Objs, Types, DroplistStates, Dom, scoped) {
-    return ElemInter.extend({
-        scoped: scoped
-    }, function(inherited) {
-        return {
-
-            constructor: function(element, options, data) {
-                options = Objs.extend({
-                    droppable: function() {
-                        return true;
-                    },
-                    context: this,
-                    bounding_box: function(bb) {
-                        return bb;
-                    },
-                    floater: null
-                }, options);
-                inherited.constructor.call(this, element, options, DroplistStates);
-                this._host.initialize("Idle");
-                this.data = data;
-                this._floater = Types.is_string(this._options.floater) ? element.parentElement.querySelector(this._options.floater) : Dom.unbox(this._options.floater);
-                this._floater.style.display = "none";
-            },
-
-            _enable: function() {
-                this._host.state().next("Idle");
-            },
-
-            _disable: function() {
-                this._host.state().next("Disabled");
-            },
-
-            __eventData: function() {
-                return {
-                    index: Dom.elementIndex(this._floater),
-                    element: this.element(),
-                    target: this,
-                    data: this.data,
-                    source: this._host.state()._drag_source ? this._host.state()._drag_source : null
-                };
-            },
-
-            __triggerEvent: function(label) {
-                this.trigger(label, this.__eventData());
-            },
-
-            droppable: function(source) {
-                return this._options.droppable.call(this._options.context, source, this);
-            },
-
-            __update_floater: function(data) {
-                this._floater.style.display = "none";
-                var coords = data.page_coords;
-                var child = Dom.childContainingElement(this.element(), data.underneath);
-                if (!child)
-                    return;
-                if (child === this._floater) {
-                    this._floater.style.display = "";
-                    return;
-                }
-                var bb = Dom.elementBoundingBox(child);
-                bb = this._options.bounding_box.call(this._options.context, bb);
-                if (bb.top <= coords.y && coords.y <= bb.bottom)
-                    return;
-                this._floater.style.display = "";
-                if (coords.y < bb.top)
-                    Dom.elementInsertBefore(this._floater, child);
-                else
-                    Dom.elementInsertAfter(this._floater, child);
-            },
-
-            insertAt: function(element, index) {
-                Dom.elementInsertAt(element, this.element(), index);
-            }
-
-        };
-    });
-});
-
-
-
-Scoped.define("module:Interactions.DroplistStates.Disabled", ["module:Interactions.State"], function(State, scoped) {
-    return State.extend({
-        scoped: scoped
-    }, {
-
-        _white_list: ["Idle"],
-
-        trigger: function(label) {
-            this.parent().__triggerEvent(label);
-        }
-
-    });
-});
-
-
-Scoped.define("module:Interactions.DroplistStates.Idle", ["module:Interactions.DroplistStates.Disabled"], function(State, scoped) {
-    return State.extend({
-        scoped: scoped
-    }, {
-
-        _white_list: ["Hover", "Disabled"],
-
-        _start: function() {
-            this.on(this.element(), "drag-hover", function(event) {
-                var drag_source = event.detail;
-                if (this.parent().droppable(drag_source))
-                    this.next("Hover");
-            });
-        }
-
-    });
-});
-
-
-Scoped.define("module:Interactions.DroplistStates.Hover", ["module:Interactions.DroplistStates.Disabled"], function(State, scoped) {
-    return State.extend({
-        scoped: scoped
-    }, function(inherited) {
-        return {
-
-            _white_list: ["Idle", "Disabled", "Dropping"],
-            _persistents: ["drag_source"],
-
-            _start: function() {
-                this.trigger("hover");
-                this.on(this.element(), "drag-hover", function(event) {
-                    this._drag_source = event.detail;
-                    this.parent().__update_floater(this._drag_source);
-                });
-                this.on(this.element(), "drag-stop drag-leave", function(event) {
-                    this._drag_source = event.detail;
-                    this.next("Idle");
-                });
-                this.on(this.element(), "drag-drop", function(event) {
-                    this._drag_source = event.detail;
-                    this.parent().__update_floater(this._drag_source);
-                    this.next(this.parent()._floater.style.display == "none" ? "Idle" : "Dropping");
-                });
-            },
-
-            _end: function() {
-                this.trigger("unhover");
-                this.parent()._floater.style.display = "none";
-                inherited._end.call(this);
-            }
-
-        };
-    });
-});
-
-
-Scoped.define("module:Interactions.DroplistStates.Dropping", ["module:Interactions.DroplistStates.Disabled"], function(State, scoped) {
     return State.extend({
         scoped: scoped
     }, {

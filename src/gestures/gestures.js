@@ -456,7 +456,7 @@ Scoped.define("module:Gestures.defaultGesture", [
                     event: "BodyTriggerEvent",
                     args: MouseEvents.upEvent(),
                     target: options.mouse_up_activate ? "ActiveState" : "Initial",
-                    stop_propagation: true
+                    stop_propagation: !options.up_event_allow_propagation
                 }, {
                     event: "ElementMouseMoveOutEvent",
                     args: {
