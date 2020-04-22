@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <head>
+		<script src="../node_modules/betajs-scoped/dist/scoped.js"></script>
+		<script src="../node_modules/betajs/dist/beta-noscoped.js"></script>
+		<script src="../node_modules/betajs-browser/dist/betajs-browser-noscoped.js"></script>
+        <script src="../dist/betajs-ui-noscoped.js"></script>
+		<script src="../node_modules/betajs-dynamics/dist/betajs-dynamics-noscoped.js"></script>
+        <link rel="stylesheet" href="styles.css" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<style>
+			#scrollbox {
+				width: 300px;
+				height: 300px;
+				overflow: scroll;
+				-webkit-overflow-scrolling: touch;
+				display: flex;
+				flex-direction: column-reverse;
+			}
+			.item {
+				border: 1px solid black;
+				height: 40px;
+			}
+		</style>
+	</head>
+	<body style="-webkit-overflow-scrolling: disable">
+		<div id="scrollbox" ba-interaction:scroll="{{infinite_scroll_options}}" ba-repeat="{{item::items}}">
+			<div class="item">Item {{item.number}}</div>
+		</div>
+		<script>
+			var itemss = new BetaJS.Collections.Collection();
+			for (var i = 0; i < 20; ++i)
+				itemss.add({number: i});
+			BetaJS.Dynamics.Dynamic.activate({
+	        	element: document.body,
+	        	attrs: {
+	        		items: itemss,
+	        		infinite_scroll_options: {
+	        			type: "infinitescroll",
+	        			enable_scroll_modifier: "",
+						reverse: true,
+	        			append: function (count, callback) {
+	        				while (count > 0) {
+	        					this.get("items").add({number: this.get("items").count()});
+	        					count--;
+	        				}	        					
+	        				callback(count, true);
+	        			}
+	        		}
+	        	}
+			});
+		</script>
+    </body>
+</html>

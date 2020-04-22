@@ -20,6 +20,7 @@ Scoped.define("module:Interactions.Infinitescroll", [
                     prepend_count: 25,
                     height_factor: 3,
                     whitespace_bottom: false,
+                    reverse: false,
                     context: null,
                     append: null, // function (count, callback); callback should say how many and whether there could be more
                     prepend: null // function (count, callback); callback should say how many and whether there could be more
@@ -61,7 +62,9 @@ Scoped.define("module:Interactions.Infinitescroll", [
             appendNeeded: function() {
                 var total_height = this.element().scrollHeight;
                 var element_height = this.element().clientHeight;
-                var hidden_height = total_height - (this.element().scrollTop + element_height) - this._whitespaceGetHeight(this.__bottom_white_space);
+                var hidden_height = this.options().reverse ?
+                    total_height - (-this.element().scrollTop + element_height) - this._whitespaceGetHeight(this.__bottom_white_space) :
+                    total_height - (this.element().scrollTop + element_height) - this._whitespaceGetHeight(this.__bottom_white_space);
                 return hidden_height < this.options().height_factor * element_height;
             },
 
@@ -102,7 +105,11 @@ Scoped.define("module:Interactions.Infinitescroll", [
             },
 
             extendFix: function() {
-                if (this.scrollingDirection()) {
+                var direction = this.scrollingDirection();
+                var opts = this.options();
+                if (opts.reverse)
+                    direction = !direction;
+                if (direction) {
                     if (this.appendNeeded())
                         this.append();
                 } else {

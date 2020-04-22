@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.52 - 2019-03-10
+betajs-ui - v1.0.53 - 2020-04-21
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -13,8 +13,8 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.52",
-    "datetime": 1552275285066
+    "version": "1.0.53",
+    "datetime": 1587525281899
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -1889,6 +1889,7 @@ Scoped.define("module:Interactions.Infinitescroll", [
                     prepend_count: 25,
                     height_factor: 3,
                     whitespace_bottom: false,
+                    reverse: false,
                     context: null,
                     append: null, // function (count, callback); callback should say how many and whether there could be more
                     prepend: null // function (count, callback); callback should say how many and whether there could be more
@@ -1930,7 +1931,9 @@ Scoped.define("module:Interactions.Infinitescroll", [
             appendNeeded: function() {
                 var total_height = this.element().scrollHeight;
                 var element_height = this.element().clientHeight;
-                var hidden_height = total_height - (this.element().scrollTop + element_height) - this._whitespaceGetHeight(this.__bottom_white_space);
+                var hidden_height = this.options().reverse ?
+                    total_height - (-this.element().scrollTop + element_height) - this._whitespaceGetHeight(this.__bottom_white_space) :
+                    total_height - (this.element().scrollTop + element_height) - this._whitespaceGetHeight(this.__bottom_white_space);
                 return hidden_height < this.options().height_factor * element_height;
             },
 
@@ -1971,7 +1974,11 @@ Scoped.define("module:Interactions.Infinitescroll", [
             },
 
             extendFix: function() {
-                if (this.scrollingDirection()) {
+                var direction = this.scrollingDirection();
+                var opts = this.options();
+                if (opts.reverse)
+                    direction = !direction;
+                if (direction) {
                     if (this.appendNeeded())
                         this.append();
                 } else {
