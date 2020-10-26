@@ -1,4 +1,4 @@
-# betajs-ui 1.0.53
+# betajs-ui 1.0.54
 [![Build Status](https://api.travis-ci.org/betajs/betajs-ui.svg?branch=master)](https://travis-ci.org/betajs/betajs-ui)
 [![Code Climate](https://codeclimate.com/github/betajs/betajs-ui/badges/gpa.svg)](https://codeclimate.com/github/betajs/betajs-ui)
 [![NPM](https://img.shields.io/npm/v/betajs-ui.svg?style=flat)](https://www.npmjs.com/package/betajs-ui)
@@ -64,11 +64,11 @@ You can use the library in the browser and compile it as well.
 ## Links
 | Resource   | URL |
 | :--------- | --: |
-| Homepage   | [https://betajs.com](https://betajs.com) |
+| Homepage   | [http://betajs.com](http://betajs.com) |
 | Git        | [git://github.com/betajs/betajs-ui.git](git://github.com/betajs/betajs-ui.git) |
 | Repository | [https://github.com/betajs/betajs-ui](https://github.com/betajs/betajs-ui) |
-| Blog       | [https://blog.betajs.com](https://blog.betajs.com) | 
-| Twitter    | [https://twitter.com/thebetajs](https://twitter.com/thebetajs) | 
+| Blog       | [http://blog.betajs.com](http://blog.betajs.com) | 
+| Twitter    | [http://twitter.com/thebetajs](http://twitter.com/thebetajs) | 
 | Gitter     | [https://gitter.im/betajs/betajs-ui](https://gitter.im/betajs/betajs-ui) | 
 
 

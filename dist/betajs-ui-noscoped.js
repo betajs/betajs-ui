@@ -1,5 +1,5 @@
 /*!
-betajs-ui - v1.0.53 - 2020-04-21
+betajs-ui - v1.0.54 - 2020-10-26
 Copyright (c) Victor Lingenthal,Oliver Friedmann
 Apache-2.0 Software License.
 */
@@ -13,8 +13,7 @@ Scoped.binding('dynamics', 'global:BetaJS.Dynamics');
 Scoped.define("module:", function () {
 	return {
     "guid": "ff8d5222-1ae4-4719-b842-1dedb9162bc0",
-    "version": "1.0.53",
-    "datetime": 1587525281899
+    "version": "1.0.54"
 };
 });
 Scoped.assumeVersion('base:version', '~1.0.96');
@@ -1293,6 +1292,17 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
         _persistents: ["initial_element_coords", "cloned_element", "cloned_modifier", "placeholder_cloned_element"],
 
         _start: function() {
+
+            var parentElement = this.parent()._element;
+
+            this._initial_element_coords = {
+                left: parentElement.offsetLeft,
+                top: parentElement.offsetTop
+            };
+
+            console.log('this._initial_element_coords');
+            console.log(this._initial_element_coords);
+
             var opts = this.parent().options();
             this._page_coords = MouseCoords.coords;
             if (opts.clone_element) {
@@ -1321,21 +1331,39 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
                 this._cloned_modifier.css("top", this._initial_element_coords.y + "px");
                 document.body.appendChild(this._cloned_element);
             } else {
-                var modifier = this.parent().modifier();
-                modifier.css("position", "relative");
-                this._initial_element_coords = {};
-                if (opts.draggable_x) {
-                    var left = modifier.css("left");
-                    if (left === "auto" || !left)
-                        modifier.css("left", "0px");
-                    this._initial_element_coords.x = parseInt(modifier.css("left"), 10);
-                }
-                if (opts.draggable_y) {
-                    var top = modifier.css("top");
-                    if (top === "auto" || !top)
-                        modifier.css("top", "0px");
-                    this._initial_element_coords.y = parseInt(modifier.css("top"), 10);
-                }
+                // var modifier = this.parent().modifier();
+                // modifier.css("position", "relative");
+                // this._initial_element_coords = {};
+                // if (opts.draggable_x) {
+                //     var left = modifier.css("left");
+                //     if (left === "auto" || !left)
+                //         modifier.css("left", "0px");
+                //     this._initial_element_coords.x = parseInt(modifier.css("left"), 10);
+                // }
+                // if (opts.draggable_y) {
+                //     var top = modifier.css("top");
+                //
+                //     console.log('this.parent()');
+                //     console.log(this.parent());
+                //
+                //     console.log('modifier');
+                //     console.log(modifier);
+                //
+                //     console.log('modifier.css("top")');
+                //     console.log(modifier.css("top"));
+                //
+                //     if (top === "auto" || !top)
+                //         modifier.css("top", "0px");
+                //
+                //     console.log('this._initial_element_coords.y');
+                //     console.log(this._initial_element_coords.y);
+                //
+                //     // this._initial_element_coords.y = 500;
+                //     this._initial_element_coords.y = parseInt(modifier.css("top") + 500, 10);
+                //
+                //     console.log('this._initial_element_coords.y');
+                //     console.log(this._initial_element_coords.y);
+                // }
             }
             this.trigger("start");
             this.on(document.body, MouseEvents.moveEvent(), this.__dragging, this, {
@@ -1351,29 +1379,43 @@ Scoped.define("module:Interactions.DragStates.Dragging", [
                         });
                 });
             }
-            var base = this.parent().actionable_modifier();
-            this._drag_coords = {
-                left: parseInt(base.css("left"), 10),
-                top: parseInt(base.css("top"), 10)
-            };
+
+            if (opts.clone_element) {
+                var base = this.parent().actionable_modifier();
+                this._drag_coords = {
+                    left: parseInt(base.css("left"), 10),
+                    top: parseInt(base.css("top"), 10)
+                };
+            } else {
+                this._drag_coords = {
+                    left: this._initial_element_coords.left,
+                    top: this._initial_element_coords.top
+                };
+            }
         },
 
         __dragging: function(event) {
             event.preventDefault();
+
             var page_coords = MouseEvents.pageCoords(event);
+
             var delta_coords = {
                 x: page_coords.x - this._page_coords.x,
                 y: page_coords.y - this._page_coords.y
             };
+
             this._page_coords = page_coords;
+
             var base = this.parent().actionable_modifier();
             this._drag_coords.left += delta_coords.x;
             this._drag_coords.top += delta_coords.y;
             var drag_coords = this.options().snappable(this._drag_coords.left, this._drag_coords.top);
             if (this.options().draggable_x)
                 base.css("left", drag_coords.left + "px");
+
             if (this.options().draggable_y)
                 base.css("top", drag_coords.top + "px");
+
             this.trigger("move");
             if (this.options().classes && this.options().classes["move.actionable_modifier"])
                 this.parent().actionable_modifier().csscls(this.options().classes["move.actionable_modifier"], true);
@@ -1416,32 +1458,38 @@ Scoped.define("module:Interactions.DragStates.Stopping", [
                     styles.left = this._initial_element_coords.x + "px";
                 if (options.draggable_y)
                     styles.top = this._initial_element_coords.y + "px";
-                this.__animation = new Animator(this.parent().actionable_element(), {
-                    styles: styles
-                }, function() {
-                    if (this.__animation)
-                        this.next("Idle");
-                }, this);
+                if (!options.no_animation)
+                    this.__animation = new Animator(this.parent().actionable_element(), {
+                        styles: styles
+                    }, function() {
+                        if (this.__animation)
+                            this.next("Idle");
+                    }, this);
                 if (this._released)
                     this.trigger("release");
             },
 
             _end: function() {
                 if (this.__animation) {
+                    console.log('Animation');
                     var animation = this.__animation;
                     this.__animation = null;
                     animation.complete();
                 }
                 if (this._cloned_modifier) {
+                    console.log('_cloned_modifier');
+
                     this._cloned_modifier.revert();
                     this._cloned_modifier.destroy();
                 }
                 if (this._cloned_element) {
+                    console.log('_cloned_element');
+
                     if (this._placeholder_cloned_element)
                         this._placeholder_cloned_element.replaceWith(this._cloned_element);
                     this._cloned_element.parentNode.removeChild(this._cloned_element);
                 }
-                this.parent().modifier().revert();
+                // this.parent().modifier().revert();
                 this.trigger("stop");
                 inherited._end.call(this);
             }
